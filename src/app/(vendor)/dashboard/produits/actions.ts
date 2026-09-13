@@ -145,6 +145,7 @@ export async function saveProduct(
       .eq("shop_id", shopId);
 
     if (error) {
+      console.error("saveProduct (update) — erreur Supabase:", error);
       return { error: "Échec de la mise à jour. Réessaie." };
     }
   } else {
@@ -183,6 +184,7 @@ export async function saveProduct(
       .single();
 
     if (error || !inserted) {
+      console.error("saveProduct (création) — erreur Supabase:", error);
       return { error: "Échec de la création. Réessaie." };
     }
 
