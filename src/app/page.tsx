@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORIES, categoryLabel } from "@/lib/categories";
+import { categoryLabel } from "@/lib/categories";
 import { SortSelect } from "@/components/sort-select";
-import { WishlistButton } from "@/components/wishlist-button";
+import { CategoryNav } from "@/components/category-nav";
+import { ProductCard, type MarketplaceCardProduct } from "@/components/product-card";
+import { buildMarketplaceHref } from "@/lib/marketplace/filters";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -12,11 +14,22 @@ import { WishlistButton } from "@/components/wishlist-button";
 // anticipation, à la demande explicite d'Isaac plutôt que dans l'ordre du
 // cahier des charges — voir decisions-techniques.md.
 //
-// Identité visuelle volontairement neutre (mêmes classes Tailwind gris que
-// le reste de l'app) : le design définitif reste en attente avec Isaac et
-// son associée (cf. decisions-techniques.md, "Ce qui n'est pas encore décidé").
+// Disposition refaite le 13/09/2026 : Isaac trouvait la page mal présentée
+// et a partagé la page d'accueil Jumia CI comme repère de disposition — "les
+// briques avant la peinture", donc uniquement la structure ici, pas encore
+// les couleurs/typographie (identité visuelle toujours en attente, voir
+// decisions-techniques.md). Jumia empile des dizaines de blocs (ventes
+// flash, produits sponsorisés, un carrousel par catégorie...) qui supposent
+// des fonctionnalités qu'on n'a pas encore (promotions, sponsoring) et un
+// volume de produits par catégorie qu'un catalogue qui démarre n'a pas
+// encore — copier telle quelle donnerait des carrousels à moitié vides.
+// Adapté ici à ce qu'on a réellement : en-tête + recherche, catégories,
+// bannière d'accroche, argumentaire de confiance, nouveautés, catalogue
+// complet filtrable. Identité visuelle volontairement neutre (mêmes classes
+// Tailwind gris que le reste de l'app).
 
 const PAGE_SIZE = 24;
+const NEW_ARRIVALS_SIZE = 8;
 
 const SORTS = [
   { value: "recent", label: "Plus récent" },
@@ -25,7 +38,7 @@ const SORTS = [
 ] as const;
 type SortValue = (typeof SORTS)[number]["value"];
 
-type MarketplaceProduct = {
+type RawMarketplaceProduct = {
   id: string;
   slug: string;
   title: string;
@@ -35,18 +48,26 @@ type MarketplaceProduct = {
   shop: { slug: string; name: string } | { slug: string; name: string }[] | null;
 };
 
-function buildHref(
-  current: { q?: string; categorie?: string; tri?: string; page?: string },
-  overrides: { q?: string; categorie?: string; tri?: string; page?: string }
-) {
-  const params = new URLSearchParams();
-  const merged = { ...current, ...overrides };
-  if (merged.q) params.set("q", merged.q);
-  if (merged.categorie) params.set("categorie", merged.categorie);
-  if (merged.tri && merged.tri !== "recent") params.set("tri", merged.tri);
-  if (merged.page && merged.page !== "1") params.set("page", merged.page);
-  const qs = params.toString();
-  return qs ? `/?${qs}` : "/";
+// Normalise la forme `shop` renvoyée par Supabase (objet ou tableau selon le
+// contexte de la requête) et calcule la vignette — utilisé pour les deux
+// requêtes de cette page (nouveautés + catalogue), d'où l'extraction ici
+// plutôt qu'une logique dupliquée dans les deux `.map()`.
+function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct | null {
+  const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
+  if (!shop) return null;
+  const thumbnail = [...(product.product_images ?? [])].sort(
+    (a, b) => a.position - b.position
+  )[0]?.url;
+  return {
+    id: product.id,
+    slug: product.slug,
+    title: product.title,
+    price: product.price,
+    category: product.category,
+    thumbnail,
+    shopSlug: shop.slug,
+    shopName: shop.name,
+  };
 }
 
 export default async function Home({
@@ -59,10 +80,11 @@ export default async function Home({
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
+  const current = { q, categorie, tri, page: pageParam };
 
   const supabase = await createClient();
 
-  let query = supabase
+  let catalogueQuery = supabase
     .from("products")
     .select(
       "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)",
@@ -73,178 +95,221 @@ export default async function Home({
     .eq("shop.status", "active")
     .range(from, to);
 
-  if (q) query = query.ilike("title", `%${q}%`);
-  if (categorie) query = query.eq("category", categorie);
-  if (sort === "prix_asc") query = query.order("price", { ascending: true });
-  else if (sort === "prix_desc") query = query.order("price", { ascending: false });
-  else query = query.order("created_at", { ascending: false });
+  if (q) catalogueQuery = catalogueQuery.ilike("title", `%${q}%`);
+  if (categorie) catalogueQuery = catalogueQuery.eq("category", categorie);
+  if (sort === "prix_asc") catalogueQuery = catalogueQuery.order("price", { ascending: true });
+  else if (sort === "prix_desc")
+    catalogueQuery = catalogueQuery.order("price", { ascending: false });
+  else catalogueQuery = catalogueQuery.order("created_at", { ascending: false });
 
-  const { data: products, count } = await query;
+  // Bande "Nouveautés" : toujours les produits les plus récents de toute la
+  // marketplace, indépendamment des filtres en cours (comme les carrousels
+  // de découverte de Jumia) — une requête à part plutôt qu'un sous-ensemble
+  // de la requête catalogue, qui elle dépend de la recherche/catégorie/tri.
+  const newArrivalsQuery = supabase
+    .from("products")
+    .select(
+      "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)"
+    )
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .eq("shop.status", "active")
+    .order("created_at", { ascending: false })
+    .limit(NEW_ARRIVALS_SIZE);
+
+  const [{ data: products, count }, { data: newArrivals }] = await Promise.all([
+    catalogueQuery,
+    newArrivalsQuery,
+  ]);
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
-  const current = { q, categorie, tri, page: pageParam };
+  const catalogueProducts = ((products ?? []) as RawMarketplaceProduct[])
+    .map(toCardProduct)
+    .filter((p): p is MarketplaceCardProduct => p !== null);
+  const newArrivalsProducts = ((newArrivals ?? []) as RawMarketplaceProduct[])
+    .map(toCardProduct)
+    .filter((p): p is MarketplaceCardProduct => p !== null);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Trouve ton prochain achat
-        </h1>
-        <div className="flex shrink-0 items-center gap-4">
+    <main className="mx-auto max-w-5xl px-4 py-6">
+      {/* En-tête : logo/texte de marque + recherche, réunis dans une seule
+          barre (au lieu d'une recherche séparée plus bas comme avant) — la
+          recherche est la première action qu'un visiteur façon Jumia doit
+          voir, pas quelque chose à découvrir en scrollant. */}
+      <header className="flex flex-wrap items-center gap-4">
+        <Link href="/" className="shrink-0 text-lg font-semibold text-gray-900">
+          Boutique
+        </Link>
+        <form method="GET" action="/" className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1">
+          {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Rechercher un article..."
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            className="shrink-0 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+          >
+            Rechercher
+          </button>
+        </form>
+        <div className="order-2 flex shrink-0 items-center gap-4 sm:order-3">
           <Link href="/favoris" className="text-sm font-medium text-gray-700 underline">
             Mes favoris
           </Link>
           <Link href="/compte" className="text-sm font-medium text-gray-700 underline">
             Mon compte
           </Link>
+        </div>
+      </header>
+
+      {/* Catégories : point d'entrée principal pour parcourir le catalogue,
+          juste sous l'en-tête (comme la rangée d'icônes de Jumia). */}
+      <div className="mt-5">
+        <CategoryNav current={current} active={categorie} />
+      </div>
+
+      {/* Bannière d'accroche : bloc d'appel, pas encore de vraie image/promo
+          (rien à mettre en avant tant que les vendeurs n'ont pas de mise en
+          avant/promotions — fonctionnalité qui n'existe pas encore). Le
+          rectangle à droite marque l'emplacement réservé à une vraie image
+          ou à un carrousel promotionnel plus tard, sans qu'il faille
+          retoucher la structure de la page pour l'ajouter. */}
+      <section className="mt-6 flex flex-col gap-4 rounded-lg bg-gray-900 p-6 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-md">
+          <h1 className="text-xl font-semibold sm:text-2xl">
+            Le catalogue de toutes les boutiques en ligne, au même endroit
+          </h1>
+          <p className="mt-2 text-sm text-gray-300">
+            Découvre des produits vendus directement par des vendeurs
+            indépendants, partout en Côte d&apos;Ivoire.
+          </p>
           <Link
             href="/inscription"
-            className="text-sm font-medium text-gray-700 underline"
+            className="mt-4 inline-block rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-900"
           >
             Vendre sur la plateforme
           </Link>
         </div>
-      </div>
-      <p className="mt-1 text-sm text-gray-600">
-        Le catalogue de tous les vendeurs de la plateforme, au même endroit.
-      </p>
-
-      <form method="GET" action="/" className="mt-6 flex gap-2">
-        {categorie ? (
-          <input type="hidden" name="categorie" value={categorie} />
-        ) : null}
-        <input
-          type="text"
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Rechercher un article..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        <div
+          aria-hidden="true"
+          className="hidden h-32 w-56 shrink-0 rounded-md bg-white/10 sm:block"
         />
-        <button
-          type="submit"
-          className="shrink-0 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
-        >
-          Rechercher
-        </button>
-      </form>
+      </section>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={buildHref(current, { categorie: undefined, page: undefined })}
-            className={`rounded-full border px-3 py-1 text-xs ${
-              !categorie
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-700"
-            }`}
-          >
-            Toutes catégories
-          </Link>
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.value}
-              href={buildHref(current, { categorie: c.value, page: undefined })}
-              className={`rounded-full border px-3 py-1 text-xs ${
-                categorie === c.value
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 text-gray-700"
-              }`}
-            >
-              {c.label}
-            </Link>
-          ))}
-        </div>
+      {/* Argumentaire de confiance : adapté de la rangée "services de
+          qualité" de Jumia, avec seulement ce qui est vrai aujourd'hui (voir
+          le libellé "bientôt disponible" déjà utilisé sur la page de
+          paiement — CinetPay/Mobile Money n'est pas encore branché en
+          production, cf. decisions-techniques.md). */}
+      <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[
+          {
+            title: "Paiement à la livraison",
+            body: "Commande sans créer de compte, paie en espèces à la réception.",
+          },
+          {
+            title: "Vendeurs indépendants",
+            body: "Chaque boutique est gérée par son propre vendeur, partout en Côte d'Ivoire.",
+          },
+          {
+            title: "Mobile Money bientôt disponible",
+            body: "Orange Money, MTN Money, Moov Money et Wave arrivent prochainement.",
+          },
+        ].map((item) => (
+          <div key={item.title} className="rounded-md border border-gray-200 p-3">
+            <p className="text-sm font-medium text-gray-900">{item.title}</p>
+            <p className="mt-1 text-xs text-gray-600">{item.body}</p>
+          </div>
+        ))}
+      </section>
 
-        <SortSelect
-          basePath="/"
-          value={sort}
-          options={SORTS as unknown as { value: string; label: string }[]}
-          q={q}
-          categorie={categorie}
-        />
-      </div>
-
-      {(products ?? []).length === 0 ? (
-        <p className="mt-10 text-sm text-gray-600">
-          {q || categorie
-            ? "Aucun article ne correspond à ta recherche."
-            : "Aucun article disponible pour l'instant — reviens bientôt."}
-        </p>
-      ) : (
-        <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {(products as MarketplaceProduct[]).map((product) => {
-            const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
-            const thumbnail = [...(product.product_images ?? [])].sort(
-              (a, b) => a.position - b.position
-            )[0]?.url;
-            if (!shop) return null;
-            return (
-              <div key={product.id} className="relative rounded border border-gray-200 p-3">
-                <div className="absolute right-2 top-2 z-10">
-                  <WishlistButton
-                    item={{
-                      productId: product.id,
-                      shopSlug: shop.slug,
-                      productSlug: product.slug,
-                      title: product.title,
-                      price: product.price,
-                      imageUrl: thumbnail,
-                    }}
-                  />
-                </div>
-                <Link href={`/${shop.slug}/${product.slug}`}>
-                  {thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-                    <img
-                      src={thumbnail}
-                      alt={product.title}
-                      className="mb-2 aspect-square w-full rounded object-cover"
-                    />
-                  ) : (
-                    <div className="mb-2 aspect-square w-full rounded bg-gray-100" />
-                  )}
-                  <p className="text-sm font-medium text-gray-900">{product.title}</p>
-                  <p className="text-sm text-gray-600">{product.price} FCFA</p>
-                  <p className="mt-1 truncate text-xs text-gray-500">{shop.name}</p>
-                  {product.category ? (
-                    <p className="text-xs text-gray-400">
-                      {categoryLabel(product.category)}
-                    </p>
-                  ) : null}
-                </Link>
-              </div>
-            );
-          })}
+      {/* Nouveautés : bande à défilement horizontal, indépendante des
+          filtres du catalogue plus bas (voir la requête dédiée). Masquée si
+          la marketplace n'a pas encore assez de produits pour que ça vaille
+          le coup. */}
+      {newArrivalsProducts.length > 0 ? (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-900">Nouveautés</h2>
+          <div className="-mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-2">
+            {newArrivalsProducts.map((product) => (
+              <ProductCard key={product.id} product={product} className="w-40 shrink-0" />
+            ))}
+          </div>
         </section>
-      )}
-
-      {totalPages > 1 ? (
-        <div className="mt-6 flex items-center justify-center gap-4 text-sm">
-          {page > 1 ? (
-            <Link
-              href={buildHref(current, { page: String(page - 1) })}
-              className="underline"
-            >
-              Page précédente
-            </Link>
-          ) : (
-            <span className="text-gray-400">Page précédente</span>
-          )}
-          <span className="text-gray-600">
-            Page {page} / {totalPages}
-          </span>
-          {page < totalPages ? (
-            <Link
-              href={buildHref(current, { page: String(page + 1) })}
-              className="underline"
-            >
-              Page suivante
-            </Link>
-          ) : (
-            <span className="text-gray-400">Page suivante</span>
-          )}
-        </div>
       ) : null}
+
+      {/* Catalogue complet : résultats filtrés/triés/paginés (fonctionnalité
+          inchangée, seulement repositionnée sous les blocs de découverte
+          ci-dessus au lieu d'être la première chose sur la page). */}
+      <section className="mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {categorie ? categoryLabel(categorie) : "Tout le catalogue"}
+          </h2>
+          <SortSelect
+            basePath="/"
+            value={sort}
+            options={SORTS as unknown as { value: string; label: string }[]}
+            q={q}
+            categorie={categorie}
+          />
+        </div>
+        {q ? (
+          <p className="mt-1 text-xs text-gray-500">
+            Résultats pour «&nbsp;{q}&nbsp;»
+            {categorie ? ` dans ${categoryLabel(categorie)}` : ""} —{" "}
+            <Link href={buildMarketplaceHref(current, { q: undefined, page: undefined })} className="underline">
+              réinitialiser la recherche
+            </Link>
+          </p>
+        ) : null}
+
+        {catalogueProducts.length === 0 ? (
+          <p className="mt-10 text-sm text-gray-600">
+            {q || categorie
+              ? "Aucun article ne correspond à ta recherche."
+              : "Aucun article disponible pour l'instant — reviens bientôt."}
+          </p>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {catalogueProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 ? (
+          <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+            {page > 1 ? (
+              <Link
+                href={buildMarketplaceHref(current, { page: String(page - 1) })}
+                className="underline"
+              >
+                Page précédente
+              </Link>
+            ) : (
+              <span className="text-gray-400">Page précédente</span>
+            )}
+            <span className="text-gray-600">
+              Page {page} / {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Link
+                href={buildMarketplaceHref(current, { page: String(page + 1) })}
+                className="underline"
+              >
+                Page suivante
+              </Link>
+            ) : (
+              <span className="text-gray-400">Page suivante</span>
+            )}
+          </div>
+        ) : null}
+      </section>
     </main>
   );
 }
