@@ -25,7 +25,7 @@ export default async function OrderDetailPage({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id")
+    .select("id, name")
     .eq("owner_id", user?.id ?? "")
     .maybeSingle();
 
@@ -119,11 +119,28 @@ export default async function OrderDetailPage({
         })}
       </ul>
 
-      <p className="mt-4 text-right text-lg font-medium text-gray-900">
-        Total : {order.total_amount} FCFA
-      </p>
+      <dl className="mt-4 divide-y divide-gray-100 text-sm">
+        <div className="flex justify-between py-1 text-gray-600">
+          <dt>Sous-total produits</dt>
+          <dd>{order.total_amount - order.delivery_fee} FCFA</dd>
+        </div>
+        <div className="flex justify-between py-1 text-gray-600">
+          <dt>Frais de livraison</dt>
+          <dd>{order.delivery_fee} FCFA</dd>
+        </div>
+        <div className="flex justify-between py-1 text-base font-medium text-gray-900">
+          <dt>Total</dt>
+          <dd>{order.total_amount} FCFA</dd>
+        </div>
+      </dl>
 
-      <StatusForm orderId={order.id} currentStatus={order.status} />
+      <StatusForm
+        orderId={order.id}
+        currentStatus={order.status}
+        customerName={order.customer_name}
+        customerPhone={order.customer_phone}
+        shopName={shop.name}
+      />
     </div>
   );
 }

@@ -12,7 +12,7 @@ export default async function PanierPage({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, name, slug")
+    .select("id, name, slug, delivery_fee")
     .eq("slug", shopSlug)
     .eq("status", "active")
     .maybeSingle();
@@ -24,7 +24,7 @@ export default async function PanierPage({
       <h1 className="text-xl font-semibold text-gray-900">
         Panier — {shop.name}
       </h1>
-      <CartCheckout shopId={shop.id} shopSlug={shop.slug} />
+      <CartCheckout shopId={shop.id} shopSlug={shop.slug} deliveryFee={shop.delivery_fee} />
     </main>
   );
 }

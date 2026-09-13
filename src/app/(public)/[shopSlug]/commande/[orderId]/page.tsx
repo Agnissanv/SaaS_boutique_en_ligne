@@ -109,9 +109,20 @@ export default async function OrderConfirmationPage({
         )}
       </ul>
 
-      <p className="mt-4 text-right text-lg font-medium text-gray-900">
-        Total : {order.total_amount} FCFA
-      </p>
+      <dl className="mt-4 divide-y divide-gray-100 text-sm">
+        <div className="flex justify-between py-1 text-gray-600">
+          <dt>Sous-total produits</dt>
+          <dd>{order.total_amount - order.delivery_fee} FCFA</dd>
+        </div>
+        <div className="flex justify-between py-1 text-gray-600">
+          <dt>Frais de livraison</dt>
+          <dd>{order.delivery_fee} FCFA</dd>
+        </div>
+        <div className="flex justify-between py-1 text-base font-medium text-gray-900">
+          <dt>Total</dt>
+          <dd>{order.total_amount} FCFA</dd>
+        </div>
+      </dl>
 
       {(items ?? []).length > 0 && (
         <section className="mt-8 border-t border-gray-200 pt-4">

@@ -11,9 +11,12 @@ type Step = "panier" | "commande";
 export function CartCheckout({
   shopId,
   shopSlug,
+  deliveryFee,
 }: {
   shopId: string;
   shopSlug: string;
+  /** null = pas configuré par le vendeur -> "à confirmer avec le vendeur" (voir migration 0012). */
+  deliveryFee: number | null;
 }) {
   const router = useRouter();
   const { items, updateQuantity, removeItem, clear, total } = useShopCart(shopSlug);
@@ -21,6 +24,7 @@ export function CartCheckout({
   const [step, setStep] = useState<Step>("panier");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
   const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
@@ -83,6 +87,7 @@ export function CartCheckout({
       })),
       p_delivery_lat: deliveryLat,
       p_delivery_lng: deliveryLng,
+      p_customer_email: customerEmail.trim() || null,
     });
 
     setPending(false);
@@ -135,9 +140,20 @@ export function CartCheckout({
           ))}
         </ul>
 
-        <p className="mt-4 text-right text-lg font-medium text-gray-900">
-          Total : {total} FCFA
-        </p>
+        <dl className="mt-4 divide-y divide-gray-100 text-sm">
+          <div className="flex justify-between py-1 text-gray-600">
+            <dt>Sous-total</dt>
+            <dd>{total} FCFA</dd>
+          </div>
+          <div className="flex justify-between py-1 text-gray-600">
+            <dt>Livraison</dt>
+            <dd>{deliveryFee != null ? `${deliveryFee} FCFA` : "à confirmer avec le vendeur"}</dd>
+          </div>
+          <div className="flex justify-between py-1 text-base font-medium text-gray-900">
+            <dt>Total</dt>
+            <dd>{total + (deliveryFee ?? 0)} FCFA</dd>
+          </div>
+        </dl>
 
         <button
           type="button"
@@ -152,7 +168,20 @@ export function CartCheckout({
 
   return (
     <form onSubmit={handleSubmitOrder} className="mt-6 flex flex-col gap-4">
-      <p className="text-sm text-gray-600">Total à payer : {total} FCFA</p>
+      <dl className="divide-y divide-gray-100 text-sm">
+        <div className="flex justify-between py-1 text-gray-600">
+          <dt>Sous-total</dt>
+          <dd>{total} FCFA</dd>
+        </div>
+        <div className="flex justify-between py-1 text-gray-600">
+          <dt>Livraison</dt>
+          <dd>{deliveryFee != null ? `${deliveryFee} FCFA` : "à confirmer avec le vendeur"}</dd>
+        </div>
+        <div className="flex justify-between py-1 text-base font-medium text-gray-900">
+          <dt>Total à payer</dt>
+          <dd>{total + (deliveryFee ?? 0)} FCFA</dd>
+        </div>
+      </dl>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="customerName" className="text-sm font-medium text-gray-700">
@@ -178,6 +207,20 @@ export function CartCheckout({
           placeholder="+225 07 00 00 00 00"
           value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="customerEmail" className="text-sm font-medium text-gray-700">
+          Email <span className="text-gray-400">(optionnel)</span>
+        </label>
+        <input
+          id="customerEmail"
+          type="email"
+          placeholder="Pour être prévenu(e) de l'avancement de ta commande"
+          value={customerEmail}
+          onChange={(e) => setCustomerEmail(e.target.value)}
           className="rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
       </div>

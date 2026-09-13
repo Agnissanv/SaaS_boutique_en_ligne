@@ -129,6 +129,21 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
     (prix barré affiché, galerie photo, indicateur de stock, partage
     WhatsApp, avis clients, tags, groupes de variantes à nom libre) et les
     limites assumées.
+11. **Manques comparés à Jumia comblés (14/09/2026)** — appliquer la migration
+    `0012_delivery_fee_and_notifications.sql` (ajoute `shops.delivery_fee`,
+    `orders.delivery_fee`, `orders.customer_email`, modifie `create_order` et
+    `get_order_receipt`). Nouvelles variables d'environnement requises pour
+    les emails automatiques de suivi de commande : `BREVO_API_KEY` (clé API
+    Brevo — différente de la clé SMTP déjà utilisée pour les emails Auth,
+    à générer dans Réglages > SMTP & API sur le compte Brevo existant),
+    `BREVO_SENDER_EMAIL` (une adresse sur un domaine déjà authentifié, ex:
+    commandes@agnissanisaac.com) et `NEXT_PUBLIC_SITE_URL` (déjà renseignée
+    dans `.env.example` avec l'URL Vercel actuelle). Sans ces variables,
+    l'email ne part simplement pas (best-effort, jamais bloquant) — le
+    bouton "Prévenir sur WhatsApp" fonctionne indépendamment. Voir
+    `decisions-techniques.md` pour le détail (filtres/tri catalogue, frais de
+    livraison, notifications client, note de confiance boutique, produits
+    similaires, liste de favoris) et ce qui reste volontairement hors scope.
 
 ## Structure du projet
 
@@ -142,9 +157,13 @@ src/app/
   api/cinetpay/webhook/         Webhook de notification de paiement
   api/auth/send-sms-hook/       Envoi des OTP téléphone via l'API Orange SMS
 src/lib/sms/orange.ts           Client API Orange SMS Côte d'Ivoire
+src/lib/email/                  Email transactionnel (API Brevo) — notifications de statut de commande
 src/lib/supabase/               Clients Supabase (browser / server / middleware / storage)
 src/lib/cart/                   Panier client (localStorage, un par boutique)
+src/lib/wishlist/               Favoris client (localStorage, global — pas de compte client)
+src/lib/reviews.ts              Agrégation de la note de confiance au niveau boutique
 src/lib/categories.ts           Catégories boutique/produit partagées (une seule source de vérité)
+src/components/                 Composants partagés entre pages (tri, étoiles, bouton favoris...)
 supabase/migrations/            Schéma SQL (tables + RLS + fonctions RPC)
 public/manifest.json, sw.js     Support PWA
 ```

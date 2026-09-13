@@ -18,6 +18,7 @@ type Shop = {
   category: string;
   logo_url?: string | null;
   cover_url?: string | null;
+  delivery_fee?: number | null;
 };
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -188,6 +189,27 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
         subpath="shop/cover"
         initialUrl={shop?.cover_url}
       />
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="deliveryFee" className="text-sm font-medium text-gray-700">
+          Frais de livraison (FCFA) <span className="text-gray-400">(optionnel)</span>
+        </label>
+        <input
+          id="deliveryFee"
+          name="deliveryFee"
+          type="number"
+          min={0}
+          step={1}
+          defaultValue={shop?.delivery_fee ?? ""}
+          placeholder="Ex : 1000"
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-gray-400">
+          Affiché au client avant qu&apos;il confirme sa commande. Laisse
+          vide si le tarif dépend de la zone — le client saura alors que
+          c&apos;est à confirmer avec toi.
+        </p>
+      </div>
 
       {shop && (
         <p className="text-xs text-gray-500">

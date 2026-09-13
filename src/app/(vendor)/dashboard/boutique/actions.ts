@@ -36,6 +36,9 @@ export async function saveShop(
   // storage.ts) — chaîne vide si le vendeur n'a pas (encore) choisi d'image.
   const logoUrl = String(formData.get("logoUrl") ?? "").trim();
   const coverUrl = String(formData.get("coverUrl") ?? "").trim();
+  // Frais de livraison : optionnel, null si laissé vide (le client verra
+  // alors "à confirmer avec le vendeur" — voir migration 0012).
+  const deliveryFeeRaw = String(formData.get("deliveryFee") ?? "").trim();
 
   if (!name || name.length < 2) {
     return { error: "Le nom de la boutique est trop court." };
@@ -45,6 +48,14 @@ export async function saveShop(
   }
   if (!isValidCategory(category)) {
     return { error: "Choisis une catégorie valide." };
+  }
+
+  let deliveryFee: number | null = null;
+  if (deliveryFeeRaw) {
+    deliveryFee = Number(deliveryFeeRaw);
+    if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
+      return { error: "Le frais de livraison doit être un nombre positif." };
+    }
   }
 
   if (shopId) {
@@ -58,6 +69,7 @@ export async function saveShop(
         category,
         logo_url: logoUrl || null,
         cover_url: coverUrl || null,
+        delivery_fee: deliveryFee,
         updated_at: new Date().toISOString(),
       })
       .eq("id", shopId)
@@ -95,6 +107,7 @@ export async function saveShop(
         category,
         logo_url: logoUrl || null,
         cover_url: coverUrl || null,
+        delivery_fee: deliveryFee,
       })
       .select("id")
       .single();

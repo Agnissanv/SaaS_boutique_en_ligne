@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, categoryLabel } from "@/lib/categories";
+import { SortSelect } from "@/components/sort-select";
+import { WishlistButton } from "@/components/wishlist-button";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -16,6 +18,13 @@ import { CATEGORIES, categoryLabel } from "@/lib/categories";
 
 const PAGE_SIZE = 24;
 
+const SORTS = [
+  { value: "recent", label: "Plus récent" },
+  { value: "prix_asc", label: "Prix croissant" },
+  { value: "prix_desc", label: "Prix décroissant" },
+] as const;
+type SortValue = (typeof SORTS)[number]["value"];
+
 type MarketplaceProduct = {
   id: string;
   slug: string;
@@ -27,13 +36,14 @@ type MarketplaceProduct = {
 };
 
 function buildHref(
-  current: { q?: string; categorie?: string; page?: string },
-  overrides: { q?: string; categorie?: string; page?: string }
+  current: { q?: string; categorie?: string; tri?: string; page?: string },
+  overrides: { q?: string; categorie?: string; tri?: string; page?: string }
 ) {
   const params = new URLSearchParams();
   const merged = { ...current, ...overrides };
   if (merged.q) params.set("q", merged.q);
   if (merged.categorie) params.set("categorie", merged.categorie);
+  if (merged.tri && merged.tri !== "recent") params.set("tri", merged.tri);
   if (merged.page && merged.page !== "1") params.set("page", merged.page);
   const qs = params.toString();
   return qs ? `/?${qs}` : "/";
@@ -42,9 +52,10 @@ function buildHref(
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; categorie?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; categorie?: string; tri?: string; page?: string }>;
 }) {
-  const { q, categorie, page: pageParam } = await searchParams;
+  const { q, categorie, tri, page: pageParam } = await searchParams;
+  const sort: SortValue = SORTS.some((s) => s.value === tri) ? (tri as SortValue) : "recent";
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -60,16 +71,18 @@ export default async function Home({
     .eq("is_active", true)
     .is("deleted_at", null)
     .eq("shop.status", "active")
-    .order("created_at", { ascending: false })
     .range(from, to);
 
   if (q) query = query.ilike("title", `%${q}%`);
   if (categorie) query = query.eq("category", categorie);
+  if (sort === "prix_asc") query = query.order("price", { ascending: true });
+  else if (sort === "prix_desc") query = query.order("price", { ascending: false });
+  else query = query.order("created_at", { ascending: false });
 
   const { data: products, count } = await query;
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
-  const current = { q, categorie, page: pageParam };
+  const current = { q, categorie, tri, page: pageParam };
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -77,12 +90,17 @@ export default async function Home({
         <h1 className="text-xl font-semibold text-gray-900">
           Trouve ton prochain achat
         </h1>
-        <Link
-          href="/inscription"
-          className="shrink-0 text-sm font-medium text-gray-700 underline"
-        >
-          Vendre sur la plateforme
-        </Link>
+        <div className="flex shrink-0 items-center gap-4">
+          <Link href="/favoris" className="text-sm font-medium text-gray-700 underline">
+            Mes favoris
+          </Link>
+          <Link
+            href="/inscription"
+            className="text-sm font-medium text-gray-700 underline"
+          >
+            Vendre sur la plateforme
+          </Link>
+        </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
         Le catalogue de tous les vendeurs de la plateforme, au même endroit.
@@ -107,30 +125,40 @@ export default async function Home({
         </button>
       </form>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link
-          href={buildHref(current, { categorie: undefined, page: undefined })}
-          className={`rounded-full border px-3 py-1 text-xs ${
-            !categorie
-              ? "border-gray-900 bg-gray-900 text-white"
-              : "border-gray-300 text-gray-700"
-          }`}
-        >
-          Toutes catégories
-        </Link>
-        {CATEGORIES.map((c) => (
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
           <Link
-            key={c.value}
-            href={buildHref(current, { categorie: c.value, page: undefined })}
+            href={buildHref(current, { categorie: undefined, page: undefined })}
             className={`rounded-full border px-3 py-1 text-xs ${
-              categorie === c.value
+              !categorie
                 ? "border-gray-900 bg-gray-900 text-white"
                 : "border-gray-300 text-gray-700"
             }`}
           >
-            {c.label}
+            Toutes catégories
           </Link>
-        ))}
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.value}
+              href={buildHref(current, { categorie: c.value, page: undefined })}
+              className={`rounded-full border px-3 py-1 text-xs ${
+                categorie === c.value
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-300 text-gray-700"
+              }`}
+            >
+              {c.label}
+            </Link>
+          ))}
+        </div>
+
+        <SortSelect
+          basePath="/"
+          value={sort}
+          options={SORTS as unknown as { value: string; label: string }[]}
+          q={q}
+          categorie={categorie}
+        />
       </div>
 
       {(products ?? []).length === 0 ? (
@@ -148,30 +176,40 @@ export default async function Home({
             )[0]?.url;
             if (!shop) return null;
             return (
-              <Link
-                key={product.id}
-                href={`/${shop.slug}/${product.slug}`}
-                className="rounded border border-gray-200 p-3"
-              >
-                {thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-                  <img
-                    src={thumbnail}
-                    alt={product.title}
-                    className="mb-2 aspect-square w-full rounded object-cover"
+              <div key={product.id} className="relative rounded border border-gray-200 p-3">
+                <div className="absolute right-2 top-2 z-10">
+                  <WishlistButton
+                    item={{
+                      productId: product.id,
+                      shopSlug: shop.slug,
+                      productSlug: product.slug,
+                      title: product.title,
+                      price: product.price,
+                      imageUrl: thumbnail,
+                    }}
                   />
-                ) : (
-                  <div className="mb-2 aspect-square w-full rounded bg-gray-100" />
-                )}
-                <p className="text-sm font-medium text-gray-900">{product.title}</p>
-                <p className="text-sm text-gray-600">{product.price} FCFA</p>
-                <p className="mt-1 truncate text-xs text-gray-500">{shop.name}</p>
-                {product.category ? (
-                  <p className="text-xs text-gray-400">
-                    {categoryLabel(product.category)}
-                  </p>
-                ) : null}
-              </Link>
+                </div>
+                <Link href={`/${shop.slug}/${product.slug}`}>
+                  {thumbnail ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
+                    <img
+                      src={thumbnail}
+                      alt={product.title}
+                      className="mb-2 aspect-square w-full rounded object-cover"
+                    />
+                  ) : (
+                    <div className="mb-2 aspect-square w-full rounded bg-gray-100" />
+                  )}
+                  <p className="text-sm font-medium text-gray-900">{product.title}</p>
+                  <p className="text-sm text-gray-600">{product.price} FCFA</p>
+                  <p className="mt-1 truncate text-xs text-gray-500">{shop.name}</p>
+                  {product.category ? (
+                    <p className="text-xs text-gray-400">
+                      {categoryLabel(product.category)}
+                    </p>
+                  ) : null}
+                </Link>
+              </div>
             );
           })}
         </section>
