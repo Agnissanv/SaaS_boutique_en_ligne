@@ -1,33 +1,31 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ProfileForm } from "./profile-form";
+import { IdentityForm } from "./identity-form";
 import { EmailForm } from "@/components/account-email-form";
 import { PasswordForm } from "@/components/account-password-form";
 
 /**
- * Page profil vendeur — créée le 15/09/2026, identifiée comme un manque
- * majeur du dashboard (aucune page profil n'existait, alors que le cahier
- * des charges §3.1.A.1 mentionne "nom d'affichage et une photo de profil"
- * dès l'inscription, jamais modifiables ensuite).
- *
- * Regroupe : identité (nom, téléphone, photo), email de connexion, mot de
- * passe — trois formulaires séparés car ils touchent des systèmes différents
- * (table `profiles` vs `auth.users` vs authentification), chacun avec son
- * propre état de succès/erreur indépendant.
+ * Page profil client — créée le 15/09/2026, juste après les comptes client
+ * optionnels (migration 0014), pour combler le manque disclosé le jour même
+ * dans decisions-techniques.md : un client ne pouvait pas encore corriger
+ * son nom/téléphone après l'inscription. Structure identique à la page
+ * profil vendeur (dashboard/profil), mêmes composants d'email/mot de passe
+ * (partagés, voir src/components/account-*-form.tsx), sans la photo de
+ * profil (pas d'avatar client affiché nulle part dans l'app).
  */
-export default async function ProfilePage() {
+export default async function CompteProfilPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/connexion");
+    redirect("/compte/connexion");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, phone, avatar_url")
+    .select("display_name, phone")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -40,11 +38,10 @@ export default async function ProfilePage() {
 
       <section className="mt-6 max-w-md">
         <h2 className="text-sm font-medium text-gray-700">Identité</h2>
-        <ProfileForm
+        <IdentityForm
           profile={{
             displayName: profile?.display_name ?? "",
             phone: profile?.phone ?? "",
-            avatarUrl: profile?.avatar_url ?? null,
           }}
         />
       </section>

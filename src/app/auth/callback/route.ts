@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { roleHomePath } from "@/lib/auth-constants";
 
 /**
  * Point d'arrivée du lien magique envoyé par email (Supabase Auth).
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
         .eq("id", user.id)
         .maybeSingle();
 
-      const destination = profile?.role === "admin" ? "/admin" : "/dashboard";
+      const destination = roleHomePath(profile?.role);
       return NextResponse.redirect(`${origin}${destination}`);
     }
   }

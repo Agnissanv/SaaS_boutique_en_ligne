@@ -2,39 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { roleHomePath } from "@/lib/auth-constants";
 
 /**
- * Connexion vendeur/admin — deux méthodes (13/09/2026, suite à la remarque
- * d'Isaac : "ceux qui ont déjà un compte ne peuvent pas se connecter, ils
- * doivent générer un nouveau lien").
+ * Connexion client — portail séparé de /connexion (vendeur/admin), à la
+ * demande d'Isaac du 15/09/2026 ("on peut proposer un compte aux clients,
+ * mais pas obligatoire pour juste passer une commande"). Même mécanique
+ * Supabase Auth (un seul auth.users pour toute la plateforme, cf.
+ * migration 0014), mais audience et destination différentes : ici on
+ * redirige toujours vers /compte (historique de commandes), jamais vers
+ * /dashboard — pas de branchement par rôle nécessaire, ce portail n'est
+ * utilisé que pour ça.
  *
- * 1) Mot de passe (par défaut) : email + mot de passe → connexion instantanée.
- * 2) Lien magique (secours) : toujours disponible pour qui n'a pas encore
- *    défini de mot de passe, ou qui préfère ne pas en retenir un.
- *
- * "Mot de passe oublié" et "pas encore défini" utilisent le même mécanisme
- * (`resetPasswordForEmail`) : un compte créé jusqu'ici uniquement par lien
- * magique n'a pas de mot de passe dans `auth.users`, donc pour lui la
- * première définition passe par ce même flux — pas de distinction utile à
- * faire côté UI, et ça évite de révéler si un compte a déjà un mot de passe.
- *
- * Le lien de réinitialisation réutilise /auth/callback (voir ce fichier :
- * il gère déjà `?next=`) avec `next=/connexion/nouveau-mot-de-passe`.
- *
- * Mise à jour du 13/09/2026 (ajout de /inscription) : le lien magique ne
- * crée plus de compte implicitement (`shouldCreateUser: false`). Avant, il
- * suffisait de cliquer sur "recevoir le lien" avec n'importe quel email pour
- * créer un compte sans jamais renseigner de nom — le profil héritait par
- * défaut de la partie locale de l'email. Désormais, la création passe
- * uniquement par /inscription (nom + mot de passe collectés dès le départ),
- * et le lien magique redevient une simple méthode de connexion alternative
- * pour un compte déjà existant.
+ * Fonctionnalités calquées sur connexion-form.tsx (vendeur) : mot de passe +
+ * lien magique + mot de passe oublié — le lien magique est même plus adapté
+ * ici, beaucoup de clients WhatsApp/Instagram préférant ne rien retenir.
  */
-export function ConnexionForm() {
+export function ConnexionClientForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
@@ -59,24 +44,16 @@ export function ConnexionForm() {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
+    setPending(false);
+
     if (error || !data.user) {
-      setPending(false);
       setError(
         "Email ou mot de passe incorrect — ou pas encore de mot de passe défini pour ce compte. Utilise « mot de passe oublié » ci-dessous, ou connecte-toi par lien magique."
       );
       return;
     }
 
-    // Redirection selon le rôle, comme /auth/callback pour le lien magique —
-    // un portail de connexion unique qui reconnaît qui arrive (vendeur ou
-    // admin), cf. demande d'Isaac du 13/09/2026.
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .maybeSingle();
-
-    router.push(roleHomePath(profile?.role));
+    router.push("/compte");
     router.refresh();
   }
 
@@ -89,7 +66,7 @@ export function ConnexionForm() {
       email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/compte`,
       },
     });
 
@@ -115,9 +92,9 @@ export function ConnexionForm() {
     setError(null);
     setPending(true);
 
-    // On ignore volontairement le résultat détaillé (existence du compte) :
-    // même message dans tous les cas, pour ne pas révéler quels emails sont
-    // inscrits sur la plateforme.
+    // Réutilise la page partagée /connexion/nouveau-mot-de-passe (mécanique
+    // Supabase identique quel que soit le rôle) : elle redirige maintenant
+    // via roleHomePath(), donc un client atterrit bien sur /compte ensuite.
     await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/connexion/nouveau-mot-de-passe`,
     });
@@ -136,7 +113,7 @@ export function ConnexionForm() {
             <p className="mt-1 text-sm text-gray-600">
               {useMagicLink
                 ? "Reçois un lien de connexion par email."
-                : "Connecte-toi avec ton email et ton mot de passe."}
+                : "Retrouve tes commandes passées sur la plateforme."}
             </p>
 
             {!useMagicLink ? (
@@ -242,7 +219,7 @@ export function ConnexionForm() {
 
             <p className="mt-4 text-center text-sm text-gray-500">
               Pas encore de compte ?{" "}
-              <Link href="/inscription" className="underline">
+              <Link href="/compte/inscription" className="underline">
                 Créer un compte
               </Link>
             </p>

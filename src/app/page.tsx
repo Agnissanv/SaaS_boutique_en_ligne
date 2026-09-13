@@ -94,6 +94,9 @@ export default async function Home({
           <Link href="/favoris" className="text-sm font-medium text-gray-700 underline">
             Mes favoris
           </Link>
+          <Link href="/compte" className="text-sm font-medium text-gray-700 underline">
+            Mon compte
+          </Link>
           <Link
             href="/inscription"
             className="text-sm font-medium text-gray-700 underline"

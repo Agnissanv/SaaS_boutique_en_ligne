@@ -111,6 +111,12 @@ export default async function ShopPage({
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-2 flex justify-end">
+        <Link href="/compte" className="text-xs text-gray-500 underline">
+          Mon compte
+        </Link>
+      </div>
+
       {shop.cover_url ? (
         // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
         <img

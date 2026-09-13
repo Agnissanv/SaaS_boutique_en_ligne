@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PASSWORD_MIN_LENGTH as MIN_LENGTH } from "@/lib/auth-constants";
+import { PASSWORD_MIN_LENGTH as MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
 
 export function NouveauMotDePasseForm() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export function NouveauMotDePasseForm() {
       ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
       : { data: null };
 
-    router.push(profile?.role === "admin" ? "/admin" : "/dashboard");
+    router.push(roleHomePath(profile?.role));
     router.refresh();
   }
 

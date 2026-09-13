@@ -4,33 +4,23 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PASSWORD_MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
 
 /**
- * Inscription vendeur — ajoutée le 13/09/2026 à la demande d'Isaac ("vu
- * qu'on repart de façon propre, optimise bien les champs de signup/login") :
- * jusqu'ici, créer un compte se faisait uniquement en cliquant sur un lien
- * magique reçu par email (`signInWithOtp` avec `shouldCreateUser: true` dans
- * connexion-form.tsx), sans jamais capturer le nom du vendeur — le profil
- * héritait par défaut de la partie locale de l'email comme nom d'affichage.
+ * Inscription client — ajoutée le 15/09/2026 (§ comptes client optionnels,
+ * migration 0014). Calquée sur inscription-form.tsx (vendeur), avec deux
+ * différences : `role: "customer"` transmis dans les métadonnées de
+ * `signUp()` (handle_new_user() ne l'accepte que pour ce rôle précis, jamais
+ * pour 'admin' — voir la migration), et un champ téléphone collecté dès
+ * l'inscription, nécessaire pour proposer ensuite le rattachement des
+ * commandes passées en invité (claim_guest_orders).
  *
- * Cette page devient le point d'entrée normal pour créer un compte : email +
- * mot de passe + nom, avec le mot de passe choisi immédiatement (pas besoin
- * d'un aller-retour email pour en définir un comme avant). Le nom saisi est
- * transmis via `options.data.display_name` à `signUp()` — voir la migration
- * 0009 qui adapte le trigger `handle_new_user()` pour le récupérer.
- *
- * Le lien magique reste disponible à la connexion (/connexion) pour qui
- * préfère ne pas retenir de mot de passe, mais ne crée plus de compte
- * implicitement (`shouldCreateUser: false` désormais) : la création passe
- * uniquement par ici, pour garantir qu'un profil complet existe toujours.
- *
- * Ne collecte pas le nom de la boutique : cette étape reste dans
- * /dashboard/boutique (déjà fonctionnelle, avec upload logo/couverture,
- * catégorie, slug...), pour ne pas dupliquer ce formulaire ni créer une
- * boutique à moitié remplie avant que le vendeur ait vu le dashboard.
+ * Après création réussie ET session active, on appelle claim_guest_orders
+ * une première fois automatiquement (best-effort, jamais bloquant pour la
+ * redirection) : si le client a déjà commandé avec ce numéro avant de créer
+ * son compte, il retrouve tout de suite son historique sur /compte.
  */
-export function InscriptionForm() {
+export function InscriptionClientForm() {
   const router = useRouter();
   const supabase = createClient();
 
@@ -38,6 +28,7 @@ export function InscriptionForm() {
   const [view, setView] = useState<View>("form");
 
   const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -51,6 +42,10 @@ export function InscriptionForm() {
     const trimmedName = displayName.trim();
     if (trimmedName.length < 2) {
       setError("Indique ton nom (au moins 2 caractères).");
+      return;
+    }
+    if (coalescePhone(phone).length < 8) {
+      setError("Indique un numéro de téléphone valide.");
       return;
     }
     if (password.length < PASSWORD_MIN_LENGTH) {
@@ -68,8 +63,8 @@ export function InscriptionForm() {
       email,
       password,
       options: {
-        data: { display_name: trimmedName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: { display_name: trimmedName, phone: phone.trim(), role: "customer" },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/compte`,
       },
     });
 
@@ -84,29 +79,25 @@ export function InscriptionForm() {
       return;
     }
 
-    // Anti-énumération côté Supabase : pour un email déjà utilisé et déjà
-    // confirmé, `signUp` ne renvoie pas d'erreur mais un utilisateur dont
-    // `identities` est vide (aucune nouvelle identité créée).
     if (data.user && data.user.identities && data.user.identities.length === 0) {
       setView("compte-existant");
       return;
     }
 
     if (data.session) {
-      // Confirmation email désactivée côté projet : compte actif immédiat.
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user!.id)
-        .maybeSingle();
-
-      router.push(roleHomePath(profile?.role));
+      // Best-effort : ne bloque jamais l'accès au compte si ça échoue.
+      // (`.catch()` direct sur le builder Postgrest n'existe pas — c'est un
+      // PromiseLike, pas une vraie Promise — d'où le try/catch.)
+      try {
+        await supabase.rpc("claim_guest_orders");
+      } catch {
+        // ignore
+      }
+      router.push("/compte");
       router.refresh();
       return;
     }
 
-    // Confirmation email activée : pas de session tant que le lien reçu
-    // n'est pas cliqué.
     setView("confirmation-envoyee");
   }
 
@@ -118,7 +109,8 @@ export function InscriptionForm() {
         {view === "form" && (
           <>
             <p className="mt-1 text-sm text-gray-600">
-              Ouvre ta boutique en ligne en quelques minutes.
+              Retrouve facilement l&apos;historique de tes commandes, chez
+              n&apos;importe quel vendeur de la plateforme.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
@@ -139,6 +131,25 @@ export function InscriptionForm() {
                 placeholder="Ex : Awa Koné"
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm"
               />
+
+              <label className="text-sm font-medium text-gray-700" htmlFor="phone">
+                Téléphone
+              </label>
+              <input
+                id="phone"
+                name="tel"
+                type="tel"
+                required
+                autoComplete="tel"
+                placeholder="+225 07 00 00 00 00"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+              />
+              <p className="text-xs text-gray-400">
+                Sert à retrouver automatiquement tes commandes déjà passées
+                avec ce numéro, sans compte.
+              </p>
 
               <label className="text-sm font-medium text-gray-700" htmlFor="email">
                 Adresse email
@@ -200,7 +211,7 @@ export function InscriptionForm() {
 
             <p className="mt-4 text-center text-sm text-gray-500">
               Déjà un compte ?{" "}
-              <Link href="/connexion" className="underline">
+              <Link href="/compte/connexion" className="underline">
                 Se connecter
               </Link>
             </p>
@@ -215,7 +226,7 @@ export function InscriptionForm() {
               l&apos;activer. Pense à vérifier tes spams s&apos;il n&apos;arrive
               pas après quelques minutes.
             </p>
-            <Link href="/connexion" className="text-sm text-gray-500 underline">
+            <Link href="/compte/connexion" className="text-sm text-gray-500 underline">
               Retour à la connexion
             </Link>
           </div>
@@ -226,7 +237,7 @@ export function InscriptionForm() {
             <p className="text-sm text-gray-600">
               Un compte existe déjà avec l&apos;adresse {email}.
             </p>
-            <Link href="/connexion" className="text-sm text-gray-500 underline">
+            <Link href="/compte/connexion" className="text-sm text-gray-500 underline">
               Se connecter
             </Link>
           </div>
@@ -234,4 +245,8 @@ export function InscriptionForm() {
       </div>
     </div>
   );
+}
+
+function coalescePhone(phone: string): string {
+  return phone.replace(/\D/g, "");
 }
