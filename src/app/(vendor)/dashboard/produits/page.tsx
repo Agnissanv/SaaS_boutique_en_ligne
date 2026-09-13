@@ -97,6 +97,12 @@ export default async function ProductsPage() {
                 >
                   Modifier
                 </Link>
+                <Link
+                  href={`/dashboard/produits/nouveau?depuis=${product.id}`}
+                  className="text-sm text-gray-700 underline"
+                >
+                  Dupliquer
+                </Link>
                 <form
                   action={toggleProductActive.bind(
                     null,

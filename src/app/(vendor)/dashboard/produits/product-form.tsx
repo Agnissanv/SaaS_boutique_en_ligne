@@ -14,7 +14,10 @@ type Variant = { name: string; value: string };
 type Group = { name: string; values: string };
 
 type Product = {
-  id: string;
+  // Optionnel : absent en création normale ET en duplication (voir
+  // ProductForm plus bas). Présent uniquement en modification d'un produit
+  // existant — c'est ce qui distingue les deux cas, pas juste `product !== null`.
+  id?: string;
   title: string;
   description: string | null;
   category: string | null;
@@ -242,7 +245,7 @@ export function ProductForm({
 
   return (
     <form action={formAction} className="mt-6 flex max-w-md flex-col gap-4">
-      {product && <input type="hidden" name="productId" value={product.id} />}
+      {product?.id && <input type="hidden" name="productId" value={product.id} />}
 
       <div className="flex flex-col gap-1">
         <label htmlFor="title" className="text-sm font-medium text-gray-700">
@@ -364,7 +367,7 @@ export function ProductForm({
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
-      <SubmitButton isEdit={Boolean(product)} />
+      <SubmitButton isEdit={Boolean(product?.id)} />
     </form>
   );
 }
