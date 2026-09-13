@@ -78,7 +78,7 @@ export function CartCheckout({
       p_payment_method: paymentMethod,
       p_items: items.map((i) => ({
         product_id: i.productId,
-        variant_id: i.variantId ?? null,
+        variant_ids: i.variantIds ?? [],
         quantity: i.quantity,
       })),
       p_delivery_lat: deliveryLat,

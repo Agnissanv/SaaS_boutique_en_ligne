@@ -88,8 +88,7 @@ export default async function OrderConfirmationPage({
           (
             item: {
               product_title: string;
-              variant_name: string | null;
-              variant_value: string | null;
+              variant_label: string | null;
               quantity: number;
               unit_price: number;
             },
@@ -98,7 +97,7 @@ export default async function OrderConfirmationPage({
             <li key={index} className="flex justify-between py-2">
               <span>
                 {item.product_title}
-                {item.variant_name ? ` (${item.variant_name} : ${item.variant_value})` : ""}
+                {item.variant_label ? ` (${item.variant_label})` : ""}
                 {" × "}
                 {item.quantity}
               </span>

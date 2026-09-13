@@ -35,7 +35,9 @@ export default async function OrderDetailPage({
 
   const { data: order } = await supabase
     .from("orders")
-    .select("*, order_items(quantity, unit_price, products(title), product_variants(name, value))")
+    .select(
+      "*, order_items(quantity, unit_price, products(title), order_item_variants(product_variants(name, value)))"
+    )
     .eq("id", orderId)
     .eq("shop_id", shop.id)
     .maybeSingle();
@@ -94,21 +96,27 @@ export default async function OrderDetailPage({
             quantity: number;
             unit_price: number;
             products: { title: string } | null;
-            product_variants: { name: string; value: string } | null;
+            order_item_variants: { product_variants: { name: string; value: string } | null }[];
           }[]
-        ).map((item, index) => (
-          <li key={index} className="flex justify-between py-2">
-            <span>
-              {item.products?.title}
-              {item.product_variants
-                ? ` (${item.product_variants.name} : ${item.product_variants.value})`
-                : ""}
-              {" × "}
-              {item.quantity}
-            </span>
-            <span>{item.unit_price * item.quantity} FCFA</span>
-          </li>
-        ))}
+        ).map((item, index) => {
+          const variantLabel = item.order_item_variants
+            .map((v) => v.product_variants)
+            .filter((v): v is { name: string; value: string } => Boolean(v))
+            .map((v) => `${v.name}: ${v.value}`)
+            .join(", ");
+
+          return (
+            <li key={index} className="flex justify-between py-2">
+              <span>
+                {item.products?.title}
+                {variantLabel ? ` (${variantLabel})` : ""}
+                {" × "}
+                {item.quantity}
+              </span>
+              <span>{item.unit_price * item.quantity} FCFA</span>
+            </li>
+          );
+        })}
       </ul>
 
       <p className="mt-4 text-right text-lg font-medium text-gray-900">

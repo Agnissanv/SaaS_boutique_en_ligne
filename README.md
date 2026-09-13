@@ -114,6 +114,12 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
    dashboard Supabase (Authentication > Providers > Email), si "Confirm
    email" est activé ou non : les deux cas sont gérés côté formulaire
    (connexion immédiate si désactivé, message "vérifie ton email" sinon).
+9. **Sélection combinée de variantes corrigée (13/09/2026)** — appliquer la
+   migration `0010_multi_variant_order_items.sql` (remplace
+   `order_items.variant_id` par une table de jointure `order_item_variants`,
+   pour choisir une variante par groupe — Taille ET Couleur — au lieu d'une
+   seule au total). Sans base de commandes réelle à migrer, la colonne a été
+   retirée directement plutôt que gardée en doublon.
 
 ## Structure du projet
 

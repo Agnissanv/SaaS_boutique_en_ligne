@@ -3,14 +3,16 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 export type CartItem = {
-  /** Combine product_id + variant_id : deux lignes différentes si variantes différentes. */
+  /** Combine product_id + variant_ids (triés) : deux lignes différentes si combinaison différente. */
   key: string;
   productId: string;
   productSlug: string;
   title: string;
   price: number;
   imageUrl?: string;
-  variantId?: string;
+  /** Une variante par groupe (ex: une Taille ET une Couleur), pas une seule au total — cf. migration 0010. */
+  variantIds?: string[];
+  /** Libellé combiné pour l'affichage, ex: "Taille: XL, Couleur: Rouge". */
   variantLabel?: string;
   quantity: number;
 };
@@ -125,7 +127,12 @@ export function useShopCart(shopSlug: string) {
 
   const addItem = useCallback(
     (item: Omit<CartItem, "key">) => {
-      const key = item.variantId ? `${item.productId}:${item.variantId}` : item.productId;
+      // Triées pour que l'ordre de sélection (Taille puis Couleur, ou
+      // l'inverse) ne crée pas deux lignes de panier pour la même combinaison.
+      const key =
+        item.variantIds && item.variantIds.length > 0
+          ? `${item.productId}:${[...item.variantIds].sort().join(",")}`
+          : item.productId;
       const current = readCart(shopSlug);
       const existing = current.find((i) => i.key === key);
       const next = existing
