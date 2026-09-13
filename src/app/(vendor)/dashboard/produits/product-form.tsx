@@ -363,9 +363,6 @@ export function ProductForm({
       <PhotoGallery initialUrls={images} />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-      {state.success && (
-        <p className="text-sm text-green-600">Produit enregistré.</p>
-      )}
 
       <SubmitButton isEdit={Boolean(product)} />
     </form>

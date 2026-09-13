@@ -1,4 +1,5 @@
 import { createClient } from "./client";
+import { SHOP_ASSETS_BUCKET, storagePathFromPublicUrl } from "./storage-path";
 
 /**
  * Upload/suppression d'images dans le bucket public "shop-assets".
@@ -12,7 +13,7 @@ import { createClient } from "./client";
  * vendeur ne peut écrire que dans le dossier de sa propre boutique.
  */
 
-const BUCKET = "shop-assets";
+const BUCKET = SHOP_ASSETS_BUCKET;
 const MAX_FILE_SIZE_MB = 5;
 
 export class ImageUploadError extends Error {}
@@ -80,11 +81,9 @@ export async function uploadShopAssetImage(
  * sont avalées, un fichier orphelin dans le bucket n'est pas bloquant).
  */
 export async function deleteShopAssetImageByUrl(url: string): Promise<void> {
-  const marker = `/object/public/${BUCKET}/`;
-  const index = url.indexOf(marker);
-  if (index === -1) return;
+  const path = storagePathFromPublicUrl(url);
+  if (!path) return;
 
-  const path = decodeURIComponent(url.slice(index + marker.length));
   const supabase = createClient();
   await supabase.storage.from(BUCKET).remove([path]);
 }

@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
 import { getShopSubscription } from "@/lib/subscription";
+import { SHOP_ASSETS_BUCKET, storagePathFromPublicUrl } from "@/lib/supabase/storage-path";
 
 export type ProductFormState = {
   error?: string;
-  success?: boolean;
 };
 
 /**
@@ -225,7 +226,12 @@ export async function saveProduct(
   }
 
   revalidatePath("/dashboard/produits");
-  return { success: true };
+  // Redirection vers la liste plutôt que de rester sur le formulaire —
+  // signalé par Isaac le 13/09/2026 : un vendeur qui reste sur l'écran de
+  // remplissage après avoir enregistré peut croire que rien ne s'est passé,
+  // même avec un message "Produit enregistré" affiché. Revoir son produit
+  // apparaître dans la liste est une confirmation beaucoup plus claire.
+  redirect("/dashboard/produits");
 }
 
 /** Active/désactive un produit (retiré de la boutique publique sans le supprimer). */
@@ -248,7 +254,44 @@ export async function toggleProductActive(productId: string, nextActive: boolean
   revalidatePath("/dashboard/produits");
 }
 
-/** Suppression douce : le produit disparaît de la liste et de la boutique publique. */
+/**
+ * Supprime les photos Storage d'un produit (best-effort) et leurs lignes
+ * `product_images` — appelé juste après une suppression de produit, pour ne
+ * pas laisser trainer indéfiniment des fichiers qui ne seront plus jamais
+ * affichés (question posée par Isaac le 13/09/2026 : les photos restaient
+ * en Storage après suppression d'un produit, gaspillant de l'espace pour
+ * rien). Best-effort côté Storage : si la suppression échoue (réseau, etc.),
+ * on continue quand même — un fichier orphelin dans le bucket n'est pas
+ * bloquant, contrairement à un produit qui resterait mal supprimé.
+ */
+async function deleteProductAssets(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productId: string
+) {
+  const { data: images } = await supabase
+    .from("product_images")
+    .select("url")
+    .eq("product_id", productId);
+
+  const paths = (images ?? [])
+    .map((img) => storagePathFromPublicUrl(img.url))
+    .filter((path): path is string => Boolean(path));
+
+  if (paths.length > 0) {
+    await supabase.storage.from(SHOP_ASSETS_BUCKET).remove(paths);
+  }
+
+  await supabase.from("product_images").delete().eq("product_id", productId);
+}
+
+/**
+ * Suppression douce : le produit disparaît de la liste et de la boutique
+ * publique (`deleted_at`, pas de fonctionnalité de restauration dans
+ * l'app — voir `dashboard/produits/page.tsx`, qui filtre définitivement les
+ * produits supprimés). Comme un produit supprimé ne redevient jamais
+ * visible, ses photos sont nettoyées de Storage au même moment plutôt que
+ * gardées indéfiniment.
+ */
 export async function deleteProduct(productId: string) {
   const supabase = await createClient();
   const {
@@ -259,11 +302,19 @@ export async function deleteProduct(productId: string) {
   const shopId = await getOwnedShopId(supabase, user.id);
   if (!shopId) return;
 
-  await supabase
+  const { data: updated } = await supabase
     .from("products")
     .update({ deleted_at: new Date().toISOString(), is_active: false })
     .eq("id", productId)
-    .eq("shop_id", shopId);
+    .eq("shop_id", shopId)
+    .select("id")
+    .maybeSingle();
+
+  // Aucune ligne touchée (produit inexistant ou d'une autre boutique) :
+  // rien à nettoyer.
+  if (updated) {
+    await deleteProductAssets(supabase, productId);
+  }
 
   revalidatePath("/dashboard/produits");
 }
