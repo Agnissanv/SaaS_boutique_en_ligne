@@ -1,0 +1,57 @@
+import Link from "next/link";
+import { Stars } from "@/components/stars";
+import { categoryLabel } from "@/lib/categories";
+
+export type MarketplaceShop = {
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  category: string | null;
+  rating: { average: number; count: number } | null;
+};
+
+/**
+ * Carte boutique — bande "Boutiques de la plateforme" ajoutée le 13/09/2026
+ * (retour d'Isaac : "quelles améliorations proposes-tu ?", "on a des
+ * concurrents bien musclés"). La marketplace ne mettait en avant jusqu'ici
+ * que des produits, jamais les boutiques elles-mêmes (limite explicitement
+ * notée comme "non fait" le 13/09/2026 lors de la construction initiale de
+ * la marketplace) — utile pour qu'un client découvre un vendeur, pas
+ * seulement un article isolé.
+ *
+ * Réutilise `getShopRating` (créé le 14/09/2026 pour la fiche boutique) au
+ * lieu d'un nouveau calcul : même note de confiance affichée partout.
+ */
+export function ShopCard({ shop, className }: { shop: MarketplaceShop; className?: string }) {
+  return (
+    <Link
+      href={`/${shop.slug}`}
+      className={`flex flex-col items-center gap-2 rounded border border-gray-200 p-3 text-center ${
+        className ?? ""
+      }`}
+    >
+      {shop.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
+        <img
+          src={shop.logoUrl}
+          alt={shop.name}
+          className="h-16 w-16 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
+          {shop.name.charAt(0).toUpperCase()}
+        </div>
+      )}
+      <p className="w-full truncate text-sm font-medium text-gray-900">{shop.name}</p>
+      {shop.category ? (
+        <p className="text-xs text-gray-500">{categoryLabel(shop.category)}</p>
+      ) : null}
+      {shop.rating ? (
+        <p className="text-xs text-gray-500">
+          <Stars rating={shop.rating.average} />{" "}
+          <span>({shop.rating.count})</span>
+        </p>
+      ) : null}
+    </Link>
+  );
+}

@@ -4,7 +4,9 @@ import { categoryLabel } from "@/lib/categories";
 import { SortSelect } from "@/components/sort-select";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard, type MarketplaceCardProduct } from "@/components/product-card";
+import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { buildMarketplaceHref } from "@/lib/marketplace/filters";
+import { getShopRating } from "@/lib/reviews";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -24,12 +26,19 @@ import { buildMarketplaceHref } from "@/lib/marketplace/filters";
 // volume de produits par catégorie qu'un catalogue qui démarre n'a pas
 // encore — copier telle quelle donnerait des carrousels à moitié vides.
 // Adapté ici à ce qu'on a réellement : en-tête + recherche, catégories,
-// bannière d'accroche, argumentaire de confiance, nouveautés, catalogue
-// complet filtrable. Identité visuelle volontairement neutre (mêmes classes
-// Tailwind gris que le reste de l'app).
+// bannière d'accroche, argumentaire de confiance, boutiques, nouveautés,
+// catalogue complet filtrable. Identité visuelle volontairement neutre
+// (mêmes classes Tailwind gris que le reste de l'app).
+//
+// Complété le 13/09/2026, à la demande d'Isaac ("quelles améliorations
+// proposes-tu ?", "on a des concurrents bien musclés") : repli propre sur
+// image cassée, boutique cliquable depuis une carte produit, résumé des
+// filtres actifs avec compteur de résultats, en-tête collant au défilement,
+// et bande "Boutiques de la plateforme".
 
 const PAGE_SIZE = 24;
 const NEW_ARRIVALS_SIZE = 8;
+const FEATURED_SHOPS_SIZE = 8;
 
 const SORTS = [
   { value: "recent", label: "Plus récent" },
@@ -50,8 +59,8 @@ type RawMarketplaceProduct = {
 
 // Normalise la forme `shop` renvoyée par Supabase (objet ou tableau selon le
 // contexte de la requête) et calcule la vignette — utilisé pour les deux
-// requêtes de cette page (nouveautés + catalogue), d'où l'extraction ici
-// plutôt qu'une logique dupliquée dans les deux `.map()`.
+// requêtes produit de cette page (nouveautés + catalogue), d'où l'extraction
+// ici plutôt qu'une logique dupliquée dans les deux `.map()`.
 function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct | null {
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
   if (!shop) return null;
@@ -117,10 +126,23 @@ export default async function Home({
     .order("created_at", { ascending: false })
     .limit(NEW_ARRIVALS_SIZE);
 
-  const [{ data: products, count }, { data: newArrivals }] = await Promise.all([
-    catalogueQuery,
-    newArrivalsQuery,
-  ]);
+  // Bande "Boutiques de la plateforme" : jusqu'ici la marketplace ne mettait
+  // en avant que des produits, jamais les boutiques elles-mêmes (noté "non
+  // fait" le 13/09/2026 à la construction initiale). Tri par nombre de vues
+  // (`shops.view_count`, existant depuis le 13/09/2026) — un signal de
+  // popularité simple, sans introduire de nouvelle notion.
+  const featuredShopsQuery = supabase
+    .from("shops")
+    .select("id, slug, name, logo_url, category")
+    .eq("status", "active")
+    .order("view_count", { ascending: false })
+    .limit(FEATURED_SHOPS_SIZE);
+
+  const [
+    { data: products, count },
+    { data: newArrivals },
+    { data: featuredShopsRaw },
+  ] = await Promise.all([catalogueQuery, newArrivalsQuery, featuredShopsQuery]);
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
   const catalogueProducts = ((products ?? []) as RawMarketplaceProduct[])
@@ -130,13 +152,43 @@ export default async function Home({
     .map(toCardProduct)
     .filter((p): p is MarketplaceCardProduct => p !== null);
 
+  // Note de confiance par boutique : réutilise `getShopRating` (0014/§4,
+  // déjà utilisée sur la fiche boutique), une requête par boutique en
+  // parallèle — nombre de boutiques mises en avant volontairement plafonné
+  // (FEATURED_SHOPS_SIZE) pour que ce fan-out reste raisonnable.
+  const featuredShops: MarketplaceShop[] = await Promise.all(
+    (featuredShopsRaw ?? []).map(async (shop) => ({
+      slug: shop.slug as string,
+      name: shop.name as string,
+      logoUrl: shop.logo_url as string | null,
+      category: shop.category as string | null,
+      rating: await getShopRating(supabase, shop.id as string),
+    }))
+  );
+
+  // Résumé des filtres actifs + compteur de résultats, affiché au-dessus de
+  // la grille du catalogue (retour d'Isaac : un lien "réinitialiser"
+  // n'existait qu'en cas de recherche texte, pas de filtre catégorie seul —
+  // et rien n'indiquait le nombre de résultats en dehors d'un filtre).
+  const hasFilter = Boolean(q || categorie);
+  const resultLabel = `${count ?? 0} article${(count ?? 0) === 1 ? "" : "s"}`;
+  const filterSummary = q && categorie
+    ? `${resultLabel} pour « ${q} » dans ${categoryLabel(categorie)}`
+    : q
+      ? `${resultLabel} pour « ${q} »`
+      : categorie
+        ? `${resultLabel} dans ${categoryLabel(categorie)}`
+        : `${resultLabel} au catalogue`;
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
       {/* En-tête : logo/texte de marque + recherche, réunis dans une seule
           barre (au lieu d'une recherche séparée plus bas comme avant) — la
           recherche est la première action qu'un visiteur façon Jumia doit
-          voir, pas quelque chose à découvrir en scrollant. */}
-      <header className="flex flex-wrap items-center gap-4">
+          voir, pas quelque chose à découvrir en scrollant. Collant au
+          défilement (13/09/2026, retour d'Isaac) : reste accessible une
+          fois qu'on a scrollé plus bas dans un catalogue qui s'allonge. */}
+      <header className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-4 border-b border-gray-100 bg-white px-4 py-3">
         <Link href="/" className="shrink-0 text-lg font-semibold text-gray-900">
           Boutique
         </Link>
@@ -227,6 +279,20 @@ export default async function Home({
         ))}
       </section>
 
+      {/* Boutiques de la plateforme : met en avant les vendeurs eux-mêmes,
+          pas seulement leurs produits (ajouté le 13/09/2026, voir l'en-tête
+          du fichier). Masquée si aucune boutique active n'existe encore. */}
+      {featuredShops.length > 0 ? (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-900">Boutiques de la plateforme</h2>
+          <div className="-mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-2">
+            {featuredShops.map((shop) => (
+              <ShopCard key={shop.slug} shop={shop} className="w-32 shrink-0" />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* Nouveautés : bande à défilement horizontal, indépendante des
           filtres du catalogue plus bas (voir la requête dédiée). Masquée si
           la marketplace n'a pas encore assez de produits pour que ça vaille
@@ -258,19 +324,24 @@ export default async function Home({
             categorie={categorie}
           />
         </div>
-        {q ? (
-          <p className="mt-1 text-xs text-gray-500">
-            Résultats pour «&nbsp;{q}&nbsp;»
-            {categorie ? ` dans ${categoryLabel(categorie)}` : ""} —{" "}
-            <Link href={buildMarketplaceHref(current, { q: undefined, page: undefined })} className="underline">
-              réinitialiser la recherche
-            </Link>
-          </p>
-        ) : null}
+        <p className="mt-1 text-xs text-gray-500">
+          {filterSummary}
+          {hasFilter ? (
+            <>
+              {" — "}
+              <Link
+                href={buildMarketplaceHref(current, { q: undefined, categorie: undefined, page: undefined })}
+                className="underline"
+              >
+                réinitialiser les filtres
+              </Link>
+            </>
+          ) : null}
+        </p>
 
         {catalogueProducts.length === 0 ? (
           <p className="mt-10 text-sm text-gray-600">
-            {q || categorie
+            {hasFilter
               ? "Aucun article ne correspond à ta recherche."
               : "Aucun article disponible pour l'instant — reviens bientôt."}
           </p>
