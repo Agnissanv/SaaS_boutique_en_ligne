@@ -149,12 +149,21 @@ export async function saveProduct(
       return { error: "Échec de la mise à jour. Réessaie." };
     }
   } else {
-    // Création : slug unique au sein de la boutique (contrainte unique(shop_id, slug)).
+    // Slug unique au sein de la boutique (contrainte unique(shop_id, slug)).
+    // 5 essais séquentiels lisibles (-2, -3...) d'abord, puis un suffixe
+    // aléatoire si ça ne suffit pas : la suppression de produit est "douce"
+    // (deleted_at, pas une vraie suppression — voir deleteProductAssets plus
+    // bas), donc les slugs de produits de test supprimés restent occupés au
+    // niveau de la contrainte. Un vendeur qui recrée plusieurs fois un
+    // produit du même nom en testant peut ainsi épuiser les 5 essais
+    // séquentiels — bug trouvé le 15/09/2026 (Isaac bloqué en boucle sur
+    // "Échec de la création", root cause confirmée via les logs Vercel :
+    // 23505 duplicate key sur products_shop_id_slug_key).
     const baseSlug = slugify(title) || "produit";
     let slug = baseSlug;
     let attempt = 0;
 
-    while (attempt < 5) {
+    while (attempt < 8) {
       const { data: existing } = await supabase
         .from("products")
         .select("id")
@@ -164,10 +173,13 @@ export async function saveProduct(
 
       if (!existing) break;
       attempt += 1;
-      slug = `${baseSlug}-${attempt + 1}`;
+      slug =
+        attempt <= 5
+          ? `${baseSlug}-${attempt + 1}`
+          : `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
     }
 
-    const { data: inserted, error } = await supabase
+    let { data: inserted, error } = await supabase
       .from("products")
       .insert({
         shop_id: shopId,
@@ -182,6 +194,29 @@ export async function saveProduct(
       })
       .select("id")
       .single();
+
+    // Filet de sécurité : même après la boucle ci-dessus, une vraie collision
+    // de dernière minute (23505) ne doit pas bloquer le vendeur — un seul
+    // retry avec un suffixe aléatoire suffit, la probabilité d'une deuxième
+    // collision est négligeable.
+    if (error?.code === "23505") {
+      slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+      ({ data: inserted, error } = await supabase
+        .from("products")
+        .insert({
+          shop_id: shopId,
+          slug,
+          title,
+          description: description || null,
+          category: category || null,
+          price,
+          compare_at_price: compareAtPrice,
+          stock,
+          tags,
+        })
+        .select("id")
+        .single());
+    }
 
     if (error || !inserted) {
       console.error("saveProduct (création) — erreur Supabase:", error);
