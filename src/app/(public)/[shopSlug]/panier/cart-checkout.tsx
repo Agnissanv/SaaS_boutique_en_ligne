@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { createClient } from "@/lib/supabase/client";
+import { notifyVendorNewOrder } from "./notify-vendor-action";
 
 type Step = "panier" | "commande";
 
@@ -102,6 +103,9 @@ export function CartCheckout({
     }
 
     clear();
+    // Best-effort, non bloquant : on ne fait jamais attendre le client pour
+    // l'envoi d'un email au vendeur (voir notify-vendor-action.ts).
+    notifyVendorNewOrder(orderId).catch(() => {});
     router.push(`/${shopSlug}/commande/${orderId}`);
   }
 

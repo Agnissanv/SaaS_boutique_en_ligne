@@ -45,7 +45,16 @@ export default async function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Commandes</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-gray-900">Commandes</h1>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- route API (fichier à télécharger), pas une page Next : <Link> tenterait une navigation client au lieu d'un téléchargement */}
+        <a
+          href="/api/dashboard/commandes/export"
+          className="text-sm text-gray-700 underline"
+        >
+          Exporter en CSV
+        </a>
+      </div>
 
       {(orders ?? []).length === 0 ? (
         <p className="mt-4 text-sm text-gray-600">

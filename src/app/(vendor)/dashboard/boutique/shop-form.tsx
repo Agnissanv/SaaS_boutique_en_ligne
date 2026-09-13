@@ -19,6 +19,8 @@ type Shop = {
   logo_url?: string | null;
   cover_url?: string | null;
   delivery_fee?: number | null;
+  whatsapp_number?: string | null;
+  notification_email?: string | null;
 };
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -211,10 +213,55 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
         </p>
       </div>
 
+      <div className="flex flex-col gap-1">
+        <label htmlFor="whatsappNumber" className="text-sm font-medium text-gray-700">
+          Numéro WhatsApp <span className="text-gray-400">(optionnel)</span>
+        </label>
+        <input
+          id="whatsappNumber"
+          name="whatsappNumber"
+          type="tel"
+          placeholder="+225 07 00 00 00 00"
+          defaultValue={shop?.whatsapp_number ?? ""}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-gray-400">
+          Affiche un bouton « Contacter sur WhatsApp » sur ta boutique et tes
+          fiches produit. Laisse vide pour ne pas l&apos;afficher.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="notificationEmail" className="text-sm font-medium text-gray-700">
+          Email pour les notifications de commande{" "}
+          <span className="text-gray-400">(optionnel)</span>
+        </label>
+        <input
+          id="notificationEmail"
+          name="notificationEmail"
+          type="email"
+          placeholder="Laisse vide pour ne recevoir aucun email"
+          defaultValue={shop?.notification_email ?? ""}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-gray-400">
+          Reçois un email à chaque nouvelle commande. Peut être différent de
+          ton email de connexion.
+        </p>
+      </div>
+
       {shop && (
         <p className="text-xs text-gray-500">
           Lien public :{" "}
-          <span className="font-mono">/{shop.slug}</span> (non modifiable ici)
+          <a
+            href={`/${shop.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono underline"
+          >
+            /{shop.slug}
+          </a>{" "}
+          (non modifiable ici)
         </p>
       )}
 

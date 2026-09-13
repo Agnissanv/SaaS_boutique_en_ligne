@@ -255,6 +255,35 @@ export async function toggleProductActive(productId: string, nextActive: boolean
 }
 
 /**
+ * Active/désactive plusieurs produits d'un coup — ajouté le 15/09/2026 en
+ * réponse au mandat d'Isaac ("essentiel pour concurrencer") : un vendeur
+ * avec un large catalogue (ex : fin de collection, rupture fournisseur
+ * généralisée) devait jusqu'ici cliquer "Désactiver" produit par produit.
+ * `.in("id", productIds)` combiné à `.eq("shop_id", shopId)` : même garantie
+ * de propriété que les actions unitaires, même en cas d'id trafiqué côté
+ * client (un id qui n'appartient pas à ce vendeur est simplement ignoré,
+ * pas d'erreur).
+ */
+export async function bulkToggleActive(productIds: string[], nextActive: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const shopId = await getOwnedShopId(supabase, user.id);
+  if (!shopId || productIds.length === 0) return;
+
+  await supabase
+    .from("products")
+    .update({ is_active: nextActive, updated_at: new Date().toISOString() })
+    .in("id", productIds)
+    .eq("shop_id", shopId);
+
+  revalidatePath("/dashboard/produits");
+}
+
+/**
  * Supprime les photos Storage d'un produit (best-effort) et leurs lignes
  * `product_images` — appelé juste après une suppression de produit, pour ne
  * pas laisser trainer indéfiniment des fichiers qui ne seront plus jamais

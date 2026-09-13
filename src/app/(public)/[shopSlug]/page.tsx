@@ -7,6 +7,7 @@ import { SortSelect } from "@/components/sort-select";
 import { Stars } from "@/components/stars";
 import { getShopRating } from "@/lib/reviews";
 import { WishlistButton } from "@/components/wishlist-button";
+import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 
 type PublicProduct = {
   id: string;
@@ -72,7 +73,7 @@ export default async function ShopPage({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, name, description, logo_url, cover_url")
+    .select("id, name, description, logo_url, cover_url, whatsapp_number")
     .eq("slug", shopSlug)
     .eq("status", "active")
     .maybeSingle();
@@ -140,6 +141,14 @@ export default async function ShopPage({
           )}
           {shop.description ? (
             <p className="mt-1 text-sm text-gray-600">{shop.description}</p>
+          ) : null}
+          {shop.whatsapp_number ? (
+            <div className="mt-2">
+              <WhatsappContactButton
+                whatsappNumber={shop.whatsapp_number}
+                message={`Bonjour, j'ai une question sur votre boutique « ${shop.name} ».`}
+              />
+            </div>
           ) : null}
         </div>
       </header>

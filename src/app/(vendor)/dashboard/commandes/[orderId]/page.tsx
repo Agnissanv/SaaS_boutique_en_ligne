@@ -1,16 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StatusForm } from "./status-form";
+import { toWhatsappNumber } from "@/lib/utils/whatsapp";
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash_on_delivery: "Paiement à la livraison",
   mobile_money: "Mobile Money",
 };
-
-/** "+225 07 00 00 00 00" -> "22507000000" (format attendu par wa.me) */
-function toWhatsappNumber(phone: string): string {
-  return phone.replace(/[^0-9]/g, "");
-}
 
 export default async function OrderDetailPage({
   params,

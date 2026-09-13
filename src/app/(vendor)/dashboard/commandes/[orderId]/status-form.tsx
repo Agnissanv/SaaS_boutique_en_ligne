@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { updateOrderStatus } from "../actions";
+import { toWhatsappNumber } from "@/lib/utils/whatsapp";
 
 const STATUSES = [
   { value: "pending", label: "En attente" },
@@ -22,11 +23,6 @@ const WHATSAPP_STATUS_MESSAGES: Partial<Record<string, string>> = {
   delivered: "ta commande a été livrée. N'hésite pas à laisser un avis !",
   cancelled: "ta commande a malheureusement été annulée.",
 };
-
-/** "+225 07 00 00 00 00" -> "22507000000" (format attendu par wa.me) */
-function toWhatsappNumber(phone: string): string {
-  return phone.replace(/[^0-9]/g, "");
-}
 
 export function StatusForm({
   orderId,

@@ -7,6 +7,7 @@ import { WhatsappShareButton } from "./whatsapp-share-button";
 import { Stars } from "@/components/stars";
 import { WishlistButton } from "@/components/wishlist-button";
 import { getShopRating } from "@/lib/reviews";
+import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 
 const LOW_STOCK_THRESHOLD = 5;
 const RELATED_LIMIT = 4;
@@ -68,7 +69,7 @@ export default async function ProductPage({
   const { data: product } = await supabase
     .from("products")
     .select(
-      "*, shop:shops!inner(id, slug, name, status), product_images(url, position), product_variants(id, name, value, extra_price)"
+      "*, shop:shops!inner(id, slug, name, status, whatsapp_number), product_images(url, position), product_variants(id, name, value, extra_price)"
     )
     .eq("slug", productSlug)
     .eq("shop.slug", shopSlug)
@@ -178,8 +179,14 @@ export default async function ProductPage({
         </p>
       ) : null}
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <WhatsappShareButton title={product.title} />
+        {shop.whatsapp_number ? (
+          <WhatsappContactButton
+            whatsappNumber={shop.whatsapp_number}
+            message={`Bonjour, je suis intéressé(e) par « ${product.title} ».`}
+          />
+        ) : null}
       </div>
 
       <AddToCartForm

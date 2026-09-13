@@ -39,6 +39,13 @@ export async function saveShop(
   // Frais de livraison : optionnel, null si laissé vide (le client verra
   // alors "à confirmer avec le vendeur" — voir migration 0012).
   const deliveryFeeRaw = String(formData.get("deliveryFee") ?? "").trim();
+  // Contact WhatsApp + email de notification — ajoutés le 15/09/2026 (voir
+  // migration 0013). Tous deux optionnels, aucune validation de format
+  // stricte : un numéro WhatsApp peut avoir des formats variés selon le
+  // pays, et une adresse mal formée échouera simplement silencieusement à
+  // l'envoi plutôt que de bloquer l'enregistrement de la boutique.
+  const whatsappNumber = String(formData.get("whatsappNumber") ?? "").trim();
+  const notificationEmail = String(formData.get("notificationEmail") ?? "").trim();
 
   if (!name || name.length < 2) {
     return { error: "Le nom de la boutique est trop court." };
@@ -70,6 +77,8 @@ export async function saveShop(
         logo_url: logoUrl || null,
         cover_url: coverUrl || null,
         delivery_fee: deliveryFee,
+        whatsapp_number: whatsappNumber || null,
+        notification_email: notificationEmail || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", shopId)
@@ -108,6 +117,8 @@ export async function saveShop(
         logo_url: logoUrl || null,
         cover_url: coverUrl || null,
         delivery_fee: deliveryFee,
+        whatsapp_number: whatsappNumber || null,
+        notification_email: notificationEmail || null,
       })
       .select("id")
       .single();

@@ -29,7 +29,7 @@ export default async function DashboardLayout({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id")
+    .select("id, slug")
     .eq("owner_id", user.id)
     .maybeSingle();
 
@@ -37,11 +37,26 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center gap-4 border-b border-gray-200 px-4 py-3 text-sm">
+      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 text-sm">
         <Link href="/dashboard">Aperçu</Link>
         <Link href="/dashboard/produits">Produits</Link>
         <Link href="/dashboard/commandes">Commandes</Link>
         <Link href="/dashboard/boutique">Ma boutique</Link>
+        <Link href="/dashboard/avis">Avis</Link>
+        <Link href="/dashboard/paiements">Paiements</Link>
+        <Link href="/dashboard/abonnement">Abonnement</Link>
+        <Link href="/dashboard/profil">Profil</Link>
+        <Link href="/dashboard/aide">Aide</Link>
+        {shop?.slug && (
+          <a
+            href={`/${shop.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-gray-500 underline"
+          >
+            Voir ma boutique ↗
+          </a>
+        )}
         <form action={signOut} className="ml-auto">
           <button type="submit" className="text-gray-500 underline">
             Déconnexion
