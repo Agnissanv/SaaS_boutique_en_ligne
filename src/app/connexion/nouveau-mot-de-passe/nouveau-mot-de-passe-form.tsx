@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-const MIN_LENGTH = 8;
+import { PASSWORD_MIN_LENGTH as MIN_LENGTH } from "@/lib/auth-constants";
 
 export function NouveauMotDePasseForm() {
   const router = useRouter();
@@ -56,9 +55,11 @@ export function NouveauMotDePasseForm() {
       </label>
       <input
         id="password"
+        name="new-password"
         type="password"
         required
         autoFocus
+        autoComplete="new-password"
         minLength={MIN_LENGTH}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -71,8 +72,10 @@ export function NouveauMotDePasseForm() {
       </label>
       <input
         id="confirm"
+        name="confirm-password"
         type="password"
         required
+        autoComplete="new-password"
         minLength={MIN_LENGTH}
         value={confirm}
         onChange={(e) => setConfirm(e.target.value)}

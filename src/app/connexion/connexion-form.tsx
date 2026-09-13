@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +23,15 @@ import { createClient } from "@/lib/supabase/client";
  *
  * Le lien de réinitialisation réutilise /auth/callback (voir ce fichier :
  * il gère déjà `?next=`) avec `next=/connexion/nouveau-mot-de-passe`.
+ *
+ * Mise à jour du 13/09/2026 (ajout de /inscription) : le lien magique ne
+ * crée plus de compte implicitement (`shouldCreateUser: false`). Avant, il
+ * suffisait de cliquer sur "recevoir le lien" avec n'importe quel email pour
+ * créer un compte sans jamais renseigner de nom — le profil héritait par
+ * défaut de la partie locale de l'email. Désormais, la création passe
+ * uniquement par /inscription (nom + mot de passe collectés dès le départ),
+ * et le lien magique redevient une simple méthode de connexion alternative
+ * pour un compte déjà existant.
  */
 export function ConnexionForm() {
   const searchParams = useSearchParams();
@@ -77,7 +87,7 @@ export function ConnexionForm() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true,
+        shouldCreateUser: false,
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -88,7 +98,7 @@ export function ConnexionForm() {
       setError(
         error.message.includes("rate limit")
           ? "Trop de tentatives : réessaie dans quelques minutes."
-          : "Impossible d'envoyer l'email. Vérifie l'adresse."
+          : "Impossible d'envoyer l'email — vérifie l'adresse, ou crée un compte si tu n'en as pas encore."
       );
       return;
     }
@@ -135,9 +145,11 @@ export function ConnexionForm() {
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   required
                   autoFocus
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="toi@exemple.com"
@@ -158,8 +170,10 @@ export function ConnexionForm() {
                 </div>
                 <input
                   id="password"
+                  name="password"
                   type="password"
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -194,9 +208,11 @@ export function ConnexionForm() {
                 </label>
                 <input
                   id="email-magic"
+                  name="email"
                   type="email"
                   required
                   autoFocus
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="toi@exemple.com"
@@ -222,6 +238,13 @@ export function ConnexionForm() {
                 </button>
               </form>
             )}
+
+            <p className="mt-4 text-center text-sm text-gray-500">
+              Pas encore de compte ?{" "}
+              <Link href="/inscription" className="underline">
+                Créer un compte
+              </Link>
+            </p>
           </>
         )}
 

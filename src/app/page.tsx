@@ -78,7 +78,7 @@ export default async function Home({
           Trouve ton prochain achat
         </h1>
         <Link
-          href="/connexion"
+          href="/inscription"
           className="shrink-0 text-sm font-medium text-gray-700 underline"
         >
           Vendre sur la plateforme

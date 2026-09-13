@@ -105,6 +105,15 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 7. **Blocage abonnement expiré** — aucune configuration Supabase requise, ni
    nouvelle migration : la logique est entièrement calculée côté application
    (`src/lib/subscription.ts`) à partir des colonnes déjà existantes.
+8. **Vraie page d'inscription ajoutée (13/09/2026)** — `/inscription` (email +
+   mot de passe + nom) remplace le lien magique comme point d'entrée pour
+   créer un compte. Appliquer la migration `0009_signup_display_name.sql`
+   (adapte le trigger `handle_new_user()` pour récupérer le nom saisi). Le
+   lien magique (`/connexion`) reste disponible mais ne crée plus de compte
+   implicitement (`shouldCreateUser: false`) — vérifier si besoin, dans le
+   dashboard Supabase (Authentication > Providers > Email), si "Confirm
+   email" est activé ou non : les deux cas sont gérés côté formulaire
+   (connexion immédiate si désactivé, message "vérifie ton email" sinon).
 
 ## Structure du projet
 
