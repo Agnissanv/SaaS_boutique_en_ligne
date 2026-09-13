@@ -120,6 +120,15 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
    pour choisir une variante par groupe — Taille ET Couleur — au lieu d'une
    seule au total). Sans base de commandes réelle à migrer, la colonne a été
    retirée directement plutôt que gardée en doublon.
+10. **Fiche produit et formulaire vendeur enrichis (13/09/2026)** — appliquer
+    la migration `0011_tags_and_reviews.sql` (ajoute `products.tags`, la
+    table `product_reviews`, la fonction `submit_product_review`, et modifie
+    `get_order_receipt_items` pour renvoyer `product_id`). Aucune
+    configuration Supabase supplémentaire requise. Voir
+    `decisions-techniques.md` pour le détail des fonctionnalités ajoutées
+    (prix barré affiché, galerie photo, indicateur de stock, partage
+    WhatsApp, avis clients, tags, groupes de variantes à nom libre) et les
+    limites assumées.
 
 ## Structure du projet
 

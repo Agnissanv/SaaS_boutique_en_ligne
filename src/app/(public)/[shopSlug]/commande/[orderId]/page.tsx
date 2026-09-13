@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ReviewForm } from "./review-form";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
@@ -87,6 +88,7 @@ export default async function OrderConfirmationPage({
         {(items ?? []).map(
           (
             item: {
+              product_id: string;
               product_title: string;
               variant_label: string | null;
               quantity: number;
@@ -110,6 +112,32 @@ export default async function OrderConfirmationPage({
       <p className="mt-4 text-right text-lg font-medium text-gray-900">
         Total : {order.total_amount} FCFA
       </p>
+
+      {(items ?? []).length > 0 && (
+        <section className="mt-8 border-t border-gray-200 pt-4">
+          <h2 className="text-sm font-medium text-gray-700">Laisser un avis</h2>
+          <p className="mt-1 text-xs text-gray-400">
+            Pas encore reçu ta commande ? Pas de souci, tu peux garder cette
+            page (ou son lien) et revenir laisser ton avis plus tard.
+          </p>
+          <div className="mt-3 flex flex-col gap-3">
+            {Array.from(
+              new Map(
+                (
+                  items as { product_id: string; product_title: string }[]
+                ).map((item) => [item.product_id, item])
+              ).values()
+            ).map((item) => (
+              <ReviewForm
+                key={item.product_id}
+                orderId={order.id}
+                productId={item.product_id}
+                productTitle={item.product_title}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <Link href={`/${shopSlug}`} className="mt-6 inline-block text-sm underline">
         Retour à la boutique

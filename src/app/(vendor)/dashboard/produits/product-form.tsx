@@ -11,6 +11,7 @@ import {
 import { CATEGORIES } from "@/lib/categories";
 
 type Variant = { name: string; value: string };
+type Group = { name: string; values: string };
 
 type Product = {
   id: string;
@@ -20,9 +21,11 @@ type Product = {
   price: number;
   compare_at_price: number | null;
   stock: number;
+  tags: string[] | null;
 };
 
 const MAX_PHOTOS = 6;
+const MAX_VARIANT_GROUPS = 6;
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
@@ -37,11 +40,19 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   );
 }
 
-function variantsToText(variants: Variant[], name: string): string {
-  return variants
-    .filter((v) => v.name === name)
-    .map((v) => v.value)
-    .join(", ");
+/** Regroupe les variantes existantes par nom, dans l'ordre où elles apparaissent. */
+function groupsFromVariants(variants: Variant[]): Group[] {
+  const order: string[] = [];
+  for (const v of variants) {
+    if (!order.includes(v.name)) order.push(v.name);
+  }
+  return order.map((name) => ({
+    name,
+    values: variants
+      .filter((v) => v.name === name)
+      .map((v) => v.value)
+      .join(", "),
+  }));
 }
 
 /** Upload multi-photos (1 à 6) avec aperçus et suppression individuelle. */
@@ -133,6 +144,90 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
   );
 }
 
+/**
+ * Groupes de variantes à nom libre (ex : "Taille", "Couleur", "Matière"...),
+ * plutôt que les deux champs figés "Tailles"/"Couleurs" d'avant — demandé
+ * par Isaac le 13/09/2026 pour que le vendeur puisse décrire n'importe quel
+ * type de variante selon son produit, pas seulement taille et couleur.
+ */
+function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
+  const [groups, setGroups] = useState<Group[]>(() => {
+    const initial = groupsFromVariants(initialVariants);
+    return initial.length > 0 ? initial : [{ name: "", values: "" }];
+  });
+
+  function updateGroup(index: number, patch: Partial<Group>) {
+    setGroups((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+  }
+  function addGroup() {
+    setGroups((prev) =>
+      prev.length >= MAX_VARIANT_GROUPS ? prev : [...prev, { name: "", values: "" }]
+    );
+  }
+  function removeGroup(index: number) {
+    setGroups((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
+  }
+
+  return (
+    <fieldset className="flex flex-col gap-3 rounded-md border border-gray-200 p-3">
+      <legend className="px-1 text-xs font-medium text-gray-500">
+        Variantes (optionnel)
+      </legend>
+      <p className="text-xs text-gray-400">
+        Ex : un groupe « Taille » avec les valeurs « S, M, L, XL », un groupe
+        « Couleur » avec « Rouge, Bleu, Noir »... Ajoute autant de groupes que
+        nécessaire (Matière, Pointure...). Le client choisira une valeur par
+        groupe.
+      </p>
+      {groups.map((group, index) => (
+        <div key={index} className="flex flex-col gap-1 rounded border border-gray-100 p-2">
+          <div className="flex items-center gap-2">
+            <input
+              value={group.name}
+              onChange={(e) => updateGroup(index, { name: e.target.value })}
+              placeholder="Nom du groupe (ex : Taille)"
+              maxLength={40}
+              className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            />
+            {groups.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeGroup(index)}
+                className="text-xs text-red-600 underline"
+              >
+                Retirer
+              </button>
+            )}
+          </div>
+          <input
+            value={group.values}
+            onChange={(e) => updateGroup(index, { values: e.target.value })}
+            placeholder="Valeurs séparées par une virgule (ex : S, M, L, XL)"
+            maxLength={300}
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          />
+          {/* Un couple nom/valeurs par groupe non vide, envoyé au serveur. */}
+          {group.name.trim() && group.values.trim() && (
+            <>
+              <input type="hidden" name="variantGroupName" value={group.name.trim()} />
+              <input type="hidden" name="variantGroupValues" value={group.values} />
+            </>
+          )}
+        </div>
+      ))}
+      {groups.length < MAX_VARIANT_GROUPS && (
+        <button
+          type="button"
+          onClick={addGroup}
+          className="w-fit text-xs font-medium text-gray-700 underline"
+        >
+          + Ajouter un groupe de variantes
+        </button>
+      )}
+    </fieldset>
+  );
+}
+
 export function ProductForm({
   product,
   variants,
@@ -198,6 +293,23 @@ export function ProductForm({
         </select>
       </div>
 
+      <div className="flex flex-col gap-1">
+        <label htmlFor="tags" className="text-sm font-medium text-gray-700">
+          Tags <span className="text-gray-400">(optionnel)</span>
+        </label>
+        <input
+          id="tags"
+          name="tags"
+          defaultValue={(product?.tags ?? []).join(", ")}
+          placeholder="promo, nouveau, tendance"
+          maxLength={300}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-gray-400">
+          Mots-clés séparés par une virgule, utiles pour la recherche.
+        </p>
+      </div>
+
       <div className="flex gap-3">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="price" className="text-sm font-medium text-gray-700">
@@ -246,37 +358,7 @@ export function ProductForm({
         />
       </div>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-gray-200 p-3">
-        <legend className="px-1 text-xs font-medium text-gray-500">
-          Variantes (optionnel)
-        </legend>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="tailles" className="text-sm font-medium text-gray-700">
-            Tailles disponibles
-          </label>
-          <input
-            id="tailles"
-            name="tailles"
-            defaultValue={variantsToText(variants, "Taille")}
-            placeholder="S, M, L, XL"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <p className="text-xs text-gray-400">Séparées par une virgule.</p>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="couleurs" className="text-sm font-medium text-gray-700">
-            Couleurs disponibles
-          </label>
-          <input
-            id="couleurs"
-            name="couleurs"
-            defaultValue={variantsToText(variants, "Couleur")}
-            placeholder="Rouge, Bleu, Noir"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <p className="text-xs text-gray-400">Séparées par une virgule.</p>
-        </div>
-      </fieldset>
+      <VariantGroups initialVariants={variants} />
 
       <PhotoGallery initialUrls={images} />
 

@@ -28,7 +28,7 @@ async function getOwnedShopId(
 }
 
 /** "S, M , L" -> ["S", "M", "L"] (valeurs uniques, non vides) */
-function parseVariantList(raw: FormDataEntryValue | null): string[] {
+function parseCommaList(raw: FormDataEntryValue | string | null): string[] {
   if (!raw) return [];
   const values = String(raw)
     .split(",")
@@ -36,6 +36,9 @@ function parseVariantList(raw: FormDataEntryValue | null): string[] {
     .filter(Boolean);
   return Array.from(new Set(values));
 }
+
+const MAX_VARIANT_GROUPS = 6;
+const MAX_TAGS = 10;
 
 export async function saveProduct(
   _prevState: ProductFormState,
@@ -78,8 +81,18 @@ export async function saveProduct(
   const priceRaw = String(formData.get("price") ?? "");
   const compareAtRaw = String(formData.get("compareAtPrice") ?? "").trim();
   const stockRaw = String(formData.get("stock") ?? "0");
-  const tailles = parseVariantList(formData.get("tailles"));
-  const couleurs = parseVariantList(formData.get("couleurs"));
+  const tags = parseCommaList(formData.get("tags"))
+    .map((t) => t.toLowerCase())
+    .slice(0, MAX_TAGS);
+  // Groupes de variantes à nom libre (ex : "Taille", "Couleur", "Matière"...)
+  // — un couple nom/valeurs par groupe non vide, envoyés en parallèle par
+  // VariantGroups (product-form.tsx). getAll() préserve l'ordre d'apparition
+  // dans le DOM, donc les deux tableaux restent alignés par index.
+  const variantGroupNames = formData
+    .getAll("variantGroupName")
+    .map((v) => String(v).trim())
+    .slice(0, MAX_VARIANT_GROUPS);
+  const variantGroupValues = formData.getAll("variantGroupValues").map((v) => String(v));
   // Renseignées côté client après upload direct vers Supabase Storage (voir
   // storage.ts) : une valeur par image conservée, dans l'ordre d'affichage.
   const imageUrls = formData
@@ -124,6 +137,7 @@ export async function saveProduct(
         price,
         compare_at_price: compareAtPrice,
         stock,
+        tags,
         updated_at: new Date().toISOString(),
       })
       .eq("id", productId)
@@ -162,6 +176,7 @@ export async function saveProduct(
         price,
         compare_at_price: compareAtPrice,
         stock,
+        tags,
       })
       .select("id")
       .single();
@@ -174,23 +189,21 @@ export async function saveProduct(
   }
 
   // Variantes : approche simple "supprimer puis recréer" plutôt qu'un diff —
-  // le volume par produit reste faible (tailles/couleurs). Le stock détaillé
-  // par variante n'est pas encore géré : seul products.stock fait foi pour
-  // l'instant (voir README).
+  // le volume par produit reste faible. Groupes à nom libre depuis le
+  // 13/09/2026 (voir VariantGroups dans product-form.tsx) : plus seulement
+  // "Taille"/"Couleur" figés. Le stock détaillé par variante n'est toujours
+  // pas géré : seul products.stock fait foi pour l'instant (voir README).
   await supabase.from("product_variants").delete().eq("product_id", resolvedProductId);
 
-  const variantRows = [
-    ...tailles.map((value) => ({
+  const variantRows = variantGroupNames.flatMap((name, index) => {
+    if (!name) return [];
+    const values = parseCommaList(variantGroupValues[index] ?? null);
+    return values.map((value) => ({
       product_id: resolvedProductId,
-      name: "Taille",
+      name,
       value,
-    })),
-    ...couleurs.map((value) => ({
-      product_id: resolvedProductId,
-      name: "Couleur",
-      value,
-    })),
-  ];
+    }));
+  });
 
   if (variantRows.length > 0) {
     await supabase.from("product_variants").insert(variantRows);
