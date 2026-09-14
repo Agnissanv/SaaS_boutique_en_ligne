@@ -7,7 +7,7 @@
 -- chemin par défaut et n'est jamais touchée par cette migration —
 -- create_order continue de fonctionner à l'identique pour `anon`. Un compte
 -- client est une couche additive au-dessus, pour qui veut retrouver son
--- historique de commandes plus tard (aujourd'hui, perdre le lien de
+-- historique de commandes plus tard  (aujourd'hui, perdre le lien de
 -- confirmation = perdre l'accès à sa commande, ce qui est le vrai problème
 -- que ça règle).
 --
