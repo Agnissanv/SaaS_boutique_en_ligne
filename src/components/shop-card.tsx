@@ -21,12 +21,16 @@ export type MarketplaceShop = {
  *
  * Réutilise `getShopRating` (créé le 14/09/2026 pour la fiche boutique) au
  * lieu d'un nouveau calcul : même note de confiance affichée partout.
+ *
+ * Recolorée/animée le 15/09/2026 (refonte de la page d'accueil) : mêmes
+ * coins et élévation au survol que `ProductCard`, pour que les deux types de
+ * carte de cette page se lisent comme une seule famille visuelle.
  */
 export function ShopCard({ shop, className }: { shop: MarketplaceShop; className?: string }) {
   return (
     <Link
       href={`/${shop.slug}`}
-      className={`flex flex-col items-center gap-2 rounded border border-ligne bg-white p-3 text-center transition-shadow hover:shadow-sm ${
+      className={`flex flex-col items-center gap-2 rounded-lg border border-ligne bg-white p-3 text-center transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md ${
         className ?? ""
       }`}
     >

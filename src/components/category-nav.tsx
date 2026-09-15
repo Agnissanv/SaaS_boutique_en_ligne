@@ -14,8 +14,13 @@ import { buildMarketplaceHref, type MarketplaceFilters } from "@/lib/marketplace
  *
  * Les tuiles restent des blocs neutres avec juste une initiale : pas de
  * vraies icônes/illustrations par catégorie pour l'instant (identité
- * visuelle non décidée, voir decisions-techniques.md) — ce sont des
- * emplacements réservés ("briques"), pas le design final.
+ * visuelle non décidée à l'origine, voir decisions-techniques.md) — ce sont
+ * des emplacements réservés ("briques"), pas le design final.
+ *
+ * Repositionnée sous le hero (au lieu de juste sous l'en-tête) et légèrement
+ * animée le 15/09/2026, dans le cadre de la refonte de la page d'accueil —
+ * comportement et structure inchangés, seule la tuile active gagne une ombre
+ * pour se distinguer plus nettement au premier coup d'œil.
  */
 export function CategoryNav({
   current,
@@ -40,10 +45,10 @@ export function CategoryNav({
           <Link
             key={tile.label}
             href={buildMarketplaceHref(current, { categorie: tile.value, page: undefined })}
-            className={`flex shrink-0 flex-col items-center gap-1.5 rounded-lg border px-4 py-3 text-center ${
+            className={`flex shrink-0 flex-col items-center gap-1.5 rounded-lg border px-4 py-3 text-center transition-all ${
               isActive
-                ? "border-vert-sapin bg-vert-sapin text-ivoire"
-                : "border-ligne text-encre hover:border-cuivre-clair"
+                ? "border-vert-sapin bg-vert-sapin text-ivoire shadow-md"
+                : "border-ligne text-encre hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-sm"
             }`}
           >
             <span

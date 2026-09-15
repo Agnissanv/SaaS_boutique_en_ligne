@@ -30,6 +30,11 @@ export type MarketplaceCardProduct = {
  * depuis la marketplace. Posé en dehors du <Link> vers la fiche produit
  * (jamais imbriqué dedans — deux <a> imbriqués sont invalides en HTML et
  * cassent l'hydratation), même principe déjà appliqué au bouton favoris.
+ *
+ * Recolorée/animée le 15/09/2026 (refonte de la page d'accueil, cf. demande
+ * d'Isaac que la marketplace soit plus soignée que la page boutique) :
+ * coins plus généreux et légère élévation au survol, cohérents avec les
+ * cartes déjà retravaillées ailleurs sur le site. Comportement inchangé.
  */
 export function ProductCard({
   product,
@@ -39,7 +44,9 @@ export function ProductCard({
   className?: string;
 }) {
   return (
-    <div className={`relative rounded border border-ligne bg-white p-3 transition-shadow hover:shadow-sm ${className ?? ""}`}>
+    <div
+      className={`relative rounded-lg border border-ligne bg-white p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md ${className ?? ""}`}
+    >
       <div className="absolute right-2 top-2 z-10">
         <WishlistButton
           item={{
@@ -56,7 +63,7 @@ export function ProductCard({
         <ProductImage
           src={product.thumbnail}
           alt={product.title}
-          className="mb-2 aspect-square w-full rounded object-cover"
+          className="mb-2 aspect-square w-full rounded-md object-cover"
         />
         <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
         <p className="font-mono text-sm text-cuivre-profond">{product.price} FCFA</p>
