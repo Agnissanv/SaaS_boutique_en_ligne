@@ -114,3 +114,85 @@ button:not(:disabled):active,
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/*
+ * Transitions d'écran natives (marketplace → boutique → fiche produit) —
+ * même chantier "langage natif" (15/09/2026). S'appuie sur le composant
+ * `<ViewTransition>` de React, intégré à l'API View Transitions du
+ * navigateur et supporté nativement par l'App Router de cette version de
+ * Next.js (16.3.5, canary React embarqué — voir la doc livrée avec le
+ * paquet : node_modules/next/dist/docs/01-app/02-guides/view-transitions.md)
+ * : aucune librairie d'animation ajoutée, aucune configuration requise.
+ *
+ * Deux mouvements, calqués sur la hiérarchie réelle de navigation :
+ * - `.nav-forward` : on va plus loin (marketplace → boutique → produit) —
+ *   le contenu sortant glisse vers la gauche, l'entrant vient de la droite.
+ * - `.nav-back` : on revient en arrière (lien "Retour à la boutique", tuile
+ *   "Accueil" de la barre basse) — mouvement inverse.
+ * Navigation non taguée (bouton retour du navigateur, onglets de la barre
+ * basse autres qu'Accueil) : aucune animation, comportement par défaut.
+ *
+ * Durées reprises telles quelles de l'exemple officiel Next.js (sortie
+ * rapide à 150ms pour ne jamais retenir l'attention sur ce qui part, entrée
+ * plus lente et différée à 210ms pour laisser le temps de remarquer ce qui
+ * arrive) — des valeurs déjà réglées par test, pas de raison d'improviser
+ * les nôtres.
+ */
+@keyframes kv-nav-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes kv-nav-slide {
+  from { translate: var(--kv-slide-offset); }
+  to { translate: 0; }
+}
+
+::view-transition-old(.nav-forward) {
+  --kv-slide-offset: -60px;
+  animation: 150ms ease-in both kv-nav-fade reverse, 400ms ease-in-out both kv-nav-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --kv-slide-offset: 60px;
+  animation: 210ms ease-out 150ms both kv-nav-fade, 400ms ease-in-out both kv-nav-slide;
+}
+::view-transition-old(.nav-back) {
+  --kv-slide-offset: 60px;
+  animation: 150ms ease-in both kv-nav-fade reverse, 400ms ease-in-out both kv-nav-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --kv-slide-offset: -60px;
+  animation: 210ms ease-out 150ms both kv-nav-fade, 400ms ease-in-out both kv-nav-slide;
+}
+
+/*
+ * Effet de morphing (la vignette produit d'une carte grossit et se déplace
+ * jusqu'à devenir la photo principale de la fiche produit, au lieu de
+ * disparaître puis réapparaître) — le repère visuel le plus fort qu'on
+ * navigue "dans" le même produit plutôt que vers une page sans rapport.
+ * Léger flou à mi-parcours pour masquer les artefacts d'interpolation
+ * pixel par pixel entre deux tailles/positions très différentes.
+ */
+::view-transition-group(.product-morph) {
+  animation-duration: 400ms;
+}
+::view-transition-image-pair(.product-morph) {
+  animation-name: kv-morph-blur;
+}
+@keyframes kv-morph-blur {
+  30% { filter: blur(3px); }
+}
+
+/* Le survol de transition capture les clics — on les laisse passer au
+   contenu réel plutôt que de figer l'appli le temps de l'animation. */
+::view-transition {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

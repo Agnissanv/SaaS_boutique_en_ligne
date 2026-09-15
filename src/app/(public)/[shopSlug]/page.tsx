@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, categoryLabel } from "@/lib/categories";
 import { CartLink } from "./cart-link";
@@ -142,6 +143,11 @@ export default async function ShopPage({
   const current = { q, categorie, tri, page: pageParam };
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
     <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
       <div className="mb-3 flex justify-end">
         <Link href="/compte" className="text-xs text-vert-actif underline">
@@ -327,12 +333,14 @@ export default async function ShopPage({
                     }}
                   />
                 </div>
-                <Link href={`/${shopSlug}/${product.slug}`}>
-                  <ProductImage
-                    src={thumbnail}
-                    alt={product.title}
-                    className="mb-2 aspect-square w-full rounded object-cover"
-                  />
+                <Link href={`/${shopSlug}/${product.slug}`} transitionTypes={["nav-forward"]}>
+                  <ViewTransition name={`product-photo-${product.id}`} share="morph" default="none">
+                    <ProductImage
+                      src={thumbnail}
+                      alt={product.title}
+                      className="mb-2 aspect-square w-full rounded object-cover"
+                    />
+                  </ViewTransition>
                   <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
                   {/* flex-wrap (15/09/2026, chantier responsive) : en grille à 2
                       colonnes sur mobile, la carte est trop étroite pour tenir
@@ -381,6 +389,7 @@ export default async function ShopPage({
 
       <CartLink shopSlug={shopSlug} />
     </main>
+    </ViewTransition>
   );
 }
 

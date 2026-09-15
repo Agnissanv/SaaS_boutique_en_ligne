@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ViewTransition } from "react";
 
 type Image = { url: string };
 
@@ -22,8 +23,23 @@ type Image = { url: string };
  * avec le reste des vignettes produit du site, fond de repli Brume plutôt
  * que gris, superposition du zoom en Vert Profond (quasi noir, sur charte)
  * plutôt qu'un noir neutre. Comportement inchangé.
+ *
+ * Photo héro enveloppée dans un `<ViewTransition name="product-photo-{id}">`
+ * le 15/09/2026 (chantier "langage natif", transitions d'écran) : même nom
+ * que la vignette utilisée sur la marketplace et la page boutique
+ * (`ProductCard`, grille boutique), pour que la photo grossisse et se
+ * déplace jusqu'ici au lieu de disparaître puis réapparaître en arrivant sur
+ * la fiche produit. `productId` ajouté comme prop pour former ce nom.
  */
-export function ProductGallery({ images, title }: { images: Image[]; title: string }) {
+export function ProductGallery({
+  images,
+  title,
+  productId,
+}: {
+  images: Image[];
+  title: string;
+  productId: string;
+}) {
   const [selected, setSelected] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -69,19 +85,21 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => setLightboxOpen(true)}
-        className="block w-full cursor-zoom-in overflow-hidden rounded-xl border border-ligne"
-        aria-label="Agrandir la photo"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element -- images uploadées par le vendeur, source dynamique */}
-        <img
-          src={images[activeIndex].url}
-          alt={title}
-          className="aspect-square w-full object-cover"
-        />
-      </button>
+      <ViewTransition name={`product-photo-${productId}`} share="morph" default="none">
+        <button
+          type="button"
+          onClick={() => setLightboxOpen(true)}
+          className="block w-full cursor-zoom-in overflow-hidden rounded-xl border border-ligne"
+          aria-label="Agrandir la photo"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- images uploadées par le vendeur, source dynamique */}
+          <img
+            src={images[activeIndex].url}
+            alt={title}
+            className="aspect-square w-full object-cover"
+          />
+        </button>
+      </ViewTransition>
       {images.length > 1 && (
         <div className="mt-2 flex gap-2 overflow-x-auto">
           {images.map((img, index) => (

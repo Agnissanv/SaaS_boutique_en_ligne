@@ -67,6 +67,15 @@ function UserIcon() {
 
 const TAB_CLASS = "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px]";
 
+// "Accueil" taguée `nav-back` le 15/09/2026 (chantier "langage natif",
+// transitions d'écran, voir decisions-techniques.md) : quel que soit
+// l'endroit d'où on tape sur cette tuile (boutique, fiche produit...), on
+// revient à la racine de la hiérarchie — même mouvement que le lien "Retour
+// à la boutique" de la fiche produit. Les autres onglets (Catégories,
+// Panier, Favoris, Compte) restent volontairement sans animation : ce ne
+// sont pas des allers-retours sur un même axe, mais des changements de
+// rayon, sans direction "avant/arrière" naturelle.
+
 /**
  * Barre de navigation basse, mobile uniquement (`sm:hidden`) — chantier
  * responsive design ouvert le 15/09/2026. Isaac a partagé le modèle Jumia
@@ -144,7 +153,11 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-ligne bg-white pb-[env(safe-area-inset-bottom,0px)] sm:hidden"
         aria-label="Navigation principale"
       >
-        <Link href="/" className={`${TAB_CLASS} ${isHome ? "text-cuivre-profond" : "text-encre/60"}`}>
+        <Link
+          href="/"
+          transitionTypes={["nav-back"]}
+          className={`${TAB_CLASS} ${isHome ? "text-cuivre-profond" : "text-encre/60"}`}
+        >
           <HomeIcon />
           Accueil
         </Link>

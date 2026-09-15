@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
 import { categoryLabel } from "@/lib/categories";
@@ -35,6 +36,13 @@ export type MarketplaceCardProduct = {
  * d'Isaac que la marketplace soit plus soignée que la page boutique) :
  * coins plus généreux et légère élévation au survol, cohérents avec les
  * cartes déjà retravaillées ailleurs sur le site. Comportement inchangé.
+ *
+ * Transitions d'écran ajoutées le 15/09/2026 (chantier "langage natif") :
+ * `transitionTypes={["nav-forward"]}` sur les deux liens (on avance dans la
+ * hiérarchie, vers un produit ou une boutique), et la vignette enveloppée
+ * dans un `<ViewTransition name="product-photo-{id}">` partagé avec la
+ * photo héro de la fiche produit (`product-gallery.tsx`), pour qu'elle
+ * grossisse et se déplace jusque là-bas au lieu de disparaître.
  */
 export function ProductCard({
   product,
@@ -59,17 +67,20 @@ export function ProductCard({
           }}
         />
       </div>
-      <Link href={`/${product.shopSlug}/${product.slug}`}>
-        <ProductImage
-          src={product.thumbnail}
-          alt={product.title}
-          className="mb-2 aspect-square w-full rounded-md object-cover"
-        />
+      <Link href={`/${product.shopSlug}/${product.slug}`} transitionTypes={["nav-forward"]}>
+        <ViewTransition name={`product-photo-${product.id}`} share="morph" default="none">
+          <ProductImage
+            src={product.thumbnail}
+            alt={product.title}
+            className="mb-2 aspect-square w-full rounded-md object-cover"
+          />
+        </ViewTransition>
         <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
         <p className="font-mono text-sm text-cuivre-profond">{product.price} FCFA</p>
       </Link>
       <Link
         href={`/${product.shopSlug}`}
+        transitionTypes={["nav-forward"]}
         className="mt-1 block truncate text-xs text-encre/60 hover:text-vert-actif hover:underline"
       >
         {product.shopName}

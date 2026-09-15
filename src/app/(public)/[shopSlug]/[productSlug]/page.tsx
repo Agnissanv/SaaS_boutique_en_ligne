@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { AddToCartForm } from "./add-to-cart-form";
 import { ProductGallery } from "./product-gallery";
@@ -127,9 +128,15 @@ export default async function ProductPage({
     : null;
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
     <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <Link
         href={`/${shopSlug}`}
+        transitionTypes={["nav-back"]}
         className="inline-flex items-center gap-1 text-sm text-vert-actif hover:underline"
       >
         ‹ Retour à la boutique
@@ -149,7 +156,7 @@ export default async function ProductPage({
               }}
             />
           </div>
-          <ProductGallery images={images} title={product.title} />
+          <ProductGallery images={images} title={product.title} productId={product.id} />
         </div>
 
         <div>
@@ -258,13 +265,16 @@ export default async function ProductPage({
                 <Link
                   key={item.id}
                   href={`/${shopSlug}/${item.slug}`}
+                  transitionTypes={["nav-forward"]}
                   className="group rounded-lg border border-ligne bg-white p-2 transition hover:border-cuivre"
                 >
-                  <ProductImage
-                    src={thumbnail}
-                    alt={item.title}
-                    className="mb-2 aspect-square w-full rounded-md object-cover"
-                  />
+                  <ViewTransition name={`product-photo-${item.id}`} share="morph" default="none">
+                    <ProductImage
+                      src={thumbnail}
+                      alt={item.title}
+                      className="mb-2 aspect-square w-full rounded-md object-cover"
+                    />
+                  </ViewTransition>
                   <p className="truncate text-xs font-medium text-encre">{item.title}</p>
                   <p className="font-mono text-xs text-cuivre-profond">{item.price} FCFA</p>
                 </Link>
@@ -274,5 +284,6 @@ export default async function ProductPage({
         </section>
       )}
     </main>
+    </ViewTransition>
   );
 }

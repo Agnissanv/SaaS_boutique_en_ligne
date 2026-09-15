@@ -25,11 +25,17 @@ export type MarketplaceShop = {
  * Recolorée/animée le 15/09/2026 (refonte de la page d'accueil) : mêmes
  * coins et élévation au survol que `ProductCard`, pour que les deux types de
  * carte de cette page se lisent comme une seule famille visuelle.
+ *
+ * `transitionTypes={["nav-forward"]}` ajouté le 15/09/2026 (chantier
+ * "langage natif", transitions d'écran) : on va plus loin dans la
+ * hiérarchie (marketplace → boutique), donc le contenu glisse vers la
+ * gauche, comme une fiche produit.
  */
 export function ShopCard({ shop, className }: { shop: MarketplaceShop; className?: string }) {
   return (
     <Link
       href={`/${shop.slug}`}
+      transitionTypes={["nav-forward"]}
       className={`flex flex-col items-center gap-2 rounded-lg border border-ligne bg-white p-3 text-center transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md ${
         className ?? ""
       }`}
