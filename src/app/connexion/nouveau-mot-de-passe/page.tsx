@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NouveauMotDePasseForm } from "./nouveau-mot-de-passe-form";
 
@@ -12,6 +13,9 @@ export const dynamic = "force-dynamic";
  * email, déjà échangé contre une session par /auth/callback?next=... — donc
  * un utilisateur authentifié est attendu ici. Sans session valide, le lien
  * est périmé ou déjà utilisé : retour à /connexion.
+ *
+ * Recolorée en charte KEVA le 15/09/2026 (côté client) — même carte/logo que
+ * /connexion et /inscription.
  */
 export default async function NouveauMotDePassePage() {
   const supabase = await createClient();
@@ -24,12 +28,17 @@ export default async function NouveauMotDePassePage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-900">
+    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 bg-brume">
+      <Link href="/" className="mx-auto mb-6 flex items-center gap-2">
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
+        <img src="/keva-logo.jpg" alt="KEVA" className="h-10 w-10 rounded-md object-cover" />
+        <span className="font-display text-xl font-semibold tracking-tight text-vert-sapin">KEVA</span>
+      </Link>
+      <div className="rounded-xl border border-ligne bg-white p-6 shadow-sm">
+        <h1 className="font-display text-xl font-semibold text-encre">
           Nouveau mot de passe
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-encre/70">
           Choisis un mot de passe pour te connecter directement la prochaine
           fois, sans attendre un email.
         </p>

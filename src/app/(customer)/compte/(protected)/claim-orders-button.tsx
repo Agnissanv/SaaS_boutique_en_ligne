@@ -54,11 +54,11 @@ export function ClaimOrdersButton() {
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 disabled:opacity-50"
+        className="rounded-md border border-ligne px-3 py-1.5 text-xs font-medium text-encre hover:bg-brume disabled:opacity-50"
       >
         {pending ? "Recherche..." : "Rattacher mes anciennes commandes"}
       </button>
-      {message && <p className="mt-1 text-xs text-gray-500">{message}</p>}
+      {message && <p className="mt-1 text-xs text-encre/60">{message}</p>}
     </div>
   );
 }

@@ -8,6 +8,9 @@ import { createClient } from "@/lib/supabase/client";
  * (voir migration 0011, submit_product_review, pour le choix de rattacher
  * l'avis à la commande plutôt qu'à un compte client — qui n'existe pas côté
  * boutique publique).
+ *
+ * Recolorée en charte KEVA le 15/09/2026 (côté client) — pure recolor. Les
+ * étoiles utilisent le cuivre plutôt qu'un jaune générique.
  */
 export function ReviewForm({
   orderId,
@@ -41,7 +44,7 @@ export function ReviewForm({
 
   if (status === "done") {
     return (
-      <p className="text-sm text-green-600">
+      <p className="text-sm text-succes">
         Merci pour ton avis sur « {productTitle} » !
       </p>
     );
@@ -50,9 +53,9 @@ export function ReviewForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 rounded-md border border-gray-100 p-3"
+      className="flex flex-col gap-2 rounded-md border border-ligne bg-white p-3"
     >
-      <p className="text-sm font-medium text-gray-700">{productTitle}</p>
+      <p className="text-sm font-medium text-encre">{productTitle}</p>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -60,7 +63,7 @@ export function ReviewForm({
             type="button"
             onClick={() => setRating(n)}
             aria-label={`${n} étoile${n > 1 ? "s" : ""}`}
-            className={`text-lg leading-none ${n <= rating ? "text-yellow-500" : "text-gray-300"}`}
+            className={`text-lg leading-none ${n <= rating ? "text-cuivre-profond" : "text-encre/20"}`}
           >
             ★
           </button>
@@ -72,17 +75,17 @@ export function ReviewForm({
         onChange={(e) => setComment(e.target.value)}
         placeholder="Ton commentaire (optionnel)"
         maxLength={500}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
       />
       {status === "error" && (
-        <p className="text-xs text-red-600">
+        <p className="text-xs text-erreur">
           {rating < 1 ? "Choisis une note avant d'envoyer." : "Échec de l'envoi. Réessaie."}
         </p>
       )}
       <button
         type="submit"
         disabled={status === "pending"}
-        className="w-fit rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+        className="w-fit rounded-md bg-cuivre-profond px-3 py-1.5 text-xs font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
       >
         {status === "pending" ? "Envoi..." : "Envoyer mon avis"}
       </button>

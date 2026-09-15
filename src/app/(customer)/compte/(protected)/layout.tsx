@@ -13,6 +13,9 @@ import { signOut } from "@/app/auth/actions";
  * vendeur qui commande aussi comme client sur une autre boutique de la
  * plateforme. Ce qui protège les données, c'est `orders.customer_id =
  * auth.uid()` (RLS, migration 0014), pas le rôle du profil.
+ *
+ * Recolorée en charte KEVA le 15/09/2026 (côté client) — même traitement de
+ * nav que les autres espaces (fond vert profond, logo, liens ivoire).
  */
 export default async function CompteLayout({
   children,
@@ -29,19 +32,24 @@ export default async function CompteLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 text-sm">
-        <Link href="/compte" className="font-medium text-gray-900">
+    <div className="min-h-screen bg-brume">
+      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-vert-profond px-4 py-3 text-sm text-ivoire">
+        <span className="mr-2 flex shrink-0 items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
+          <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
+          <span className="font-display font-semibold tracking-tight">Mon compte</span>
+        </span>
+        <Link href="/compte" className="font-medium text-ivoire hover:text-cuivre-clair">
           Mes commandes
         </Link>
-        <Link href="/compte/profil" className="text-gray-500 underline">
+        <Link href="/compte/profil" className="text-ivoire/70 underline hover:text-cuivre-clair">
           Mon profil
         </Link>
-        <Link href="/" className="text-gray-500 underline">
+        <Link href="/" className="text-ivoire/70 underline hover:text-cuivre-clair">
           Retour à la marketplace
         </Link>
         <form action={signOut} className="ml-auto">
-          <button type="submit" className="text-gray-500 underline">
+          <button type="submit" className="text-ivoire/70 underline hover:text-cuivre-clair">
             Déconnexion
           </button>
         </form>

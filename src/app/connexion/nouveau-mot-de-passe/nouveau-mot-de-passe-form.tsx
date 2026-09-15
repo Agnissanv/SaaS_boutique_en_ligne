@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PASSWORD_MIN_LENGTH as MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
 
+// Recolorée en charte KEVA le 15/09/2026 (côté client) — pure recolor, même
+// traitement que connexion-form.tsx (mêmes tokens de champ/bouton).
 export function NouveauMotDePasseForm() {
   const router = useRouter();
   const supabase = createClient();
@@ -50,7 +52,7 @@ export function NouveauMotDePasseForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
-      <label className="text-sm font-medium text-gray-700" htmlFor="password">
+      <label className="text-sm font-medium text-encre" htmlFor="password">
         Nouveau mot de passe
       </label>
       <input
@@ -64,10 +66,10 @@ export function NouveauMotDePasseForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="••••••••"
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
       />
 
-      <label className="text-sm font-medium text-gray-700" htmlFor="confirm">
+      <label className="text-sm font-medium text-encre" htmlFor="confirm">
         Confirme le mot de passe
       </label>
       <input
@@ -80,15 +82,15 @@ export function NouveauMotDePasseForm() {
         value={confirm}
         onChange={(e) => setConfirm(e.target.value)}
         placeholder="••••••••"
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
       />
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-erreur">{error}</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
       >
         {pending ? "Enregistrement..." : "Enregistrer et continuer"}
       </button>
