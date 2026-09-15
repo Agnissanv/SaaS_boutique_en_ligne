@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
+import { BottomNav } from "@/components/bottom-nav";
 import "./globals.css";
 
 // Typographie KEVA (14/09/2026, voir decisions-techniques.md et la charte
@@ -56,6 +57,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}
+        {/* Barre de navigation basse mobile (chantier responsive design,
+            15/09/2026) : rendue une seule fois ici, masquée elle-même sur les
+            portails d'authentification et les espaces internes vendeur/admin
+            — voir bottom-nav.tsx. */}
+        <BottomNav />
         <RegisterServiceWorker />
       </body>
     </html>

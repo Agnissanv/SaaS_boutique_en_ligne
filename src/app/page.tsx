@@ -394,7 +394,11 @@ export default async function Home({
             Rechercher
           </button>
         </form>
-        <div className="order-2 flex shrink-0 items-center gap-4 text-sm font-medium sm:order-3">
+        {/* Masqués sur mobile (<640px) : Favoris/Compte sont désormais
+            accessibles via la barre de navigation basse (bottom-nav.tsx,
+            15/09/2026) — éviter un double accès redondant sur un en-tête déjà
+            étroit. Restent visibles sur desktop, où cette barre est masquée. */}
+        <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
           <Link href="/favoris" className="hover:text-cuivre-clair">
             Mes favoris
           </Link>
@@ -472,7 +476,7 @@ export default async function Home({
       {/* Catégories : point d'entrée principal pour parcourir le catalogue,
           juste sous le hero. Étendues à 24 catégories le 15/09/2026 (round
           2) — voir src/lib/categories.ts. */}
-      <div className="mt-8">
+      <div id="categories" className="mt-8 scroll-mt-20">
         <CategoryNav current={current} active={categorie} />
       </div>
 
