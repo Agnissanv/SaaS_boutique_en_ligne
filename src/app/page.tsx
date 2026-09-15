@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { categoryLabel } from "@/lib/categories";
+import { CATEGORIES, categoryLabel } from "@/lib/categories";
 import { SortSelect } from "@/components/sort-select";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard, type MarketplaceCardProduct } from "@/components/product-card";
+import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { ProductImage } from "@/components/product-image";
 import { buildMarketplaceHref } from "@/lib/marketplace/filters";
@@ -17,20 +18,35 @@ import { getShopRating } from "@/lib/reviews";
 // anticipation, à la demande explicite d'Isaac plutôt que dans l'ordre du
 // cahier des charges — voir decisions-techniques.md.
 //
-// Refonte visuelle du 15/09/2026 : cette page est la vitrine de toute la
-// plateforme (le point d'entrée de chaque visiteur, pas un espace vendeur),
-// Isaac a explicitement demandé qu'elle soit traitée avec plus d'ambition
-// que la page boutique — véritable hero avec la signature de marque KEVA
-// ("Vendez. Encaissez. Grandissez.", jamais intégrée visuellement jusqu'ici),
-// un collage de vraies photos produit (jamais une image de stock), et des
-// chiffres réels de la plateforme (nombre de boutiques/produits actifs —
-// calculés à la volée, jamais une valeur inventée pour "faire plein").
-// Structure/fonctionnalités inchangées : recherche, catégories, boutiques
-// mises en avant, nouveautés, catalogue filtrable/triable/paginé.
+// Round 2 de refonte le 15/09/2026 : le premier passage du jour (hero, chiffres
+// réels, icônes de confiance) a été jugé encore trop pauvre par Isaac
+// ("je veux une vraie page de marketplace... comme Jumia, Amazon") — deux
+// changements structurels demandés explicitement :
+// 1. Remplacer l'unique grille "Tout le catalogue" paginée par une bande à
+//    défilement horizontal PAR CATÉGORIE (même traitement que "Nouveautés"),
+//    pour ne jamais afficher des centaines/milliers d'articles d'un coup —
+//    la grille paginée reste utilisée, mais seulement en mode filtré
+//    (recherche ou catégorie choisie explicitement).
+// 2. Étendre `CATEGORIES` (6 → 24, voir `src/lib/categories.ts`) : une
+//    marketplace de cette ambition a besoin de bien plus de catégories que
+//    "Mode, Beauté, Électronique, Maison, Alimentation, Autre".
+// Ajout non demandé explicitement mais dans l'esprit de la demande ("ça
+// dépend de toi") : une bande "Meilleures ventes", agrégée sur de vraies
+// commandes (`get_best_selling_products`, migration 0015) — jamais un
+// classement inventé.
 
 const PAGE_SIZE = 24;
-const NEW_ARRIVALS_SIZE = 8;
-const FEATURED_SHOPS_SIZE = 8;
+const NEW_ARRIVALS_SIZE = 10;
+const FEATURED_SHOPS_SIZE = 10;
+const BEST_SELLERS_SIZE = 12;
+const CATEGORY_ROW_SIZE = 12;
+// Nombre de produits actifs les plus récents considérés pour regrouper les
+// bandes par catégorie — une seule requête groupée en JS plutôt que jusqu'à
+// 24 requêtes (une par catégorie). Compromis délibéré, documenté dans
+// decisions-techniques.md. Un produit plus ancien que cette fenêtre reste
+// consultable via "Voir tout" (grille filtrée par catégorie, non plafonnée)
+// et via la recherche — seule la bande d'aperçu peut le manquer.
+const CATEGORY_FEED_LIMIT = 400;
 const HERO_COLLAGE_SIZE = 3;
 
 const SORTS = [
@@ -53,7 +69,7 @@ const HERO_COLLAGE_POSITIONS = [
 
 // Icônes de l'argumentaire de confiance — dessinées à la main en SVG inline,
 // même parti pris que les icônes de la sidebar du dashboard vendeur
-// (15/09/2026) : pas de dépendance à une librairie d'icônes, pas d'emoji.
+// (15/09/2026) : pas de dépendance à une librairie d'icônes.
 function IconDelivery() {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
@@ -113,9 +129,10 @@ type RawMarketplaceProduct = {
 };
 
 // Normalise la forme `shop` renvoyée par Supabase (objet ou tableau selon le
-// contexte de la requête) et calcule la vignette — utilisé pour les deux
-// requêtes produit de cette page (nouveautés + catalogue), d'où l'extraction
-// ici plutôt qu'une logique dupliquée dans les deux `.map()`.
+// contexte de la requête) et calcule la vignette — utilisé par toutes les
+// requêtes produit de cette page (nouveautés, meilleures ventes, bandes par
+// catégorie, catalogue filtré), d'où l'extraction ici plutôt qu'une logique
+// dupliquée dans chaque `.map()`.
 function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct | null {
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
   if (!shop) return null;
@@ -134,6 +151,9 @@ function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct |
   };
 }
 
+const PRODUCT_CARD_COLUMNS =
+  "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)";
+
 export default async function Home({
   searchParams,
 }: {
@@ -146,36 +166,19 @@ export default async function Home({
   const to = from + PAGE_SIZE - 1;
   const current = { q, categorie, tri, page: pageParam };
 
+  // Mode "filtré" (recherche texte et/ou catégorie choisie explicitement) :
+  // grille classique triable/paginée, comme avant. Mode par défaut (aucun
+  // filtre) : disposition par bandes façon Jumia/Amazon — voir le
+  // changement structurel expliqué en tête de fichier. Les deux modes sont
+  // mutuellement exclusifs : jamais de grille de "tout le catalogue" affichée
+  // d'un coup.
+  const hasFilter = Boolean(q || categorie);
+
   const supabase = await createClient();
 
-  let catalogueQuery = supabase
-    .from("products")
-    .select(
-      "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)",
-      { count: "exact" }
-    )
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .eq("shop.status", "active")
-    .range(from, to);
-
-  if (q) catalogueQuery = catalogueQuery.ilike("title", `%${q}%`);
-  if (categorie) catalogueQuery = catalogueQuery.eq("category", categorie);
-  if (sort === "prix_asc") catalogueQuery = catalogueQuery.order("price", { ascending: true });
-  else if (sort === "prix_desc")
-    catalogueQuery = catalogueQuery.order("price", { ascending: false });
-  else catalogueQuery = catalogueQuery.order("created_at", { ascending: false });
-
-  // Bande "Nouveautés" : toujours les produits les plus récents de toute la
-  // marketplace, indépendamment des filtres en cours (comme les carrousels
-  // de découverte de Jumia) — une requête à part plutôt qu'un sous-ensemble
-  // de la requête catalogue, qui elle dépend de la recherche/catégorie/tri.
-  // Sert aussi de source pour le collage de photos du hero (voir plus bas).
   const newArrivalsQuery = supabase
     .from("products")
-    .select(
-      "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)"
-    )
+    .select(PRODUCT_CARD_COLUMNS)
     .eq("is_active", true)
     .is("deleted_at", null)
     .eq("shop.status", "active")
@@ -186,7 +189,9 @@ export default async function Home({
   // en avant que des produits, jamais les boutiques elles-mêmes (noté "non
   // fait" le 13/09/2026 à la construction initiale). Tri par nombre de vues
   // (`shops.view_count`, existant depuis le 13/09/2026) — un signal de
-  // popularité simple, sans introduire de nouvelle notion.
+  // popularité simple, sans introduire de nouvelle notion. Restée visible
+  // même en mode filtré (utile pour découvrir un vendeur pendant une
+  // recherche), contrairement aux bandes de catalogue ci-dessous.
   const featuredShopsQuery = supabase
     .from("shops")
     .select("id, slug, name, logo_url, category")
@@ -194,13 +199,11 @@ export default async function Home({
     .order("view_count", { ascending: false })
     .limit(FEATURED_SHOPS_SIZE);
 
-  // Chiffres réels de la plateforme, affichés dans le hero — ajouté le
-  // 15/09/2026 dans le cadre de la refonte visuelle. `head: true` : on ne
-  // veut que le compte, jamais les lignes elles-mêmes, donc pas de coût de
-  // transfert supplémentaire. Jamais une valeur inventée pour "faire plein"
-  // (même principe que la barre de santé du stock ou le badge "vendeur
-  // vérifié" écarté ailleurs) : si la plateforme est encore petite, le
-  // chiffre réel s'affiche tel quel.
+  // Chiffres réels de la plateforme, affichés dans le hero. `head: true` :
+  // on ne veut que le compte, jamais les lignes elles-mêmes. Jamais une
+  // valeur inventée pour "faire plein" (même principe que la barre de santé
+  // du stock ou le badge "vendeur vérifié" écarté ailleurs) : si la
+  // plateforme est encore petite, le chiffre réel s'affiche tel quel.
   const shopsCountQuery = supabase
     .from("shops")
     .select("id", { count: "exact", head: true })
@@ -211,20 +214,52 @@ export default async function Home({
     .eq("is_active", true)
     .is("deleted_at", null);
 
+  // Grille filtrée (recherche/catégorie), seulement construite en mode
+  // filtré — inutile de payer une requête paginée de tout le catalogue
+  // quand la page par défaut n'en a plus besoin.
+  let catalogueQuery = supabase
+    .from("products")
+    .select(PRODUCT_CARD_COLUMNS, { count: "exact" })
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .eq("shop.status", "active")
+    .range(from, to);
+  if (q) catalogueQuery = catalogueQuery.ilike("title", `%${q}%`);
+  if (categorie) catalogueQuery = catalogueQuery.eq("category", categorie);
+  if (sort === "prix_asc") catalogueQuery = catalogueQuery.order("price", { ascending: true });
+  else if (sort === "prix_desc") catalogueQuery = catalogueQuery.order("price", { ascending: false });
+  else catalogueQuery = catalogueQuery.order("created_at", { ascending: false });
+
+  // Flux borné de produits récents, regroupé en JS par catégorie plus bas —
+  // une seule requête plutôt que jusqu'à 24 (une par catégorie). Seulement
+  // nécessaire en mode par défaut (pas de bandes par catégorie en mode
+  // filtré).
+  const categoryFeedQuery = supabase
+    .from("products")
+    .select(PRODUCT_CARD_COLUMNS)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .eq("shop.status", "active")
+    .order("created_at", { ascending: false })
+    .limit(CATEGORY_FEED_LIMIT);
+
   const [
-    { data: products, count },
     { data: newArrivals },
     { data: featuredShopsRaw },
     { count: shopsCount },
     { count: productsCount },
+    catalogueResult,
+    categoryFeedResult,
   ] = await Promise.all([
-    catalogueQuery,
     newArrivalsQuery,
     featuredShopsQuery,
     shopsCountQuery,
     productsCountQuery,
+    hasFilter ? catalogueQuery : Promise.resolve({ data: [] as RawMarketplaceProduct[], count: 0 }),
+    hasFilter ? Promise.resolve({ data: [] as RawMarketplaceProduct[] }) : categoryFeedQuery,
   ]);
 
+  const { data: products, count } = catalogueResult;
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
   const catalogueProducts = ((products ?? []) as RawMarketplaceProduct[])
     .map(toCardProduct)
@@ -232,6 +267,70 @@ export default async function Home({
   const newArrivalsProducts = ((newArrivals ?? []) as RawMarketplaceProduct[])
     .map(toCardProduct)
     .filter((p): p is MarketplaceCardProduct => p !== null);
+
+  // Meilleures ventes : appel best-effort à la RPC `get_best_selling_products`
+  // (migration 0015). Enveloppé pour ne jamais faire échouer la page
+  // d'accueil si Isaac n'a pas encore appliqué la migration — même logique
+  // "best-effort" que les notifications email (ne jamais bloquer le
+  // parcours principal pour une fonctionnalité secondaire).
+  let bestSellingProducts: MarketplaceCardProduct[] = [];
+  if (!hasFilter) {
+    const { data: bestSellers, error: bestSellersError } = await supabase.rpc(
+      "get_best_selling_products",
+      { p_limit: BEST_SELLERS_SIZE }
+    );
+    if (bestSellersError) {
+      console.error(
+        "get_best_selling_products RPC error (migration 0015 appliquée ?):",
+        bestSellersError
+      );
+    } else if (bestSellers && bestSellers.length > 0) {
+      const ids: string[] = (bestSellers as { product_id: string }[]).map(
+        (row) => row.product_id
+      );
+      const { data: bestSellersRaw } = await supabase
+        .from("products")
+        .select(PRODUCT_CARD_COLUMNS)
+        .in("id", ids)
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .eq("shop.status", "active");
+      const byId = new Map<string, RawMarketplaceProduct>(
+        ((bestSellersRaw ?? []) as RawMarketplaceProduct[]).map(
+          (p): [string, RawMarketplaceProduct] => [p.id, p]
+        )
+      );
+      bestSellingProducts = ids
+        .map((id: string): RawMarketplaceProduct | undefined => byId.get(id))
+        .filter((p): p is RawMarketplaceProduct => Boolean(p))
+        .map(toCardProduct)
+        .filter((p): p is MarketplaceCardProduct => p !== null);
+    }
+  }
+
+  // Bandes par catégorie : regroupe le flux borné ci-dessus par catégorie,
+  // dans l'ordre de `CATEGORIES`, plafonné à `CATEGORY_ROW_SIZE` par bande.
+  // Une catégorie sans aucun produit actif n'apparaît simplement pas — même
+  // principe que les autres bandes de découverte, jamais de bande vide.
+  const categoryRows: { value: string; label: string; products: MarketplaceCardProduct[] }[] = [];
+  if (!hasFilter) {
+    const feedProducts = ((categoryFeedResult.data ?? []) as RawMarketplaceProduct[])
+      .map(toCardProduct)
+      .filter((p): p is MarketplaceCardProduct => p !== null);
+    const byCategory = new Map<string, MarketplaceCardProduct[]>();
+    for (const product of feedProducts) {
+      if (!product.category) continue;
+      const list = byCategory.get(product.category) ?? [];
+      if (list.length < CATEGORY_ROW_SIZE) list.push(product);
+      byCategory.set(product.category, list);
+    }
+    for (const cat of CATEGORIES) {
+      const list = byCategory.get(cat.value);
+      if (list && list.length > 0) {
+        categoryRows.push({ value: cat.value, label: cat.label, products: list });
+      }
+    }
+  }
 
   // Collage du hero : les vignettes des toutes dernières nouveautés, déjà
   // chargées ci-dessus — pas de requête supplémentaire. De vraies photos
@@ -256,10 +355,7 @@ export default async function Home({
   );
 
   // Résumé des filtres actifs + compteur de résultats, affiché au-dessus de
-  // la grille du catalogue (retour d'Isaac : un lien "réinitialiser"
-  // n'existait qu'en cas de recherche texte, pas de filtre catégorie seul —
-  // et rien n'indiquait le nombre de résultats en dehors d'un filtre).
-  const hasFilter = Boolean(q || categorie);
+  // la grille filtrée.
   const resultLabel = `${count ?? 0} article${(count ?? 0) === 1 ? "" : "s"}`;
   const filterSummary = q && categorie
     ? `${resultLabel} pour « ${q} » dans ${categoryLabel(categorie)}`
@@ -267,7 +363,8 @@ export default async function Home({
       ? `${resultLabel} pour « ${q} »`
       : categorie
         ? `${resultLabel} dans ${categoryLabel(categorie)}`
-        : `${resultLabel} au catalogue`;
+        : resultLabel;
+  const gridTitle = categorie ? categoryLabel(categorie) : "Résultats de recherche";
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-10">
@@ -307,12 +404,9 @@ export default async function Home({
         </div>
       </header>
 
-      {/* Hero : vitrine de toute la plateforme, retravaillée le 15/09/2026 à
-          la demande explicite d'Isaac ("mille fois plus beau" que la page
-          boutique). Signature de marque KEVA ("Vendez. Encaissez.
-          Grandissez.", choisie le 15/09/2026 mais jamais encore intégrée
-          visuellement) en eyebrow, gros titre en Fraunces, et un collage de
-          vraies photos produit à droite plutôt qu'un rectangle vide. */}
+      {/* Hero : vitrine de toute la plateforme. Signature de marque KEVA
+          ("Vendez. Encaissez. Grandissez."), gros titre en Fraunces, collage
+          de vraies photos produit, chiffres réels de la plateforme. */}
       <section className="-mx-4 bg-vert-profond px-4 py-12 text-ivoire sm:py-16">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl text-center lg:text-left">
@@ -376,17 +470,14 @@ export default async function Home({
       </section>
 
       {/* Catégories : point d'entrée principal pour parcourir le catalogue,
-          juste sous le hero. */}
+          juste sous le hero. Étendues à 24 catégories le 15/09/2026 (round
+          2) — voir src/lib/categories.ts. */}
       <div className="mt-8">
         <CategoryNav current={current} active={categorie} />
       </div>
 
       {/* Argumentaire de confiance : adapté de la rangée "services de
-          qualité" de Jumia, avec seulement ce qui est vrai aujourd'hui (voir
-          le libellé "bientôt disponible" déjà utilisé sur la page de
-          paiement — CinetPay/Mobile Money n'est pas encore branché en
-          production, cf. decisions-techniques.md). Icônes dessinées à la
-          main, ajoutées le 15/09/2026 (auparavant du texte seul). */}
+          qualité" de Jumia, avec seulement ce qui est vrai aujourd'hui. */}
       <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {TRUST_ITEMS.map((item) => (
           <div key={item.title} className="flex items-start gap-3 rounded-lg border border-ligne bg-white p-4">
@@ -406,8 +497,7 @@ export default async function Home({
 
       {/* Boutiques de la plateforme : met en avant les vendeurs eux-mêmes,
           pas seulement leurs produits. Masquée si aucune boutique active
-          n'existe encore. Défilement en douceur (`snap-x`) ajouté le
-          15/09/2026. */}
+          n'existe encore. Restée visible même en mode filtré. */}
       {featuredShops.length > 0 ? (
         <section className="mt-10">
           <h2 className="font-display text-lg font-semibold text-encre">Boutiques de la plateforme</h2>
@@ -419,43 +509,28 @@ export default async function Home({
         </section>
       ) : null}
 
-      {/* Nouveautés : bande à défilement horizontal, indépendante des
-          filtres du catalogue plus bas (voir la requête dédiée). Masquée si
-          la marketplace n'a pas encore assez de produits pour que ça vaille
-          le coup. */}
-      {newArrivalsProducts.length > 0 ? (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold text-encre">Nouveautés</h2>
-          <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth">
-            {newArrivalsProducts.map((product) => (
-              <ProductCard key={product.id} product={product} className="w-44 shrink-0 snap-start" />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* Catalogue complet : résultats filtrés/triés/paginés (fonctionnalité
-          inchangée). Regroupé dans une carte comme les filtres de la page
-          boutique/du dashboard vendeur, pour une cohérence entre les pages
-          déjà retravaillées le même jour. */}
-      <section id="catalogue" className="mt-10 scroll-mt-20">
-        <div className="rounded-lg border border-ligne bg-white p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold text-encre">
-              {categorie ? categoryLabel(categorie) : "Tout le catalogue"}
-            </h2>
-            <SortSelect
-              basePath="/"
-              value={sort}
-              options={SORTS as unknown as { value: string; label: string }[]}
-              q={q}
-              categorie={categorie}
-            />
-          </div>
-          <p className="mt-1 text-xs text-encre/60">
-            {filterSummary}
-            {hasFilter ? (
-              <>
+      <div id="catalogue" className="scroll-mt-20">
+        {hasFilter ? (
+          /* Mode filtré : grille classique triable/paginée — recherche
+             texte et/ou catégorie choisie explicitement (via CategoryNav ou
+             un lien "Voir tout"). C'est le seul endroit de la page où le
+             catalogue est affiché "à plat" plutôt qu'en bandes, précisément
+             parce qu'un résultat filtré reste un ensemble borné et déjà
+             qualifié par l'utilisateur — pas "tout le catalogue" d'un coup. */
+          <section className="mt-10">
+            <div className="rounded-lg border border-ligne bg-white p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-display text-lg font-semibold text-encre">{gridTitle}</h2>
+                <SortSelect
+                  basePath="/"
+                  value={sort}
+                  options={SORTS as unknown as { value: string; label: string }[]}
+                  q={q}
+                  categorie={categorie}
+                />
+              </div>
+              <p className="mt-1 text-xs text-encre/60">
+                {filterSummary}
                 {" — "}
                 <Link
                   href={buildMarketplaceHref(current, { q: undefined, categorie: undefined, page: undefined })}
@@ -463,57 +538,75 @@ export default async function Home({
                 >
                   réinitialiser les filtres
                 </Link>
-              </>
+              </p>
+            </div>
+
+            {catalogueProducts.length === 0 ? (
+              <p className="mt-10 text-sm text-encre/70">Aucun article ne correspond à ta recherche.</p>
+            ) : (
+              <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {catalogueProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+
+            {totalPages > 1 ? (
+              <div className="mt-8 flex items-center justify-center gap-2 text-sm">
+                {page > 1 ? (
+                  <Link
+                    href={buildMarketplaceHref(current, { page: String(page - 1) })}
+                    className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
+                  >
+                    ‹ Précédent
+                  </Link>
+                ) : (
+                  <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
+                    ‹ Précédent
+                  </span>
+                )}
+                <span className="px-2 font-mono text-encre/70">
+                  {page} / {totalPages}
+                </span>
+                {page < totalPages ? (
+                  <Link
+                    href={buildMarketplaceHref(current, { page: String(page + 1) })}
+                    className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
+                  >
+                    Suivant ›
+                  </Link>
+                ) : (
+                  <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
+                    Suivant ›
+                  </span>
+                )}
+              </div>
             ) : null}
-          </p>
-        </div>
-
-        {catalogueProducts.length === 0 ? (
-          <p className="mt-10 text-sm text-encre/70">
-            {hasFilter
-              ? "Aucun article ne correspond à ta recherche."
-              : "Aucun article disponible pour l'instant — reviens bientôt."}
-          </p>
+          </section>
         ) : (
-          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {catalogueProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+          /* Mode par défaut : disposition par bandes façon Jumia/Amazon —
+             Nouveautés, Meilleures ventes, puis une bande par catégorie
+             ayant au moins un produit actif. Jamais de grille "tout le
+             catalogue" affichée d'un coup, même à grande échelle. */
+          <>
+            <ProductRow title="Nouveautés" products={newArrivalsProducts} />
+            <ProductRow title="Meilleures ventes" products={bestSellingProducts} />
+            {categoryRows.map((row) => (
+              <ProductRow
+                key={row.value}
+                title={row.label}
+                products={row.products}
+                viewAllHref={buildMarketplaceHref(current, { categorie: row.value, page: undefined })}
+              />
             ))}
-          </div>
+            {newArrivalsProducts.length === 0 && categoryRows.length === 0 ? (
+              <p className="mt-10 text-sm text-encre/70">
+                Aucun article disponible pour l&apos;instant — reviens bientôt.
+              </p>
+            ) : null}
+          </>
         )}
-
-        {totalPages > 1 ? (
-          <div className="mt-8 flex items-center justify-center gap-2 text-sm">
-            {page > 1 ? (
-              <Link
-                href={buildMarketplaceHref(current, { page: String(page - 1) })}
-                className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
-              >
-                ‹ Précédent
-              </Link>
-            ) : (
-              <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
-                ‹ Précédent
-              </span>
-            )}
-            <span className="px-2 font-mono text-encre/70">
-              {page} / {totalPages}
-            </span>
-            {page < totalPages ? (
-              <Link
-                href={buildMarketplaceHref(current, { page: String(page + 1) })}
-                className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
-              >
-                Suivant ›
-              </Link>
-            ) : (
-              <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
-                Suivant ›
-              </span>
-            )}
-          </div>
-        ) : null}
-      </section>
+      </div>
     </main>
   );
 }
