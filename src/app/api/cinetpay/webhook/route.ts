@@ -5,24 +5,34 @@ import { applyPlanToShop } from "@/lib/subscription";
 
 /**
  * Webhook de notification CinetPay pour les paiements d'abonnement —
- * implémentation réelle du 15/09/2026 (compte marchand d'Isaac validé, voir
- * decisions-techniques.md). Remplace le stub posé précédemment (payload
- * jamais vérifié, statut jamais confirmé).
+ * réécrit le 15/09/2026 après avoir découvert que le compte réel d'Isaac
+ * tourne sur une version plus récente de l'API que celle initialement
+ * documentée (voir decisions-techniques.md et cinetpay.ts). Deux différences
+ * majeures avec la première version de ce fichier :
+ * - Le corps est du JSON (pas `application/x-www-form-urlencoded`).
+ * - Le payload ne contient PAS de statut — seulement des identifiants
+ *   (`notify_token`, `merchant_transaction_id`, `transaction_id`) et les
+ *   infos du client. Il n'y a donc même pas de tentation de lire un faux
+ *   statut : on va toujours chercher le statut réel nous-mêmes.
  *
- * Règles de sécurité issues de la doc officielle CinetPay
- * (https://docs.cinetpay.com/api/1.0-fr/checkout/notification), suivies à
- * la lettre :
- * - CinetPay envoie ce webhook en `application/x-www-form-urlencoded`, PAS
- *   en JSON — d'où `request.formData()` plutôt que `request.json()`.
- * - Le webhook peut être appelé PLUSIEURS FOIS pour la même transaction —
- *   traitement idempotent obligatoire (voir la vérification `payment.status
- *   === "success"` plus bas).
- * - On ne fait JAMAIS confiance au statut annoncé dans le payload reçu : on
- *   rappelle systématiquement l'API de vérification CinetPay
- *   (`checkCinetPayTransactionStatus`) avec NOTRE propre apikey/site_id
- *   pour obtenir le statut réel avant d'activer quoi que ce soit.
- * - Toujours répondre 200, sans redirection — sinon CinetPay considère la
- *   notification en échec et réessaie indéfiniment.
+ * Règles de sécurité — copiées de la page "Notification de transaction" de
+ * la documentation intégrée au compte d'Isaac ("Avertissement sécurité — À
+ * LIRE EN PREMIER") :
+ * - "Ne faites JAMAIS confiance au statut transmis dans le webhook." N'importe
+ *   qui connaissant l'URL (publique par nature) peut forger un appel.
+ * - Règle d'or : à chaque réception, on appelle immédiatement
+ *   `GET /v1/payment/{merchant_transaction_id}` pour obtenir le statut
+ *   canonique signé par CinetPay — jamais une donnée du payload entrant.
+ * - En plus de ça, on compare le `notify_token` reçu à celui qu'on a stocké
+ *   nous-mêmes lors de l'initialisation (`initiateSubscriptionPayment`) —
+ *   une vérification d'authenticité supplémentaire, recommandée par leur
+ *   doc, qui rejette une notification forgée avant même de dépenser un appel
+ *   à l'API de vérification.
+ * - Toujours répondre 200 sous 10 secondes, sans redirection, même en cas
+ *   d'erreur de notre côté — sinon CinetPay retente indéfiniment (back-off
+ *   1 min, 5 min, 30 min, 2h, 6h...).
+ * - Traitement idempotent obligatoire : une notification peut être livrée
+ *   plusieurs fois pour la même transaction.
  *
  * Cette route est un webhook serveur-à-serveur : `createServiceRoleClient`
  * est le bon choix ici (pas de session utilisateur, pas de cookies) — même
@@ -31,15 +41,18 @@ import { applyPlanToShop } from "@/lib/subscription";
 export async function POST(request: NextRequest) {
   const supabase = createServiceRoleClient();
 
-  let transactionId: string | null = null;
+  let payload: Record<string, unknown> | null = null;
   try {
-    const formData = await request.formData();
-    transactionId = String(formData.get("cpm_trans_id") ?? "") || null;
+    payload = await request.json();
   } catch (error) {
-    console.error("CinetPay webhook — payload illisible:", error);
+    console.error("CinetPay webhook — payload JSON illisible:", error);
   }
 
-  if (!transactionId) {
+  const merchantTransactionId =
+    typeof payload?.merchant_transaction_id === "string" ? payload.merchant_transaction_id : null;
+  const notifyToken = typeof payload?.notify_token === "string" ? payload.notify_token : null;
+
+  if (!merchantTransactionId) {
     // Toujours 200 : CinetPay ne doit jamais recevoir d'erreur qui le
     // pousserait à réessayer indéfiniment un payload qu'on ne peut de toute
     // façon pas traiter.
@@ -48,8 +61,8 @@ export async function POST(request: NextRequest) {
 
   const { data: payment } = await supabase
     .from("payments")
-    .select("id, shop_id, status, intent_plan_code")
-    .eq("provider_transaction_id", transactionId)
+    .select("id, shop_id, status, intent_plan_code, provider_notify_token")
+    .eq("provider_transaction_id", merchantTransactionId)
     .maybeSingle();
 
   if (!payment || !payment.shop_id || !payment.intent_plan_code) {
@@ -57,20 +70,33 @@ export async function POST(request: NextRequest) {
     // initiateSubscriptionPayment) — rien à activer, mais on répond quand
     // même 200 pour ne pas déclencher de réessais CinetPay sur un cas qui
     // ne se résoudra jamais.
-    console.error("CinetPay webhook — transaction inconnue:", transactionId);
+    console.error("CinetPay webhook — transaction inconnue:", merchantTransactionId);
     return NextResponse.json({ received: true });
   }
 
-  // Idempotence : la doc CinetPay prévient explicitement que ce webhook peut
-  // être appelé plusieurs fois pour la même transaction — un paiement déjà
-  // confirmé ne doit pas réactiver/réinitialiser l'abonnement une seconde fois.
+  // Vérification d'authenticité recommandée par CinetPay, EN PLUS de la
+  // vérification de statut ci-dessous (qui reste, elle, obligatoire) — un
+  // jeton qui ne correspond pas signifie que cet appel n'a pas été déclenché
+  // par notre propre initialisation de paiement.
+  if (payment.provider_notify_token && payment.provider_notify_token !== notifyToken) {
+    console.error(
+      "CinetPay webhook — notify_token invalide pour la transaction:",
+      merchantTransactionId
+    );
+    return NextResponse.json({ received: true });
+  }
+
+  // Idempotence : une notification peut être livrée plusieurs fois pour la
+  // même transaction — un paiement déjà confirmé ne doit pas réactiver
+  // l'abonnement une seconde fois.
   if (payment.status === "success") {
     return NextResponse.json({ received: true });
   }
 
   // Étape obligatoire : on ne fait confiance qu'à cette vérification, jamais
-  // au contenu du payload webhook lui-même.
-  const verification = await checkCinetPayTransactionStatus(transactionId);
+  // au contenu du payload webhook lui-même (qui, dans cette version de
+  // l'API, ne contient de toute façon aucun statut).
+  const verification = await checkCinetPayTransactionStatus(merchantTransactionId);
 
   if (verification.status === "ACCEPTED") {
     const result = await applyPlanToShop(supabase, payment.shop_id, payment.intent_plan_code);
@@ -89,7 +115,7 @@ export async function POST(request: NextRequest) {
       action: "subscription_payment_success",
       metadata: {
         plan: payment.intent_plan_code,
-        transaction_id: transactionId,
+        transaction_id: merchantTransactionId,
         applied: Boolean(result),
       },
     });
@@ -103,11 +129,20 @@ export async function POST(request: NextRequest) {
       actor_id: null,
       shop_id: payment.shop_id,
       action: "subscription_payment_failed",
-      metadata: { plan: payment.intent_plan_code, transaction_id: transactionId },
+      metadata: { plan: payment.intent_plan_code, transaction_id: merchantTransactionId },
     });
   }
   // PENDING / UNKNOWN : on ne fait rien, le webhook sera probablement
   // rappelé plus tard par CinetPay avec un statut définitif.
 
+  return NextResponse.json({ received: true });
+}
+
+/**
+ * CinetPay recommande d'accepter aussi le GET sur la même URL : une sonde de
+ * santé envoyée avant la première vraie notification, pour vérifier que
+ * l'endpoint est joignable. Un corps vide avec 200 suffit.
+ */
+export async function GET() {
   return NextResponse.json({ received: true });
 }

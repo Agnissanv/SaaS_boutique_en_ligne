@@ -9,6 +9,21 @@ export type InitiatePaymentState = {
 };
 
 /**
+ * CinetPay ("1.0 Aurora") exige `client_first_name` / `client_last_name`,
+ * chacun avec au moins 2 caractères — des champs qu'on n'a pas séparément en
+ * base (`profiles.display_name` est un champ unique). On les dérive du nom
+ * affiché du vendeur, avec repli sur "Client" si vide/trop court.
+ */
+function splitDisplayName(displayName: string | null | undefined) {
+  const parts = (displayName ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+  }
+  const single = parts[0] && parts[0].length >= 2 ? parts[0] : "Client";
+  return { firstName: single, lastName: single };
+}
+
+/**
  * Démarre un paiement CinetPay réel pour passer d'un plan à un autre
  * (spec du 15/09/2026 — Isaac a confirmé que le compte marchand est
  * maintenant validé). Le vendeur choisit son plan sur /dashboard/abonnement,
@@ -53,6 +68,12 @@ export async function initiateSubscriptionPayment(
     return { error: "Crée d'abord ta boutique." };
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const serviceRole = createServiceRoleClient();
 
   const { data: plan } = await serviceRole
@@ -91,13 +112,18 @@ export async function initiateSubscriptionPayment(
     return { error: "Impossible de démarrer le paiement. Réessaie." };
   }
 
+  const { firstName, lastName } = splitDisplayName(profile?.display_name);
+
   const result = await initiateCinetPayPayment({
     transactionId,
     amount: plan.price,
     description: `Abonnement KEVA — Plan ${plan.name}`,
     notifyUrl: `${siteUrl}/api/cinetpay/webhook`,
-    returnUrl: `${siteUrl}/dashboard/abonnement?paiement=retour`,
-    metadata: shop.id,
+    successUrl: `${siteUrl}/dashboard/abonnement?paiement=succes`,
+    failedUrl: `${siteUrl}/dashboard/abonnement?paiement=echec`,
+    clientEmail: user.email ?? "client@keva.app",
+    clientFirstName: firstName,
+    clientLastName: lastName,
   });
 
   if (!result.ok) {
@@ -107,6 +133,14 @@ export async function initiateSubscriptionPayment(
       .eq("provider_transaction_id", transactionId);
     return { error: result.error };
   }
+
+  // Stocké pour que le webhook puisse authentifier la notification reçue
+  // (comparaison de `notify_token`) avant même d'appeler l'API de
+  // vérification — voir 0018_cinetpay_notify_token.sql.
+  await serviceRole
+    .from("payments")
+    .update({ provider_notify_token: result.notifyToken })
+    .eq("provider_transaction_id", transactionId);
 
   redirect(result.paymentUrl);
 }
