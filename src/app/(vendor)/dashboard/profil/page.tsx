@@ -33,13 +33,13 @@ export default async function ProfilePage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Mon profil</h1>
-      <p className="mt-2 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Mon profil</h1>
+      <p className="mt-2 text-sm text-encre/70">
         Gère tes informations personnelles et ta connexion.
       </p>
 
       <section className="mt-6 max-w-md">
-        <h2 className="text-sm font-medium text-gray-700">Identité</h2>
+        <h2 className="font-display text-sm font-semibold text-encre">Identité</h2>
         <ProfileForm
           profile={{
             displayName: profile?.display_name ?? "",
@@ -49,13 +49,13 @@ export default async function ProfilePage() {
         />
       </section>
 
-      <section className="mt-8 max-w-md border-t border-gray-200 pt-6">
-        <h2 className="text-sm font-medium text-gray-700">Email de connexion</h2>
+      <section className="mt-8 max-w-md border-t border-ligne pt-6">
+        <h2 className="font-display text-sm font-semibold text-encre">Email de connexion</h2>
         <EmailForm currentEmail={user.email ?? ""} />
       </section>
 
-      <section className="mt-8 max-w-md border-t border-gray-200 pt-6">
-        <h2 className="text-sm font-medium text-gray-700">Mot de passe</h2>
+      <section className="mt-8 max-w-md border-t border-ligne pt-6">
+        <h2 className="font-display text-sm font-semibold text-encre">Mot de passe</h2>
         <PasswordForm />
       </section>
     </div>

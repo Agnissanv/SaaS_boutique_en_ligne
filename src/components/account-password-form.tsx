@@ -54,7 +54,7 @@ export function PasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
+        <label htmlFor="newPassword" className="text-sm font-medium text-encre">
           Nouveau mot de passe
         </label>
         <input
@@ -65,12 +65,12 @@ export function PasswordForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+        <label htmlFor="confirmPassword" className="text-sm font-medium text-encre">
           Confirme le mot de passe
         </label>
         <input
@@ -81,17 +81,17 @@ export function PasswordForm() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           placeholder="••••••••"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-green-600">Mot de passe mis à jour.</p>}
+      {error && <p className="text-sm text-erreur">{error}</p>}
+      {success && <p className="text-sm text-succes">Mot de passe mis à jour.</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 w-fit rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="mt-1 w-fit rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
       >
         {pending ? "Enregistrement..." : "Changer le mot de passe"}
       </button>

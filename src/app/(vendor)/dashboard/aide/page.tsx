@@ -53,18 +53,18 @@ const FAQ: { question: string; answer: string }[] = [
 export default function HelpPage() {
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Aide</h1>
-      <p className="mt-2 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Aide</h1>
+      <p className="mt-2 text-sm text-encre/70">
         Questions fréquentes sur l&apos;utilisation de ta boutique.
       </p>
 
-      <div className="mt-6 max-w-2xl divide-y divide-gray-200">
+      <div className="mt-6 max-w-2xl divide-y divide-ligne">
         {FAQ.map((item, index) => (
           <details key={index} className="group py-3">
-            <summary className="cursor-pointer text-sm font-medium text-gray-900">
+            <summary className="cursor-pointer text-sm font-medium text-encre hover:text-vert-sapin">
               {item.question}
             </summary>
-            <p className="mt-2 text-sm text-gray-600">{item.answer}</p>
+            <p className="mt-2 text-sm text-encre/70">{item.answer}</p>
           </details>
         ))}
       </div>

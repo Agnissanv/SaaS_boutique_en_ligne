@@ -1,14 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  paid: "Payée",
-  preparing: "En préparation",
-  delivered: "Livrée",
-  cancelled: "Annulée",
-};
+import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
 
 type Order = {
   id: string;
@@ -46,23 +39,23 @@ export default async function OrdersPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-900">Commandes</h1>
+        <h1 className="font-display text-lg font-semibold text-encre">Commandes</h1>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- route API (fichier à télécharger), pas une page Next : <Link> tenterait une navigation client au lieu d'un téléchargement */}
         <a
           href="/api/dashboard/commandes/export"
-          className="text-sm text-gray-700 underline"
+          className="rounded-md border border-ligne px-3 py-1.5 text-sm font-medium text-encre hover:bg-brume"
         >
           Exporter en CSV
         </a>
       </div>
 
       {(orders ?? []).length === 0 ? (
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-encre/70">
           Aucune commande pour l&apos;instant. Elles apparaîtront ici dès
           qu&apos;un client commandera sur ta boutique.
         </p>
       ) : (
-        <ul className="mt-4 divide-y divide-gray-200">
+        <ul className="mt-4 divide-y divide-ligne">
           {(orders as Order[]).map((order) => (
             <li key={order.id} className="py-3">
               <Link
@@ -70,15 +63,21 @@ export default async function OrdersPage() {
                 className="flex items-center justify-between gap-4"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">
+                  <p className="truncate text-sm font-medium text-encre">
                     {order.customer_name}
-                    <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
-                      {STATUS_LABELS[order.status] ?? order.status}
+                    <span
+                      className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
+                        ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/70"
+                      }`}
+                    >
+                      {ORDER_STATUS_LABELS[order.status] ?? order.status}
                     </span>
                   </p>
-                  <p className="text-sm text-gray-600">
-                    {order.total_amount} FCFA —{" "}
-                    {new Date(order.created_at).toLocaleDateString("fr-FR")}
+                  <p className="text-sm text-encre/70">
+                    <span className="font-mono text-cuivre-profond">
+                      {order.total_amount} FCFA
+                    </span>{" "}
+                    — {new Date(order.created_at).toLocaleDateString("fr-FR")}
                   </p>
                 </div>
               </Link>

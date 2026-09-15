@@ -29,7 +29,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="mt-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+      className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
     >
       {pending ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer ma boutique"}
     </button>
@@ -85,7 +85,7 @@ function ImageField({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label className="text-sm font-medium text-encre">{label}</label>
       <input type="hidden" name={fieldName} value={url} />
       {url ? (
         <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ function ImageField({
           <button
             type="button"
             onClick={handleRemove}
-            className="text-sm text-red-600 underline"
+            className="text-sm text-erreur underline"
           >
             Retirer
           </button>
@@ -109,11 +109,11 @@ function ImageField({
           accept="image/*"
           onChange={handleChange}
           disabled={uploading}
-          className="text-sm"
+          className="text-sm text-encre/80"
         />
       )}
-      {uploading && <p className="text-xs text-gray-500">Envoi en cours...</p>}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
+      {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
   );
 }
@@ -127,7 +127,7 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
       {shop && <input type="hidden" name="shopId" value={shop.id} />}
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium text-gray-700">
+        <label htmlFor="name" className="text-sm font-medium text-encre">
           Nom de la boutique
         </label>
         <input
@@ -138,13 +138,13 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
           maxLength={80}
           defaultValue={shop?.name ?? ""}
           placeholder="Ex : Chez Awa Mode"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm font-medium text-gray-700">
-          Description <span className="text-gray-400">(300 caractères max)</span>
+        <label htmlFor="description" className="text-sm font-medium text-encre">
+          Description <span className="text-encre/50">(300 caractères max)</span>
         </label>
         <textarea
           id="description"
@@ -153,12 +153,12 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
           rows={3}
           defaultValue={shop?.description ?? ""}
           placeholder="Présente ta boutique en quelques mots..."
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="category" className="text-sm font-medium text-gray-700">
+        <label htmlFor="category" className="text-sm font-medium text-encre">
           Catégorie
         </label>
         <select
@@ -166,7 +166,7 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
           name="category"
           required
           defaultValue={shop?.category ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         >
           <option value="" disabled>
             Choisir une catégorie
@@ -193,8 +193,8 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
       />
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="deliveryFee" className="text-sm font-medium text-gray-700">
-          Frais de livraison (FCFA) <span className="text-gray-400">(optionnel)</span>
+        <label htmlFor="deliveryFee" className="text-sm font-medium text-encre">
+          Frais de livraison (FCFA) <span className="text-encre/50">(optionnel)</span>
         </label>
         <input
           id="deliveryFee"
@@ -204,9 +204,9 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
           step={1}
           defaultValue={shop?.delivery_fee ?? ""}
           placeholder="Ex : 1000"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-encre/50">
           Affiché au client avant qu&apos;il confirme sa commande. Laisse
           vide si le tarif dépend de la zone — le client saura alors que
           c&apos;est à confirmer avec toi.
@@ -214,8 +214,8 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="whatsappNumber" className="text-sm font-medium text-gray-700">
-          Numéro WhatsApp <span className="text-gray-400">(optionnel)</span>
+        <label htmlFor="whatsappNumber" className="text-sm font-medium text-encre">
+          Numéro WhatsApp <span className="text-encre/50">(optionnel)</span>
         </label>
         <input
           id="whatsappNumber"
@@ -223,18 +223,18 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
           type="tel"
           placeholder="+225 07 00 00 00 00"
           defaultValue={shop?.whatsapp_number ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-encre/50">
           Affiche un bouton « Contacter sur WhatsApp » sur ta boutique et tes
           fiches produit. Laisse vide pour ne pas l&apos;afficher.
         </p>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="notificationEmail" className="text-sm font-medium text-gray-700">
+        <label htmlFor="notificationEmail" className="text-sm font-medium text-encre">
           Email pour les notifications de commande{" "}
-          <span className="text-gray-400">(optionnel)</span>
+          <span className="text-encre/50">(optionnel)</span>
         </label>
         <input
           id="notificationEmail"
@@ -242,22 +242,22 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
           type="email"
           placeholder="Laisse vide pour ne recevoir aucun email"
           defaultValue={shop?.notification_email ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-encre/50">
           Reçois un email à chaque nouvelle commande. Peut être différent de
           ton email de connexion.
         </p>
       </div>
 
       {shop && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-encre/60">
           Lien public :{" "}
           <a
             href={`/${shop.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="font-mono underline"
+            className="font-mono text-vert-sapin underline hover:text-vert-actif"
           >
             /{shop.slug}
           </a>{" "}
@@ -265,9 +265,9 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
         </p>
       )}
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-erreur">{state.error}</p>}
       {state.success && (
-        <p className="text-sm text-green-600">Boutique enregistrée.</p>
+        <p className="text-sm text-succes">Boutique enregistrée.</p>
       )}
 
       <SubmitButton isEdit={Boolean(shop)} />

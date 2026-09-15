@@ -51,12 +51,12 @@ export function EmailForm({ currentEmail }: { currentEmail: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
-      <p className="text-sm text-gray-600">
-        Email actuel : <span className="font-medium text-gray-900">{currentEmail}</span>
+      <p className="text-sm text-encre/70">
+        Email actuel : <span className="font-medium text-encre">{currentEmail}</span>
       </p>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="newEmail" className="text-sm font-medium text-gray-700">
+        <label htmlFor="newEmail" className="text-sm font-medium text-encre">
           Nouvelle adresse email
         </label>
         <input
@@ -65,17 +65,17 @@ export function EmailForm({ currentEmail }: { currentEmail: string }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="nouvelle-adresse@exemple.com"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-encre/50">
           Un email de confirmation sera envoyé à cette adresse. Le changement
           ne sera effectif qu&apos;après avoir cliqué sur le lien reçu.
         </p>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-erreur">{error}</p>}
       {success && (
-        <p className="text-sm text-green-600">
+        <p className="text-sm text-succes">
           Email de confirmation envoyé. Vérifie ta boîte de réception.
         </p>
       )}
@@ -83,7 +83,7 @@ export function EmailForm({ currentEmail }: { currentEmail: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 w-fit rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="mt-1 w-fit rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
       >
         {pending ? "Envoi..." : "Changer l'email"}
       </button>

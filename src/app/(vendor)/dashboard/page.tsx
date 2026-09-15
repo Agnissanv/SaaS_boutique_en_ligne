@@ -2,14 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LOW_STOCK_THRESHOLD } from "@/lib/products";
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  paid: "Payée",
-  preparing: "En préparation",
-  delivered: "Livrée",
-  cancelled: "Annulée",
-};
+import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
 
 type RecentOrder = {
   id: string;
@@ -101,25 +94,25 @@ export default async function DashboardOverviewPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Aperçu</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Aperçu</h1>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Vues de la boutique" value={shop.view_count ?? 0} />
         <StatTile label="Commandes" value={ordersCount ?? 0} />
-        <StatTile label="CA aujourd'hui" value={`${revenueDay} FCFA`} />
-        <StatTile label="CA ce mois" value={`${revenueMonth} FCFA`} />
+        <StatTile label="CA aujourd'hui" value={`${revenueDay} FCFA`} mono />
+        <StatTile label="CA ce mois" value={`${revenueMonth} FCFA`} mono />
       </div>
-      <p className="mt-2 text-xs text-gray-500">
+      <p className="mt-2 text-xs text-encre/60">
         CA cette semaine : {revenueWeek} FCFA. Chiffre d&apos;affaires calculé
         sur les commandes non annulées.
       </p>
 
       {(lowStockProducts ?? []).length > 0 && (
-        <div className="mt-6 rounded-md border border-amber-300 bg-amber-50 p-4">
-          <h2 className="text-sm font-medium text-amber-900">
+        <div className="mt-6 rounded-lg border border-attention/30 bg-attention/10 p-4">
+          <h2 className="font-display text-sm font-semibold text-attention">
             Stock bas ({LOW_STOCK_THRESHOLD} unités ou moins)
           </h2>
-          <ul className="mt-2 space-y-1 text-sm text-amber-800">
+          <ul className="mt-2 space-y-1 text-sm text-encre/80">
             {(lowStockProducts as LowStockProduct[]).map((product) => (
               <li key={product.id} className="flex justify-between">
                 <span>{product.title}</span>
@@ -129,7 +122,7 @@ export default async function DashboardOverviewPage() {
           </ul>
           <Link
             href="/dashboard/produits"
-            className="mt-2 inline-block text-sm font-medium text-amber-900 underline"
+            className="mt-2 inline-block text-sm font-medium text-attention underline"
           >
             Gérer les stocks
           </Link>
@@ -138,20 +131,23 @@ export default async function DashboardOverviewPage() {
 
       <div className="mt-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-700">
+          <h2 className="font-display text-sm font-semibold text-encre">
             Commandes récentes
           </h2>
-          <Link href="/dashboard/commandes" className="text-sm text-gray-500 underline">
+          <Link
+            href="/dashboard/commandes"
+            className="text-sm text-encre/60 underline hover:text-vert-sapin"
+          >
             Voir tout
           </Link>
         </div>
 
         {(recentOrders ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-encre/70">
             Aucune commande pour l&apos;instant.
           </p>
         ) : (
-          <ul className="mt-2 divide-y divide-gray-200">
+          <ul className="mt-2 divide-y divide-ligne">
             {(recentOrders as RecentOrder[]).map((order) => (
               <li key={order.id} className="py-2">
                 <Link
@@ -159,17 +155,21 @@ export default async function DashboardOverviewPage() {
                   className="flex items-center justify-between gap-4"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">
+                    <p className="truncate text-sm font-medium text-encre">
                       {order.customer_name}
-                      <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
-                        {STATUS_LABELS[order.status] ?? order.status}
+                      <span
+                        className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
+                          ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/70"
+                        }`}
+                      >
+                        {ORDER_STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-encre/60">
                       {new Date(order.created_at).toLocaleDateString("fr-FR")}
                     </p>
                   </div>
-                  <p className="shrink-0 text-sm text-gray-900">
+                  <p className="shrink-0 font-mono text-sm text-cuivre-profond">
                     {order.total_amount} FCFA
                   </p>
                 </Link>
@@ -182,11 +182,27 @@ export default async function DashboardOverviewPage() {
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string | number }) {
+function StatTile({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string | number;
+  mono?: boolean;
+}) {
   return (
-    <div className="rounded-md border border-gray-200 p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
+    <div className="rounded-lg border border-ligne bg-white p-4">
+      <p className="text-xs text-encre/60">{label}</p>
+      <p
+        className={
+          mono
+            ? "mt-1 font-mono text-lg font-semibold text-cuivre-profond"
+            : "mt-1 font-display text-lg font-semibold text-encre"
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }

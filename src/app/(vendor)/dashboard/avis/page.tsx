@@ -52,43 +52,43 @@ export default async function ReviewsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Avis clients</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Avis clients</h1>
 
       {average !== null && (
-        <p className="mt-2 text-sm text-gray-700">
+        <p className="mt-2 text-sm text-encre/80">
           <Stars rating={average} /> {average.toFixed(1)}/5 ({rows.length} avis
           au total)
         </p>
       )}
 
       {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-encre/70">
           Aucun avis pour l&apos;instant. Les clients peuvent laisser un avis
           depuis la page de confirmation de leur commande, une fois livrée.
         </p>
       ) : (
-        <ul className="mt-4 divide-y divide-gray-200">
+        <ul className="mt-4 divide-y divide-ligne">
           {rows.map((review) => {
             const product = Array.isArray(review.products)
               ? review.products[0]
               : review.products;
             return (
               <li key={review.id} className="py-3">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-encre">
                   <Stars rating={review.rating} /> — {review.customer_name}
                 </p>
                 {product && (
                   <Link
                     href={`/dashboard/produits/${product.id}`}
-                    className="text-xs text-gray-500 underline"
+                    className="text-xs text-encre/60 underline hover:text-vert-sapin"
                   >
                     {product.title}
                   </Link>
                 )}
                 {review.comment && (
-                  <p className="mt-1 text-sm text-gray-600">{review.comment}</p>
+                  <p className="mt-1 text-sm text-encre/80">{review.comment}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-encre/50">
                   {new Date(review.created_at).toLocaleDateString("fr-FR")}
                 </p>
               </li>

@@ -69,34 +69,34 @@ export default async function PaymentsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Paiements</h1>
-      <p className="mt-2 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Paiements</h1>
+      <p className="mt-2 text-sm text-encre/70">
         Le paiement en ligne (Mobile Money) n&apos;est pas encore disponible :
         ce relevé se base sur le paiement à la livraison, seul mode actif
         aujourd&apos;hui.
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
-        <div className="rounded-md border border-gray-200 p-3">
-          <p className="text-xs text-gray-500">Encaissé (livrées)</p>
-          <p className="mt-1 text-lg font-semibold text-gray-900">
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <p className="text-xs text-encre/60">Encaissé (livrées)</p>
+          <p className="mt-1 font-mono text-lg font-semibold text-cuivre-profond">
             {totalReceived} FCFA
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 p-3">
-          <p className="text-xs text-gray-500">À encaisser à la livraison</p>
-          <p className="mt-1 text-lg font-semibold text-gray-900">
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <p className="text-xs text-encre/60">À encaisser à la livraison</p>
+          <p className="mt-1 font-mono text-lg font-semibold text-cuivre-profond">
             {totalAwaiting} FCFA
           </p>
         </div>
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-6 text-sm text-gray-600">
+        <p className="mt-6 text-sm text-encre/70">
           Aucun paiement pour l&apos;instant.
         </p>
       ) : (
-        <ul className="mt-6 divide-y divide-gray-200">
+        <ul className="mt-6 divide-y divide-ligne">
           {rows.map((order) => (
             <li key={order.id} className="py-3">
               <Link
@@ -104,24 +104,24 @@ export default async function PaymentsPage() {
                 className="flex items-center justify-between gap-4"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">
+                  <p className="truncate text-sm font-medium text-encre">
                     {order.customer_name}
                     <span
                       className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
                         order.status === "delivered"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-amber-100 text-amber-700"
+                          ? "bg-succes/15 text-succes"
+                          : "bg-attention/15 text-attention"
                       }`}
                     >
                       {order.status === "delivered" ? "Encaissé" : "À encaisser"}
                     </span>
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-encre/70">
                     {PAYMENT_LABELS[order.payment_method] ?? order.payment_method} —{" "}
                     {new Date(order.created_at).toLocaleDateString("fr-FR")}
                   </p>
                 </div>
-                <p className="shrink-0 text-sm text-gray-900">
+                <p className="shrink-0 font-mono text-sm text-cuivre-profond">
                   {order.total_amount} FCFA
                 </p>
               </Link>

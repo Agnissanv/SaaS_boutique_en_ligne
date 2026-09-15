@@ -26,7 +26,7 @@ function renderFeatures(features: Plan["features"]) {
   if (items.length === 0) return null;
 
   return (
-    <ul className="mt-2 space-y-1 text-xs text-gray-600">
+    <ul className="mt-2 space-y-1 text-xs text-encre/70">
       {items.map((item, index) => (
         <li key={index}>• {item}</li>
       ))}
@@ -72,42 +72,42 @@ export default async function SubscriptionPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Mon abonnement</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Mon abonnement</h1>
 
-      <div className="mt-4 max-w-md rounded-md border border-gray-200 p-4">
-        <p className="text-sm text-gray-600">Plan actuel</p>
-        <p className="mt-1 text-lg font-semibold text-gray-900">
+      <div className="mt-4 max-w-md rounded-lg border border-ligne bg-white p-4">
+        <p className="text-sm text-encre/60">Plan actuel</p>
+        <p className="mt-1 font-display text-lg font-semibold text-encre">
           {subscription.planName ?? "Aucun abonnement"}
         </p>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-encre/70">
           Statut :{" "}
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-encre">
             {SUBSCRIPTION_STATE_LABELS[subscription.state]}
           </span>
         </p>
         {subscription.expiresAt && (
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-encre/70">
             Expire le{" "}
             {new Date(subscription.expiresAt).toLocaleDateString("fr-FR")}
           </p>
         )}
         {subscription.state === "grace_period" && (
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-attention">
             Période de grâce en cours — contacte-nous pour renouveler avant
             que l&apos;ajout de nouveaux produits soit bloqué.
           </p>
         )}
         {subscription.state === "expired" && (
-          <p className="mt-2 text-sm text-red-700">
+          <p className="mt-2 text-sm text-erreur">
             Abonnement expiré — contacte-nous pour le renouveler.
           </p>
         )}
       </div>
 
-      <h2 className="mt-8 text-sm font-medium text-gray-700">
+      <h2 className="mt-8 font-display text-sm font-semibold text-encre">
         Plans disponibles
       </h2>
-      <p className="mt-1 text-xs text-gray-500">
+      <p className="mt-1 text-xs text-encre/60">
         Le paiement automatique en ligne n&apos;est pas encore disponible :
         contacte-nous pour souscrire ou changer de plan.
       </p>
@@ -116,23 +116,29 @@ export default async function SubscriptionPage() {
         {(plans as Plan[] | null)?.map((plan) => (
           <div
             key={plan.id}
-            className={`rounded-md border p-4 ${
+            className={`rounded-lg border bg-white p-4 ${
               plan.code === subscription.planCode
-                ? "border-gray-900"
-                : "border-gray-200"
+                ? "border-vert-sapin"
+                : "border-ligne"
             }`}
           >
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-encre">
               {plan.name}
               {plan.code === subscription.planCode && (
-                <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-normal text-gray-600">
+                <span className="ml-2 rounded bg-sable px-1.5 py-0.5 text-xs font-normal text-encre/70">
                   plan actuel
                 </span>
               )}
             </p>
-            <p className="mt-1 text-sm text-gray-600">
-              {plan.price > 0 ? `${plan.price} FCFA` : "Gratuit"} /{" "}
-              {plan.duration_days} jours
+            <p className="mt-1 text-sm text-encre/70">
+              {plan.price > 0 ? (
+                <span className="font-mono text-cuivre-profond">
+                  {plan.price} FCFA
+                </span>
+              ) : (
+                <span className="font-medium text-succes">Gratuit</span>
+              )}{" "}
+              / {plan.duration_days} jours
             </p>
             {renderFeatures(plan.features)}
           </div>

@@ -48,7 +48,7 @@ export function StatusForm({
 
   return (
     <div className="mt-6 flex flex-wrap items-center gap-3">
-      <label htmlFor="status" className="text-sm font-medium text-gray-700">
+      <label htmlFor="status" className="text-sm font-medium text-encre">
         Statut
       </label>
       <select
@@ -60,7 +60,7 @@ export function StatusForm({
             updateOrderStatus(orderId, e.target.value);
           })
         }
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+        className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif disabled:opacity-50"
       >
         {STATUSES.map((s) => (
           <option key={s.value} value={s.value}>
@@ -69,6 +69,7 @@ export function StatusForm({
         ))}
       </select>
 
+      {/* Vert WhatsApp officiel conservé volontairement, cf. page.tsx. */}
       {whatsappHref && (
         <a
           href={whatsappHref}

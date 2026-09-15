@@ -4,9 +4,9 @@ import { ShopForm } from "./shop-form";
 // Réglages boutique : nom, description, catégorie, logo, couverture, lien
 // public (slug). cf. cahier des charges §3.1.A.2.
 //
-// Upload logo/couverture : reporté à un prochain passage (Supabase Storage +
-// bucket public "shop-assets"), pas nécessaire pour créer une boutique
-// fonctionnelle. Un vendeur peut créer sa boutique et vendre sans logo.
+// Upload logo/couverture : implémenté (Supabase Storage, bucket public
+// "shop-assets" — voir ImageField dans shop-form.tsx). Reste optionnel :
+// un vendeur peut créer sa boutique et vendre sans logo.
 export default async function ShopSettingsPage() {
   const supabase = await createClient();
   const {
@@ -23,8 +23,8 @@ export default async function ShopSettingsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Ma boutique</h1>
-      <p className="mt-2 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Ma boutique</h1>
+      <p className="mt-2 text-sm text-encre/70">
         {shop
           ? "Modifie les informations de ta boutique."
           : "Crée ta boutique pour commencer à ajouter des produits."}
