@@ -32,7 +32,7 @@
   --color-ivoire: #f3ead8;
   --color-sable: #e8dcc6;
 
-  /* Neutres — interface produit (remplacent les gray-*/blue-* Tailwind) */
+  /* Neutres — interface produit (remplacent les classes gray et blue de Tailwind) */
   --color-brume: #f7f5f1;
   --color-encre: #3a3a34;
   --color-ligne: #ddd6c9;
