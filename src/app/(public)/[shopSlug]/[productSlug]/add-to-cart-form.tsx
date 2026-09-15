@@ -21,6 +21,15 @@ type Variant = { id: string; name: string; value: string; extra_price: number };
  *
  * Recoloré le 15/09/2026 avec la charte KEVA (voir la refonte de la fiche
  * produit publique dans decisions-techniques.md) — comportement inchangé.
+ *
+ * Sélecteurs reconstruits le 15/09/2026 (chantier "langage natif", voir
+ * decisions-techniques.md) : les `<select>` par groupe de variante sont
+ * remplacés par des puces à toucher directement (le choix se fait en un
+ * tap, sans ouvrir de menu — mieux adapté qu'une feuille d'action à une
+ * poignée de valeurs courtes comme des tailles ou des couleurs), et le
+ * champ quantité `<input type="number">` (flèches du navigateur, jamais les
+ * mêmes deux pixels selon l'OS) par un vrai compteur [−] / [+]. Comportement
+ * et API du formulaire inchangés.
  */
 export function AddToCartForm({
   shopSlug,
@@ -92,43 +101,60 @@ export function AddToCartForm({
   return (
     <form onSubmit={handleAdd} className="mt-5 flex flex-col gap-3">
       {groups.map((name) => (
-        <div key={name} className="flex flex-col gap-1">
-          <label htmlFor={`variant-${name}`} className="text-sm font-medium text-encre">
-            {name}
-          </label>
-          <select
-            id={`variant-${name}`}
-            value={selectedByGroup[name] ?? ""}
-            onChange={(e) =>
-              setSelectedByGroup((prev) => ({ ...prev, [name]: e.target.value }))
-            }
-            className="rounded-md border border-ligne bg-white px-3 py-2 text-sm text-encre focus:border-vert-actif focus:outline-none focus:ring-1 focus:ring-vert-actif"
-          >
+        <div key={name} className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-encre">{name}</span>
+          <div role="radiogroup" aria-label={name} className="flex flex-wrap gap-2">
             {variants
               .filter((v) => v.name === name)
-              .map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.value}
-                  {v.extra_price ? ` (+${v.extra_price} FCFA)` : ""}
-                </option>
-              ))}
-          </select>
+              .map((v) => {
+                const isSelected = selectedByGroup[name] === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setSelectedByGroup((prev) => ({ ...prev, [name]: v.id }))}
+                    className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                      isSelected
+                        ? "border-cuivre-profond bg-cuivre-profond text-ivoire"
+                        : "border-ligne bg-white text-encre"
+                    }`}
+                  >
+                    {v.value}
+                    {v.extra_price ? ` (+${v.extra_price} FCFA)` : ""}
+                  </button>
+                );
+              })}
+          </div>
         </div>
       ))}
 
       <div className="flex items-center gap-3">
-        <label htmlFor="quantity" className="text-sm font-medium text-encre">
-          Quantité
-        </label>
-        <input
-          id="quantity"
-          type="number"
-          min={1}
-          max={stock}
-          value={quantity}
-          onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-          className="w-20 rounded-md border border-ligne bg-white px-3 py-2 text-sm text-encre focus:border-vert-actif focus:outline-none focus:ring-1 focus:ring-vert-actif"
-        />
+        <span className="text-sm font-medium text-encre">Quantité</span>
+        <div className="flex items-center rounded-md border border-ligne">
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={quantity <= 1}
+            aria-label="Diminuer la quantité"
+            className="px-3 py-2 text-base font-medium text-encre disabled:opacity-30"
+          >
+            −
+          </button>
+          <span aria-live="polite" className="min-w-[2rem] text-center font-mono text-sm text-encre">
+            {quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
+            disabled={quantity >= stock}
+            aria-label="Augmenter la quantité"
+            className="px-3 py-2 text-base font-medium text-encre disabled:opacity-30"
+          >
+            +
+          </button>
+        </div>
       </div>
 
       <button

@@ -55,3 +55,62 @@ body {
 h1, h2, h3, h4 {
   text-wrap: balance;
 }
+
+/*
+ * Langage d'interaction "appli native" — lancé le 15/09/2026, à la demande
+ * explicite d'Isaac qu'une fois installée, KEVA ne se trahisse jamais comme
+ * une page web (voir decisions-techniques.md, "Chantier appli native").
+ * Démarré ici par les deux fondations partagées par tout l'écran, avant
+ * d'attaquer composant par composant (marketplace puis boutique client) :
+ *
+ * 1. Un vrai retour tactile au clic — un bouton qui ne réagit qu'après la
+ *    réponse du serveur ne se sent jamais "vivant" sous le doigt. `:active`
+ *    plutôt que `:hover` : le survol n'existe pas sur un écran tactile,
+ *    seule la pression compte. `transition-property` limité à `transform`
+ *    (jamais `all`) pour ne jamais ralentir une autre transition déjà posée
+ *    sur le même élément (couleur au survol, élévation des cartes...).
+ * 2. Une seule courbe d'accélération partagée pour toutes les futures
+ *    animations "natives" (feuilles d'action, transitions d'écran) — un
+ *    léger dépassement (`overshoot`) plutôt qu'un `ease-out` plat, plus
+ *    proche d'un ressort physique que d'un fondu web.
+ *
+ * `prefers-reduced-motion` respecté partout : le retour tactile devient un
+ * simple changement d'opacité (aucune known raison médicale de désactiver
+ * une réduction d'échelle de 4 %, mais autant rester cohérent avec la règle
+ * une fois pour toutes plutôt qu'au cas par cas).
+ */
+:root {
+  --ease-native: cubic-bezier(0.34, 1.4, 0.4, 1);
+  --duration-tap: 120ms;
+  --duration-sheet: 320ms;
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  transition: transform var(--duration-tap) var(--ease-native);
+}
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    transition: opacity var(--duration-tap) linear;
+  }
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: none;
+    opacity: 0.7;
+  }
+}
+
+@keyframes sheet-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
