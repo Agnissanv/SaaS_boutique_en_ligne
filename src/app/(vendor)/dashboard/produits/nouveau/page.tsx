@@ -115,7 +115,13 @@ export default async function NewProductPage({
           Renseigne les informations du produit à ajouter à ta boutique.
         </p>
       )}
-      <ProductForm product={duplicateFrom} variants={duplicateVariants} images={[]} />
+      <ProductForm
+        product={duplicateFrom}
+        variants={duplicateVariants}
+        images={[]}
+        canManageStock={subscription.features.canManageStock}
+        canUseVariants={subscription.features.canUseVariants}
+      />
     </div>
     </ViewTransition>
     </ViewTransition>

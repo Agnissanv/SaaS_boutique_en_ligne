@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getShopSubscription } from "@/lib/subscription";
 import { ProductForm } from "../product-form";
 
 export default async function EditProductPage({
@@ -49,6 +50,10 @@ export default async function EditProductPage({
     .eq("product_id", productId)
     .order("position", { ascending: true });
 
+  // Plan Starter : stock/variantes masqués (spec du 15/09/2026) — voir
+  // ProductForm et produits/actions.ts pour l'application complète.
+  const subscription = await getShopSubscription(supabase, shop.id);
+
   return (
     <ViewTransition
       enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
@@ -64,6 +69,8 @@ export default async function EditProductPage({
         product={product}
         variants={variants ?? []}
         images={(images ?? []).map((img) => img.url)}
+        canManageStock={subscription.features.canManageStock}
+        canUseVariants={subscription.features.canUseVariants}
       />
     </div>
     </ViewTransition>

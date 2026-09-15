@@ -249,10 +249,21 @@ export function ProductForm({
   product,
   variants,
   images,
+  canManageStock = true,
+  canUseVariants = true,
 }: {
   product: Product | null;
   variants: Variant[];
   images: string[];
+  /**
+   * Plan Starter : pas de gestion de stock ni de variantes (spec du
+   * 15/09/2026 confirmée par Isaac — voir produits/actions.ts pour
+   * l'application côté serveur, qui reste la source de vérité). Par défaut
+   * à `true` pour ne rien changer si jamais un appelant oublie de passer ces
+   * props — le blocage réel est de toute façon revérifié côté serveur.
+   */
+  canManageStock?: boolean;
+  canUseVariants?: boolean;
 }) {
   const initialState: ProductFormState = {};
   const [state, formAction] = useActionState(saveProduct, initialState);
@@ -356,23 +367,35 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="stock" className="text-sm font-medium text-encre">
-          Stock disponible
-        </label>
-        <input
-          id="stock"
-          name="stock"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          required
-          defaultValue={product?.stock ?? 0}
-          className="rounded-md border border-ligne px-3 py-2 text-sm"
-        />
-      </div>
+      {canManageStock ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="stock" className="text-sm font-medium text-encre">
+            Stock disponible
+          </label>
+          <input
+            id="stock"
+            name="stock"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            required
+            defaultValue={product?.stock ?? 0}
+            className="rounded-md border border-ligne px-3 py-2 text-sm"
+          />
+        </div>
+      ) : (
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+          Gestion du stock disponible à partir du plan Business.
+        </p>
+      )}
 
-      <VariantGroups initialVariants={variants} />
+      {canUseVariants ? (
+        <VariantGroups initialVariants={variants} />
+      ) : (
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+          Variantes (taille, couleur...) disponibles à partir du plan Business.
+        </p>
+      )}
 
       <PhotoGallery initialUrls={images} />
 

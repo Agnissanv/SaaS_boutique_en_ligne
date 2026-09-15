@@ -58,6 +58,72 @@ export function computeSubscriptionState(expiresAt: string | null): Subscription
   return "expired";
 }
 
+/**
+ * Feature flags par plan (refonte des abonnements du 15/09/2026, spec finale
+ * fournie par Isaac — voir supabase/migrations/0016_subscription_plans_v2.sql
+ * pour les valeurs exactes par plan). Un seul endroit de lecture/décodage du
+ * jsonb `subscription_plans.features`, réutilisé partout où une fonctionnalité
+ * doit être conditionnée au plan — même principe que le reste de ce fichier
+ * (un seul point de calcul, pas de logique dupliquée côté vendeur/admin).
+ */
+export type ShopFeatureFlags = {
+  maxProducts: number | null;
+  canManageStock: boolean;
+  canUseVariants: boolean;
+  canUsePromoCodes: boolean;
+  canCustomizeBranding: "none" | "basic" | "complete";
+  canRemoveBranding: boolean;
+  canExportStats: boolean;
+  canMultiUser: boolean;
+  maxCollaborators: number;
+  hasOrderNotifications: boolean;
+  hasAdvancedStockAlerts: boolean;
+};
+
+/**
+ * Flags les plus restrictifs (équivalents Starter) — appliqués par défaut
+ * quand une boutique n'a aucun abonnement (`state === "none"`, cas qui ne
+ * devrait plus arriver depuis `start_free_subscription`, mais mieux vaut
+ * fermer par défaut que d'ouvrir par erreur une fonctionnalité payante).
+ */
+export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
+  maxProducts: 2,
+  canManageStock: false,
+  canUseVariants: false,
+  canUsePromoCodes: false,
+  canCustomizeBranding: "none",
+  canRemoveBranding: false,
+  canExportStats: false,
+  canMultiUser: false,
+  maxCollaborators: 0,
+  hasOrderNotifications: false,
+  hasAdvancedStockAlerts: false,
+};
+
+/** Décode le jsonb `features` d'un plan — tolérant à un champ manquant/mal formé (retombe sur le défaut le plus restrictif plutôt que de planter). */
+function parseFeatureFlags(features: unknown): ShopFeatureFlags {
+  const f = (features ?? {}) as Record<string, unknown>;
+  return {
+    maxProducts:
+      typeof f.max_products === "number" || f.max_products === null
+        ? (f.max_products as number | null)
+        : DEFAULT_FEATURE_FLAGS.maxProducts,
+    canManageStock: Boolean(f.can_manage_stock),
+    canUseVariants: Boolean(f.can_use_variants),
+    canUsePromoCodes: Boolean(f.can_use_promo_codes),
+    canCustomizeBranding:
+      f.can_customize_branding === "basic" || f.can_customize_branding === "complete"
+        ? f.can_customize_branding
+        : "none",
+    canRemoveBranding: Boolean(f.can_remove_branding),
+    canExportStats: Boolean(f.can_export_stats),
+    canMultiUser: Boolean(f.can_multi_user),
+    maxCollaborators: typeof f.max_collaborators === "number" ? f.max_collaborators : 0,
+    hasOrderNotifications: Boolean(f.has_order_notifications),
+    hasAdvancedStockAlerts: Boolean(f.has_advanced_stock_alerts),
+  };
+}
+
 export type ShopSubscriptionInfo = {
   state: SubscriptionState;
   planName: string | null;
@@ -65,11 +131,15 @@ export type ShopSubscriptionInfo = {
   expiresAt: string | null;
   /** Date à partir de laquelle le blocage réel s'applique (fin de la période de grâce). */
   graceEndsAt: string | null;
+  features: ShopFeatureFlags;
 };
 
 type SubscriptionRow = {
   expires_at: string;
-  plan: { code: string; name: string } | { code: string; name: string }[] | null;
+  plan:
+    | { code: string; name: string; features: unknown }
+    | { code: string; name: string; features: unknown }[]
+    | null;
 };
 
 /**
@@ -84,7 +154,7 @@ export async function getShopSubscription(
 ): Promise<ShopSubscriptionInfo> {
   const { data } = await supabase
     .from("subscriptions")
-    .select("expires_at, plan:subscription_plans(code, name)")
+    .select("expires_at, plan:subscription_plans(code, name, features)")
     .eq("shop_id", shopId)
     .order("started_at", { ascending: false })
     .limit(1)
@@ -93,7 +163,14 @@ export async function getShopSubscription(
   const row = data as SubscriptionRow | null;
 
   if (!row) {
-    return { state: "none", planName: null, planCode: null, expiresAt: null, graceEndsAt: null };
+    return {
+      state: "none",
+      planName: null,
+      planCode: null,
+      expiresAt: null,
+      graceEndsAt: null,
+      features: DEFAULT_FEATURE_FLAGS,
+    };
   }
 
   const plan = Array.isArray(row.plan) ? row.plan[0] : row.plan;
@@ -108,5 +185,109 @@ export async function getShopSubscription(
     planCode: plan?.code ?? null,
     expiresAt: row.expires_at,
     graceEndsAt,
+    features: parseFeatureFlags(plan?.features),
+  };
+}
+
+export type ApplyPlanResult = {
+  planId: string;
+  planCode: string;
+  planName: string;
+  expiresAt: string;
+  /** Produits désactivés automatiquement car en excédent de la nouvelle limite (downgrade) — jamais supprimés. */
+  deactivatedProductIds: string[];
+};
+
+/**
+ * Cœur de l'assignation d'un plan à une boutique — création/mise à jour de
+ * `subscriptions` + désactivation des produits en excédent en cas de
+ * downgrade (§3 de la spec du 15/09/2026 : "bloquer les produits
+ * supplémentaires sans les supprimer"). Extrait le 15/09/2026 pour être
+ * appelé depuis DEUX endroits qui ne doivent pas diverger : l'assignation
+ * manuelle admin (`/admin/abonnements`, `assignPlan`) ET la confirmation
+ * automatique d'un paiement CinetPay réel (`/api/cinetpay/webhook`) —
+ * chacun avec son propre contrôle d'accès (rôle admin vs statut de paiement
+ * vérifié), mais la même logique de fond une fois l'autorisation acquise.
+ *
+ * Ne fait AUCUNE vérification d'autorisation elle-même — c'est aux
+ * appelants de s'assurer que l'assignation est légitime avant d'appeler
+ * cette fonction (rôle admin vérifié, ou paiement confirmé via l'API de
+ * vérification CinetPay, jamais sur la seule foi d'un payload de webhook).
+ */
+export async function applyPlanToShop(
+  // Accepte aussi bien le client authentifié (Server Action admin) que le
+  // client service role (webhook, hors contexte utilisateur) — les deux
+  // exposent la même API `SupabaseClient<Database>` sous le capot.
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  shopId: string,
+  planCode: string
+): Promise<ApplyPlanResult | null> {
+  const { data: plan } = await supabase
+    .from("subscription_plans")
+    .select("id, code, name, duration_days, features")
+    .eq("code", planCode)
+    .maybeSingle();
+
+  if (!plan) return null;
+
+  const { data: existing } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("shop_id", shopId)
+    .maybeSingle();
+
+  const expiresAt = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString();
+
+  if (existing) {
+    await supabase
+      .from("subscriptions")
+      .update({
+        plan_id: plan.id,
+        status: "active",
+        started_at: new Date().toISOString(),
+        expires_at: expiresAt,
+      })
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("subscriptions").insert({
+      shop_id: shopId,
+      plan_id: plan.id,
+      status: "active",
+      started_at: new Date().toISOString(),
+      expires_at: expiresAt,
+    });
+  }
+
+  // Downgrade avec dépassement de la nouvelle limite de produits : les plus
+  // anciens (premiers ajoutés) restent actifs, les plus récents en excédent
+  // sont désactivés — récupérables à tout moment, jamais supprimés.
+  const maxProducts = (plan.features as { max_products?: number | null } | null)?.max_products;
+  let deactivatedProductIds: string[] = [];
+
+  if (typeof maxProducts === "number") {
+    const { data: activeProducts } = await supabase
+      .from("products")
+      .select("id")
+      .eq("shop_id", shopId)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true });
+
+    const excess = (activeProducts ?? []).slice(maxProducts);
+    if (excess.length > 0) {
+      deactivatedProductIds = excess.map((p) => p.id);
+      await supabase
+        .from("products")
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .in("id", deactivatedProductIds);
+    }
+  }
+
+  return {
+    planId: plan.id,
+    planCode: plan.code,
+    planName: plan.name,
+    expiresAt,
+    deactivatedProductIds,
   };
 }

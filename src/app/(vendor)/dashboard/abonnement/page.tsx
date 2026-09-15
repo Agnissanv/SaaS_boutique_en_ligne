@@ -4,6 +4,7 @@ import {
   getShopSubscription,
   SUBSCRIPTION_STATE_LABELS,
 } from "@/lib/subscription";
+import { UpgradeButton } from "./upgrade-button";
 
 type Plan = {
   id: string;
@@ -41,10 +42,12 @@ function renderFeatures(features: Plan["features"]) {
  * expiré ou proche de l'expiration, jamais un état clair de son plan actuel
  * ni des plans disponibles (cahier des charges §3.1.A.7).
  *
- * Pas de bouton "changer de plan" ni de paiement en ligne : le renouvellement
- * passe pour l'instant par un admin qui réassigne un plan manuellement
- * (CinetPay non branché) — voir la bannière déjà présente dans layout.tsx et
- * decisions-techniques.md. Cette page est volontairement informative.
+ * Paiement CinetPay réel branché le 15/09/2026 (compte marchand d'Isaac
+ * validé) : un bouton "Passer à ce plan" sur les plans payants démarre un
+ * vrai paiement Mobile Money (voir actions.ts/upgrade-button.tsx et
+ * /api/cinetpay/webhook pour l'activation à la confirmation). L'assignation
+ * manuelle par un admin (`/admin/abonnements`) reste possible en parallèle
+ * pour les cas hors CinetPay (virement direct, geste commercial...).
  */
 export default async function SubscriptionPage() {
   const supabase = await createClient();
@@ -108,8 +111,8 @@ export default async function SubscriptionPage() {
         Plans disponibles
       </h2>
       <p className="mt-1 text-xs text-encre/60">
-        Le paiement automatique en ligne n&apos;est pas encore disponible :
-        contacte-nous pour souscrire ou changer de plan.
+        Paiement Mobile Money sécurisé via CinetPay — le plan est activé dès
+        confirmation du paiement.
       </p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -141,6 +144,9 @@ export default async function SubscriptionPage() {
               / {plan.duration_days} jours
             </p>
             {renderFeatures(plan.features)}
+            {plan.price > 0 && plan.code !== subscription.planCode && (
+              <UpgradeButton planCode={plan.code} planName={plan.name} />
+            )}
           </div>
         ))}
       </div>

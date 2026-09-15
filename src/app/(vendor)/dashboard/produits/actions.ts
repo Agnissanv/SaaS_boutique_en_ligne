@@ -41,6 +41,13 @@ function parseCommaList(raw: FormDataEntryValue | string | null): string[] {
 const MAX_VARIANT_GROUPS = 6;
 const MAX_TAGS = 10;
 
+/**
+ * Stock "effectivement illimité" appliqué aux produits d'un plan sans
+ * `can_manage_stock` (Starter, cf. plus bas) — voir le commentaire sur son
+ * usage pour le raisonnement complet.
+ */
+const UNLIMITED_STOCK_SENTINEL = 999_999;
+
 export async function saveProduct(
   _prevState: ProductFormState,
   formData: FormData
@@ -61,6 +68,12 @@ export async function saveProduct(
 
   const productId = String(formData.get("productId") ?? "");
 
+  // Abonnement récupéré une seule fois, réutilisé pour tous les contrôles liés
+  // au plan ci-dessous (expiration, limite de produits, gestion du stock,
+  // variantes) — refonte des abonnements du 15/09/2026 (spec finale d'Isaac,
+  // voir supabase/migrations/0016_subscription_plans_v2.sql).
+  const subscription = await getShopSubscription(supabase, shopId);
+
   // Blocage progressif d'abonnement expiré (§3.1.A.7, cf. src/lib/subscription.ts) :
   // seule la CRÉATION d'un nouveau produit est bloquée une fois la période de
   // grâce dépassée — modifier/désactiver/supprimer un produit existant, gérer
@@ -68,12 +81,32 @@ export async function saveProduct(
   // coupée). Revérifié ici côté serveur, pas seulement caché côté UI, comme
   // pour les autres contrôles d'accès du projet.
   if (!productId) {
-    const subscription = await getShopSubscription(supabase, shopId);
     if (subscription.state === "expired") {
       return {
         error:
           "Ton abonnement est expiré : impossible d'ajouter un nouveau produit tant qu'il n'est pas renouvelé. Contacte-nous pour le renouveler.",
       };
+    }
+
+    // Limite de produits par plan (§2 de la spec d'Isaac, 15/09/2026) —
+    // jusqu'ici en base (`features.max_products`) mais jamais vérifiée nulle
+    // part, malgré plusieurs mentions "non fait" dans decisions-techniques.md.
+    // `null` = illimité (plan Pro). Compte les produits non supprimés
+    // (actifs ou désactivés) : un vendeur ne doit pas pouvoir contourner la
+    // limite en désactivant puis recréant, la désactivation reste réversible.
+    const maxProducts = subscription.features.maxProducts;
+    if (maxProducts !== null) {
+      const { count } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("shop_id", shopId)
+        .is("deleted_at", null);
+
+      if ((count ?? 0) >= maxProducts) {
+        return {
+          error: `Limite de ${maxProducts} produits atteinte pour ton plan ${subscription.planName ?? "actuel"}. Passe à un plan supérieur pour ajouter plus de produits.`,
+        };
+      }
     }
   }
   const title = String(formData.get("title") ?? "").trim();
@@ -119,9 +152,23 @@ export async function saveProduct(
     }
   }
 
-  const stock = Number(stockRaw);
+  let stock = Number(stockRaw);
   if (!Number.isInteger(stock) || stock < 0) {
     return { error: "Le stock doit être un nombre entier positif." };
+  }
+
+  // Plan Starter : pas de gestion de stock (spec du 15/09/2026, confirmée
+  // explicitement par Isaac malgré le fait que stock/variantes étaient
+  // universels jusqu'ici). Le champ reste masqué côté UI (product-form.tsx),
+  // mais revérifié ici côté serveur — un vendeur Starter ne doit surtout pas
+  // se retrouver bloqué à la vente faute de stock : `create_order` refuse
+  // toute commande si `stock < quantité commandée` (0004_orders_rpc.sql et
+  // versions suivantes), donc plutôt que de laisser le défaut de colonne à 0
+  // (ce qui empêcherait purement et simplement toute vente), le stock est
+  // forcé à une valeur volontairement très haute — équivalent fonctionnel
+  // d'un stock illimité, sans toucher à la RPC de commande elle-même.
+  if (!subscription.features.canManageStock) {
+    stock = UNLIMITED_STOCK_SENTINEL;
   }
 
   let resolvedProductId = productId;
@@ -231,20 +278,30 @@ export async function saveProduct(
   // 13/09/2026 (voir VariantGroups dans product-form.tsx) : plus seulement
   // "Taille"/"Couleur" figés. Le stock détaillé par variante n'est toujours
   // pas géré : seul products.stock fait foi pour l'instant (voir README).
-  await supabase.from("product_variants").delete().eq("product_id", resolvedProductId);
+  //
+  // Plan Starter : pas de variantes (spec du 15/09/2026). Le champ est masqué
+  // côté UI, donc `variantGroupNames` arrive déjà vide en pratique — mais on
+  // n'exécute même pas le "supprimer puis recréer" dans ce cas, plutôt que de
+  // forcer une liste vide : un vendeur qui downgrade de Business à Starter ne
+  // doit pas voir ses variantes existantes silencieusement effacées à la
+  // prochaine modification d'un champ sans rapport (prix, description...).
+  // Ses variantes restent en base, gelées, jusqu'à ce qu'il remonte de plan.
+  if (subscription.features.canUseVariants) {
+    await supabase.from("product_variants").delete().eq("product_id", resolvedProductId);
 
-  const variantRows = variantGroupNames.flatMap((name, index) => {
-    if (!name) return [];
-    const values = parseCommaList(variantGroupValues[index] ?? null);
-    return values.map((value) => ({
-      product_id: resolvedProductId,
-      name,
-      value,
-    }));
-  });
+    const variantRows = variantGroupNames.flatMap((name, index) => {
+      if (!name) return [];
+      const values = parseCommaList(variantGroupValues[index] ?? null);
+      return values.map((value) => ({
+        product_id: resolvedProductId,
+        name,
+        value,
+      }));
+    });
 
-  if (variantRows.length > 0) {
-    await supabase.from("product_variants").insert(variantRows);
+    if (variantRows.length > 0) {
+      await supabase.from("product_variants").insert(variantRows);
+    }
   }
 
   // Photos : même approche "supprimer puis recréer" que les variantes — la
