@@ -11,7 +11,7 @@ export function CartLink({ shopSlug }: { shopSlug: string }) {
   return (
     <Link
       href={`/${shopSlug}/panier`}
-      className="fixed bottom-4 right-4 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-lg"
+      className="fixed bottom-4 right-4 z-30 rounded-full bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire shadow-lg hover:bg-cuivre"
     >
       Panier ({count})
     </Link>
