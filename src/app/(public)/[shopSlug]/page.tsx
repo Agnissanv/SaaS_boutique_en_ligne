@@ -334,7 +334,12 @@ export default async function ShopPage({
                     className="mb-2 aspect-square w-full rounded object-cover"
                   />
                   <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
-                  <p className="mt-0.5 flex items-baseline gap-1.5 font-mono text-sm text-cuivre-profond">
+                  {/* flex-wrap (15/09/2026, chantier responsive) : en grille à 2
+                      colonnes sur mobile, la carte est trop étroite pour tenir
+                      prix + prix barré sur une seule ligne avec des montants à
+                      6 chiffres — le prix barré passe alors proprement à la
+                      ligne au lieu de déborder de la carte. */}
+                  <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-cuivre-profond">
                     {product.price} FCFA
                     {hasDiscount ? (
                       <span className="font-mono text-xs text-encre/40 line-through">
