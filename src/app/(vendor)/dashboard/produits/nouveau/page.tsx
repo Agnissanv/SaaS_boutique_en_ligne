@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
@@ -75,38 +76,48 @@ export default async function NewProductPage({
   const subscription = await getShopSubscription(supabase, shop.id);
   if (subscription.state === "expired") {
     return (
+      <ViewTransition enter="kv-content-in" default="none">
       <div>
-        <h1 className="text-lg font-semibold text-gray-900">Nouveau produit</h1>
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <h1 className="text-lg font-semibold text-encre">Nouveau produit</h1>
+        <div className="mt-4 rounded-md border border-erreur/30 bg-erreur/10 p-4 text-sm text-erreur">
           Ton abonnement est expiré : impossible d&apos;ajouter un nouveau
           produit tant qu&apos;il n&apos;est pas renouvelé. Contacte-nous pour
           le renouveler — tes produits existants restent gérables.
         </div>
         <Link
           href="/dashboard/produits"
-          className="mt-4 inline-block text-sm text-gray-500 underline"
+          className="mt-4 inline-block text-sm text-encre/60 underline"
         >
           Retour aux produits
         </Link>
       </div>
+      </ViewTransition>
     );
   }
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
+    <ViewTransition enter="kv-content-in" default="none">
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Nouveau produit</h1>
+      <h1 className="text-lg font-semibold text-encre">Nouveau produit</h1>
       {duplicateFrom ? (
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-encre/70">
           Produit dupliqué à partir de « {duplicateFrom.title} ». Ajoute de
           nouvelles photos et modifie le titre si ce n&apos;est pas le même
           produit.
         </p>
       ) : (
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-encre/70">
           Renseigne les informations du produit à ajouter à ta boutique.
         </p>
       )}
       <ProductForm product={duplicateFrom} variants={duplicateVariants} images={[]} />
     </div>
+    </ViewTransition>
+    </ViewTransition>
   );
 }

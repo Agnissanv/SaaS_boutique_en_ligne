@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProductList } from "./product-list";
@@ -79,11 +80,18 @@ export default async function ProductsPage({
   const currentFilters: ProductFiltersValue = { q, categorie, statut, tri };
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
+    <ViewTransition enter="kv-content-in" default="none">
     <div>
       <div className="flex items-center justify-between">
         <h1 className="font-display text-lg font-semibold text-encre">Mes produits</h1>
         <Link
           href="/dashboard/produits/nouveau"
+          transitionTypes={["nav-forward"]}
           className="flex items-center gap-1.5 rounded-md bg-cuivre-profond px-3 py-1.5 text-sm font-medium text-white hover:bg-cuivre-profond/90"
         >
           <IconPlus className="h-4 w-4" />
@@ -95,6 +103,8 @@ export default async function ProductsPage({
 
       <ProductList products={(products as Product[]) ?? []} />
     </div>
+    </ViewTransition>
+    </ViewTransition>
   );
 }
 

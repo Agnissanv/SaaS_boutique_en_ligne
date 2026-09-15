@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "../product-form";
 
@@ -49,8 +50,14 @@ export default async function EditProductPage({
     .order("position", { ascending: true });
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
+    <ViewTransition enter="kv-content-in" default="none">
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">
+      <h1 className="text-lg font-semibold text-encre">
         Modifier « {product.title} »
       </h1>
       <ProductForm
@@ -59,5 +66,7 @@ export default async function EditProductPage({
         images={(images ?? []).map((img) => img.url)}
       />
     </div>
+    </ViewTransition>
+    </ViewTransition>
   );
 }

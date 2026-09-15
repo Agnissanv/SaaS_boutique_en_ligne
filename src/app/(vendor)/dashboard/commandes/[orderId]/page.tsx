@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { StatusForm } from "./status-form";
 import { toWhatsappNumber } from "@/lib/utils/whatsapp";
@@ -43,6 +44,12 @@ export default async function OrderDetailPage({
   const whatsappNumber = toWhatsappNumber(order.customer_phone);
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
+    <ViewTransition enter="kv-content-in" default="none">
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">
         Commande de {order.customer_name}
@@ -145,5 +152,7 @@ export default async function OrderDetailPage({
         shopName={shop.name}
       />
     </div>
+    </ViewTransition>
+    </ViewTransition>
   );
 }

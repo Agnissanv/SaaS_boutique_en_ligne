@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
@@ -37,6 +38,12 @@ export default async function OrdersPage() {
     .order("created_at", { ascending: false });
 
   return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
+    <ViewTransition enter="kv-content-in" default="none">
     <div>
       <div className="flex items-center justify-between">
         <h1 className="font-display text-lg font-semibold text-encre">Commandes</h1>
@@ -60,6 +67,7 @@ export default async function OrdersPage() {
             <li key={order.id} className="py-3">
               <Link
                 href={`/dashboard/commandes/${order.id}`}
+                transitionTypes={["nav-forward"]}
                 className="flex items-center justify-between gap-4"
               >
                 <div className="min-w-0">
@@ -86,5 +94,7 @@ export default async function OrdersPage() {
         </ul>
       )}
     </div>
+    </ViewTransition>
+    </ViewTransition>
   );
 }

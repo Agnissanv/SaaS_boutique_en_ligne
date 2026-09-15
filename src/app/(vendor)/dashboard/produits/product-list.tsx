@@ -229,10 +229,10 @@ function ProductTable({ products, selected, onToggleSelected, onToggleActive, pe
                 </td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2.5 whitespace-nowrap text-encre/70">
-                    <Link href={`/dashboard/produits/${product.id}`} className="underline hover:text-cuivre-profond">
+                    <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
                       Modifier
                     </Link>
-                    <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} className="underline hover:text-cuivre-profond">
+                    <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
                       Dupliquer
                     </Link>
                     <form action={deleteProduct.bind(null, product.id)}>
@@ -284,10 +284,10 @@ function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pen
               <StockBar stock={product.stock} />
             </div>
             <div className="mt-3 flex items-center gap-2.5 text-xs text-encre/70">
-              <Link href={`/dashboard/produits/${product.id}`} className="underline hover:text-cuivre-profond">
+              <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
                 Modifier
               </Link>
-              <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} className="underline hover:text-cuivre-profond">
+              <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
                 Dupliquer
               </Link>
               <form action={deleteProduct.bind(null, product.id)} className="ml-auto">
