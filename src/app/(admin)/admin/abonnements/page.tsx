@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { computeSubscriptionState, SUBSCRIPTION_STATE_LABELS } from "@/lib/subscription";
+import {
+  computeSubscriptionState,
+  SUBSCRIPTION_STATE_LABELS,
+  SUBSCRIPTION_STATE_BADGE_CLASS,
+} from "@/lib/subscription";
 import { PlanSelect } from "./plan-select";
 
 type SubscriptionRow = {
@@ -36,8 +40,8 @@ export default async function AdminSubscriptionsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Abonnements</h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Abonnements</h1>
+      <p className="mt-1 text-sm text-encre/70">
         Le paiement d&apos;abonnement via Mobile Money n&apos;est pas encore
         branché (CinetPay). En attendant, un plan peut être assigné
         manuellement ci-dessous.
@@ -46,7 +50,7 @@ export default async function AdminSubscriptionsPage() {
       <div className="mt-6 overflow-x-auto">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-200 text-xs text-gray-500">
+            <tr className="border-b border-ligne text-xs text-encre/50">
               <th className="py-2 pr-4">Boutique</th>
               <th className="py-2 pr-4">Plan actuel</th>
               <th className="py-2 pr-4">Statut</th>
@@ -54,7 +58,7 @@ export default async function AdminSubscriptionsPage() {
               <th className="py-2 pr-4">Changer de plan</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-ligne">
             {((shops ?? []) as ShopRow[]).map((shop) => {
               const subs = Array.isArray(shop.subscriptions)
                 ? shop.subscriptions
@@ -63,22 +67,33 @@ export default async function AdminSubscriptionsPage() {
                 : [];
               const sub = subs[0];
               const plan = sub ? (Array.isArray(sub.plan) ? sub.plan[0] : sub.plan) : null;
+              const state = sub ? computeSubscriptionState(sub.expires_at) : null;
 
               return (
                 <tr key={shop.id}>
                   <td className="py-3 pr-4">
-                    <p className="font-medium text-gray-900">{shop.name}</p>
-                    <p className="text-xs text-gray-500">/{shop.slug}</p>
+                    <p className="font-medium text-encre">{shop.name}</p>
+                    <p className="text-xs text-encre/50">/{shop.slug}</p>
                   </td>
-                  <td className="py-3 pr-4 text-gray-700">
-                    {plan ? `${plan.name} (${plan.price} FCFA)` : "Aucun"}
+                  <td className="py-3 pr-4 text-encre/70">
+                    {plan ? (
+                      <>
+                        {plan.name} <span className="font-mono text-cuivre-profond">({plan.price} FCFA)</span>
+                      </>
+                    ) : (
+                      "Aucun"
+                    )}
                   </td>
-                  <td className="py-3 pr-4 text-gray-700">
-                    {sub
-                      ? SUBSCRIPTION_STATE_LABELS[computeSubscriptionState(sub.expires_at)]
-                      : "—"}
+                  <td className="py-3 pr-4">
+                    {state ? (
+                      <span className={`rounded px-1.5 py-0.5 text-xs ${SUBSCRIPTION_STATE_BADGE_CLASS[state]}`}>
+                        {SUBSCRIPTION_STATE_LABELS[state]}
+                      </span>
+                    ) : (
+                      <span className="text-encre/50">—</span>
+                    )}
                   </td>
-                  <td className="py-3 pr-4 text-gray-500">
+                  <td className="py-3 pr-4 text-encre/50">
                     {sub ? new Date(sub.expires_at).toLocaleDateString("fr-FR") : "—"}
                   </td>
                   <td className="py-3 pr-4">

@@ -2,9 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 
 function StatTile({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-md border border-gray-200 p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-gray-900">{value}</p>
+    <div className="rounded-lg border border-ligne bg-white p-4">
+      <p className="text-xs text-encre/60">{label}</p>
+      <p className="mt-1 font-display text-lg font-semibold text-encre">{value}</p>
     </div>
   );
 }
@@ -48,8 +48,8 @@ export default async function AdminOverviewPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Vue d&apos;ensemble</h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Vue d&apos;ensemble</h1>
+      <p className="mt-1 text-sm text-encre/70">
         Chiffres toutes boutiques confondues, sur la plateforme entière.
       </p>
 
@@ -60,9 +60,9 @@ export default async function AdminOverviewPage() {
         <StatTile label="Abonnements actifs" value={subscriptionsActive ?? 0} />
       </div>
 
-      <p className="mt-4 text-sm text-gray-700">
-        <span className="font-medium">CA plateforme (toutes commandes non annulées) :</span>{" "}
-        {platformRevenue} FCFA
+      <p className="mt-4 text-sm text-encre/80">
+        <span className="font-medium text-encre">CA plateforme (toutes commandes non annulées) :</span>{" "}
+        <span className="font-mono text-cuivre-profond">{platformRevenue} FCFA</span>
       </p>
     </div>
   );

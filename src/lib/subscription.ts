@@ -31,6 +31,20 @@ export const SUBSCRIPTION_STATE_LABELS: Record<SubscriptionState, string> = {
   none: "Aucun abonnement",
 };
 
+/**
+ * Classes de badge KEVA par état d'abonnement (même principe que
+ * ORDER_STATUS_BADGE_CLASS dans src/lib/orders.ts — un seul endroit pour
+ * couleur + libellé, réutilisé par /admin/abonnements et /dashboard/abonnement).
+ * Actif → succès ; période de grâce → attention (accès encore complet mais
+ * à surveiller) ; expiré → erreur ; aucun abonnement → neutre.
+ */
+export const SUBSCRIPTION_STATE_BADGE_CLASS: Record<SubscriptionState, string> = {
+  active: "bg-succes/15 text-succes",
+  grace_period: "bg-attention/15 text-attention",
+  expired: "bg-erreur/15 text-erreur",
+  none: "bg-sable text-encre/60",
+};
+
 /** Calcule l'état réel à partir d'une seule date d'expiration. Pure — testable sans DB. */
 export function computeSubscriptionState(expiresAt: string | null): SubscriptionState {
   if (!expiresAt) return "none";

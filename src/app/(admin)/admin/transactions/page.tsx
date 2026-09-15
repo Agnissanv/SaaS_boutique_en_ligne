@@ -31,27 +31,27 @@ export default async function AdminTransactionsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Transactions</h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <h1 className="font-display text-lg font-semibold text-encre">Transactions</h1>
+      <p className="mt-1 text-sm text-encre/70">
         Journal des actions admin (100 dernières). Les paiements Mobile
         Money s&apos;ajouteront ici une fois CinetPay branché.
       </p>
 
       {(logs ?? []).length === 0 ? (
-        <p className="mt-6 text-sm text-gray-600">Aucune action enregistrée pour l&apos;instant.</p>
+        <p className="mt-6 text-sm text-encre/60">Aucune action enregistrée pour l&apos;instant.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-gray-100 text-sm">
+        <ul className="mt-6 divide-y divide-ligne text-sm">
           {(logs as LogRow[]).map((log) => {
             const shop = Array.isArray(log.shop) ? log.shop[0] : log.shop;
             const actor = Array.isArray(log.actor) ? log.actor[0] : log.actor;
             return (
               <li key={log.id} className="flex items-center justify-between gap-4 py-2">
                 <div>
-                  <p className="text-gray-900">
+                  <p className="text-encre">
                     {ACTION_LABELS[log.action] ?? log.action}
                     {shop ? ` — ${shop.name}` : ""}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-encre/50">
                     Par {actor?.display_name ?? "—"} le{" "}
                     {new Date(log.created_at).toLocaleString("fr-FR")}
                   </p>

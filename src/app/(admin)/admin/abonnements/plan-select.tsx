@@ -21,7 +21,7 @@ export function PlanSelect({ shopId, currentPlanCode }: { shopId: string; curren
           assignPlan(shopId, e.target.value);
         })
       }
-      className="rounded-md border border-gray-300 px-2 py-1 text-xs disabled:opacity-50"
+      className="rounded-md border border-ligne px-2 py-1 text-xs focus:ring-2 focus:ring-vert-actif disabled:opacity-50"
     >
       <option value="" disabled>
         Assigner un plan...

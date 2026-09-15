@@ -38,7 +38,7 @@ export default async function AdminVendorsPage({
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-gray-900">Vendeurs</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Vendeurs</h1>
 
       <form method="GET" className="mt-4 flex gap-2">
         <input
@@ -46,23 +46,23 @@ export default async function AdminVendorsPage({
           name="q"
           defaultValue={q ?? ""}
           placeholder="Rechercher une boutique (nom ou lien)..."
-          className="w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="w-full max-w-sm rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
         <button
           type="submit"
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+          className="rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
         >
           Rechercher
         </button>
       </form>
 
       {(shops ?? []).length === 0 ? (
-        <p className="mt-6 text-sm text-gray-600">Aucune boutique trouvée.</p>
+        <p className="mt-6 text-sm text-encre/60">Aucune boutique trouvée.</p>
       ) : (
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-xs text-gray-500">
+              <tr className="border-b border-ligne text-xs text-encre/50">
                 <th className="py-2 pr-4">Boutique</th>
                 <th className="py-2 pr-4">Vendeur</th>
                 <th className="py-2 pr-4">Catégorie</th>
@@ -71,7 +71,7 @@ export default async function AdminVendorsPage({
                 <th className="py-2 pr-4">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-ligne">
               {(shops as ShopRow[]).map((shop) => {
                 const owner = Array.isArray(shop.owner) ? shop.owner[0] : shop.owner;
                 const notesRow = Array.isArray(shop.shop_admin_notes)
@@ -80,26 +80,26 @@ export default async function AdminVendorsPage({
                 return (
                   <tr key={shop.id} className="align-top">
                     <td className="py-3 pr-4">
-                      <p className="font-medium text-gray-900">{shop.name}</p>
-                      <p className="text-xs text-gray-500">/{shop.slug}</p>
+                      <p className="font-medium text-encre">{shop.name}</p>
+                      <p className="text-xs text-encre/50">/{shop.slug}</p>
                     </td>
-                    <td className="py-3 pr-4 text-gray-700">
+                    <td className="py-3 pr-4 text-encre/70">
                       <p>{owner?.display_name ?? "—"}</p>
-                      <p className="text-xs text-gray-500">{owner?.phone ?? ""}</p>
+                      <p className="text-xs text-encre/50">{owner?.phone ?? ""}</p>
                     </td>
-                    <td className="py-3 pr-4 text-gray-700">{categoryLabel(shop.category)}</td>
+                    <td className="py-3 pr-4 text-encre/70">{categoryLabel(shop.category)}</td>
                     <td className="py-3 pr-4">
                       <span
                         className={`rounded px-1.5 py-0.5 text-xs ${
                           shop.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-succes/15 text-succes"
+                            : "bg-erreur/15 text-erreur"
                         }`}
                       >
                         {shop.status === "active" ? "Active" : "Suspendue"}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-gray-500">
+                    <td className="py-3 pr-4 text-encre/50">
                       {new Date(shop.created_at).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="py-3 pr-4">

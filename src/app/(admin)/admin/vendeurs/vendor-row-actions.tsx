@@ -28,8 +28,8 @@ export function VendorRowActions({
         }
         className={`w-fit rounded-md border px-3 py-1 text-xs font-medium disabled:opacity-50 ${
           status === "active"
-            ? "border-red-300 text-red-700"
-            : "border-green-300 text-green-700"
+            ? "border-erreur/40 text-erreur hover:bg-erreur/10"
+            : "border-succes/40 text-succes hover:bg-succes/10"
         }`}
       >
         {status === "active" ? "Suspendre" : "Réactiver"}
@@ -50,7 +50,7 @@ export function VendorRowActions({
             setNotesSaved(true);
           });
         }}
-        className="w-56 rounded-md border border-gray-300 px-2 py-1 text-xs"
+        className="w-56 rounded-md border border-ligne px-2 py-1 text-xs focus:ring-2 focus:ring-vert-actif"
       />
     </div>
   );
