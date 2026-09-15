@@ -26,6 +26,19 @@ import { buildMarketplaceHref, type MarketplaceFilters } from "@/lib/marketplace
  * collisions visuelles à 24 catégories (plusieurs "Mode *"/"Maison"
  * partagent un M, "Bijoux"/"Beauté"/"Bébé"/"Bricolage" partagent un B) —
  * remplacées par une icône distincte par catégorie (`CategoryIcon`).
+ *
+ * Bandeau retravaillé le 15/09/2026 (même jour, retour direct d'Isaac sur
+ * une capture d'écran : "la barre de navigation... sa forme un peu
+ * rectangle, qui ne touche même pas le fond"). Chaque tuile était jusqu'ici
+ * une boîte individuelle avec bordure (`rounded-lg border ...`), posée
+ * directement sur le fond blanc de la page — un quadrillage de petits
+ * rectangles plutôt qu'une vraie "barre". Corrigé par deux changements :
+ * (1) le `<nav>` porte maintenant lui-même un fond plein (Brume) et occupe
+ * toute la largeur du contenu, comme le héros et l'en-tête, au lieu de
+ * flotter sur du blanc ; (2) les tuiles perdent leur bordure/boîte
+ * individuelle — juste un cercle d'icône (élevé par une ombre légère) et un
+ * libellé en dessous, façon Amazon/Jumia, l'état actif se lisant sur le
+ * remplissage du cercle plutôt que sur un encadré entier.
  */
 export function CategoryNav({
   current,
@@ -42,7 +55,7 @@ export function CategoryNav({
   return (
     <nav
       aria-label="Catégories"
-      className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 scroll-smooth sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+      className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto bg-brume px-4 py-5 scroll-smooth sm:flex-wrap sm:overflow-visible sm:rounded-2xl sm:py-6"
     >
       {tiles.map((tile) => {
         const isActive = tile.value ? tile.value === active : !active;
@@ -50,21 +63,25 @@ export function CategoryNav({
           <Link
             key={tile.label}
             href={buildMarketplaceHref(current, { categorie: tile.value, page: undefined })}
-            className={`flex w-20 shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-center transition-all ${
-              isActive
-                ? "border-vert-sapin bg-vert-sapin text-ivoire shadow-md"
-                : "border-ligne text-encre hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-sm"
-            }`}
+            className="group flex w-20 shrink-0 snap-start flex-col items-center gap-2 text-center"
           >
             <span
               aria-hidden="true"
-              className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                isActive ? "bg-white/20 text-ivoire" : "bg-sable text-cuivre-profond"
+              className={`flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 ${
+                isActive
+                  ? "bg-vert-sapin text-ivoire shadow-md"
+                  : "bg-white text-cuivre-profond shadow-sm group-hover:-translate-y-1 group-hover:text-vert-sapin group-hover:shadow-md"
               }`}
             >
-              <CategoryIcon value={tile.value ?? "all"} />
+              <CategoryIcon value={tile.value ?? "all"} className="h-6 w-6" />
             </span>
-            <span className="line-clamp-2 text-[11px] font-medium leading-tight">{tile.label}</span>
+            <span
+              className={`line-clamp-2 text-[11px] leading-tight transition-colors ${
+                isActive ? "font-semibold text-vert-sapin" : "font-medium text-encre/80 group-hover:text-vert-sapin"
+              }`}
+            >
+              {tile.label}
+            </span>
           </Link>
         );
       })}
