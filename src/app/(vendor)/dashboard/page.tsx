@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { LOW_STOCK_THRESHOLD } from "@/lib/products";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
@@ -9,12 +10,6 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: "Livrée",
   cancelled: "Annulée",
 };
-
-// Produit considéré "stock bas" en dessous de ce seuil (cf. cahier des
-// charges §3.1.A.4 : "Alertes stock bas"). Pas encore configurable par
-// boutique — valeur fixe raisonnable pour un petit vendeur, à revoir si
-// besoin une fois que de vrais vendeurs testent.
-const LOW_STOCK_THRESHOLD = 5;
 
 type RecentOrder = {
   id: string;
