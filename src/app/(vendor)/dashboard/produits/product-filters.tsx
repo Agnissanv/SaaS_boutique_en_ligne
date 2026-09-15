@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/categories";
+import { NativeSelect } from "@/components/native-select";
 
 export type ProductFiltersValue = {
   q: string;
@@ -75,51 +76,46 @@ export function ProductFilters({ current }: { current: ProductFiltersValue }) {
         </button>
       </form>
 
-      <label className="flex flex-col gap-1 text-xs text-encre/60">
-        Catégorie
-        <select
+      {/* Les trois `<select>` deviennent `NativeSelect` le 15/09/2026
+          (chantier "langage natif", dashboard vendeur — voir
+          decisions-techniques.md), même motif que le tri marketplace : le
+          texte de légende reste un `<span>` visible au-dessus, le composant
+          ne porte que le bouton + la feuille d'action. */}
+      <div className="flex flex-col gap-1 text-xs text-encre/60">
+        <span>Catégorie</span>
+        <NativeSelect
+          label="Catégorie"
           value={current.categorie}
-          onChange={(e) => navigate({ categorie: e.target.value })}
-          className="rounded-md border border-ligne bg-white px-2 py-1.5 text-sm text-encre"
-        >
-          <option value="">Toutes catégories</option>
-          {CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={(next) => navigate({ categorie: next })}
+          className="py-1.5"
+          options={[
+            { value: "", label: "Toutes catégories" },
+            ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+          ]}
+        />
+      </div>
 
-      <label className="flex flex-col gap-1 text-xs text-encre/60">
-        Statut
-        <select
+      <div className="flex flex-col gap-1 text-xs text-encre/60">
+        <span>Statut</span>
+        <NativeSelect
+          label="Statut"
           value={current.statut}
-          onChange={(e) => navigate({ statut: e.target.value })}
-          className="rounded-md border border-ligne bg-white px-2 py-1.5 text-sm text-encre"
-        >
-          {STATUTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={(next) => navigate({ statut: next })}
+          className="py-1.5"
+          options={STATUTS}
+        />
+      </div>
 
-      <label className="flex flex-col gap-1 text-xs text-encre/60">
-        Trier par
-        <select
+      <div className="flex flex-col gap-1 text-xs text-encre/60">
+        <span>Trier par</span>
+        <NativeSelect
+          label="Trier par"
           value={current.tri}
-          onChange={(e) => navigate({ tri: e.target.value })}
-          className="rounded-md border border-ligne bg-white px-2 py-1.5 text-sm text-encre"
-        >
-          {TRIS.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={(next) => navigate({ tri: next })}
+          className="py-1.5"
+          options={TRIS}
+        />
+      </div>
     </div>
   );
 }

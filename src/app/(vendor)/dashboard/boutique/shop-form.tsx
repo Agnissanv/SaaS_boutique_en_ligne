@@ -9,6 +9,7 @@ import {
   ImageUploadError,
 } from "@/lib/supabase/storage";
 import { CATEGORIES } from "@/lib/categories";
+import { NativeSelect } from "@/components/native-select";
 
 type Shop = {
   id: string;
@@ -118,6 +119,19 @@ function ImageField({
   );
 }
 
+/**
+ * `<select>` de catégorie et champ frais de livraison reconstruits le
+ * 15/09/2026 (chantier "langage natif", dashboard vendeur — voir
+ * decisions-techniques.md) : le `<select>` devient `NativeSelect` (bouton +
+ * feuille d'action, même motif que le tri marketplace), et le frais de
+ * livraison passe de `type="number"` à `type="text" inputMode="numeric"` —
+ * un prix arbitraire en FCFA ne se prête pas à un compteur [−]/[+] (contrairement
+ * à la quantité du panier), mais garder `type="number"` affichait quand même
+ * les flèches du navigateur sur desktop ; `inputMode="numeric"` donne le
+ * clavier numérique sur mobile sans cet artefact. Validation serveur
+ * inchangée (`saveShop` parse déjà la valeur en `Number`, quel que soit le
+ * type d'input).
+ */
 export function ShopForm({ shop }: { shop: Shop | null }) {
   const initialState: ShopFormState = {};
   const [state, formAction] = useActionState(saveShop, initialState);
@@ -161,22 +175,14 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
         <label htmlFor="category" className="text-sm font-medium text-encre">
           Catégorie
         </label>
-        <select
+        <NativeSelect
           id="category"
           name="category"
-          required
+          label="Catégorie"
+          placeholder="Choisir une catégorie"
           defaultValue={shop?.category ?? ""}
-          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
-        >
-          <option value="" disabled>
-            Choisir une catégorie
-          </option>
-          {CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
+          options={CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+        />
       </div>
 
       <ImageField
@@ -199,9 +205,9 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
         <input
           id="deliveryFee"
           name="deliveryFee"
-          type="number"
-          min={0}
-          step={1}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           defaultValue={shop?.delivery_fee ?? ""}
           placeholder="Ex : 1000"
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"

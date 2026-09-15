@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { updateOrderStatus } from "../actions";
 import { toWhatsappNumber } from "@/lib/utils/whatsapp";
+import { NativeSelect } from "@/components/native-select";
 
 const STATUSES = [
   { value: "pending", label: "En attente" },
@@ -51,23 +52,21 @@ export function StatusForm({
       <label htmlFor="status" className="text-sm font-medium text-encre">
         Statut
       </label>
-      <select
+      {/* `<select>` remplacé le 15/09/2026 par `NativeSelect` (chantier
+          "langage natif", dashboard vendeur) — même comportement contrôlé,
+          `onChange` reçoit directement la valeur choisie. */}
+      <NativeSelect
         id="status"
-        defaultValue={currentStatus}
+        label="Statut de la commande"
+        value={currentStatus}
         disabled={isPending}
-        onChange={(e) =>
+        onChange={(next) =>
           startTransition(() => {
-            updateOrderStatus(orderId, e.target.value);
+            updateOrderStatus(orderId, next);
           })
         }
-        className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif disabled:opacity-50"
-      >
-        {STATUSES.map((s) => (
-          <option key={s.value} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-      </select>
+        options={STATUSES}
+      />
 
       {/* Vert WhatsApp officiel conservé volontairement, cf. page.tsx. */}
       {whatsappHref && (

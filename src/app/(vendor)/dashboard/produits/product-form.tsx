@@ -9,6 +9,7 @@ import {
   ImageUploadError,
 } from "@/lib/supabase/storage";
 import { CATEGORIES } from "@/lib/categories";
+import { NativeSelect } from "@/components/native-select";
 
 type Variant = { name: string; value: string };
 type Group = { name: string; values: string };
@@ -36,7 +37,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="mt-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+      className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
     >
       {pending ? "Enregistrement..." : isEdit ? "Enregistrer" : "Ajouter le produit"}
     </button>
@@ -103,8 +104,8 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-gray-700">
-        Photos <span className="text-gray-400">(jusqu&apos;à {MAX_PHOTOS})</span>
+      <label className="text-sm font-medium text-encre">
+        Photos <span className="text-encre/50">(jusqu&apos;à {MAX_PHOTOS})</span>
       </label>
       {urls.map((url) => (
         <input key={url} type="hidden" name="imageUrls" value={url} />
@@ -122,7 +123,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
               <button
                 type="button"
                 onClick={() => handleRemove(url)}
-                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs text-white"
+                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-cuivre-profond text-xs text-ivoire"
                 aria-label="Retirer cette photo"
               >
                 ×
@@ -141,8 +142,8 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
           className="text-sm"
         />
       )}
-      {uploading && <p className="text-xs text-gray-500">Envoi en cours...</p>}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
+      {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
   );
 }
@@ -172,31 +173,31 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
   }
 
   return (
-    <fieldset className="flex flex-col gap-3 rounded-md border border-gray-200 p-3">
-      <legend className="px-1 text-xs font-medium text-gray-500">
+    <fieldset className="flex flex-col gap-3 rounded-md border border-ligne p-3">
+      <legend className="px-1 text-xs font-medium text-encre/60">
         Variantes (optionnel)
       </legend>
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-encre/50">
         Ex : un groupe « Taille » avec les valeurs « S, M, L, XL », un groupe
         « Couleur » avec « Rouge, Bleu, Noir »... Ajoute autant de groupes que
         nécessaire (Matière, Pointure...). Le client choisira une valeur par
         groupe.
       </p>
       {groups.map((group, index) => (
-        <div key={index} className="flex flex-col gap-1 rounded border border-gray-100 p-2">
+        <div key={index} className="flex flex-col gap-1 rounded border border-ligne p-2">
           <div className="flex items-center gap-2">
             <input
               value={group.name}
               onChange={(e) => updateGroup(index, { name: e.target.value })}
               placeholder="Nom du groupe (ex : Taille)"
               maxLength={40}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+              className="flex-1 rounded-md border border-ligne px-3 py-1.5 text-sm"
             />
             {groups.length > 1 && (
               <button
                 type="button"
                 onClick={() => removeGroup(index)}
-                className="text-xs text-red-600 underline"
+                className="text-xs text-erreur underline"
               >
                 Retirer
               </button>
@@ -207,7 +208,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
             onChange={(e) => updateGroup(index, { values: e.target.value })}
             placeholder="Valeurs séparées par une virgule (ex : S, M, L, XL)"
             maxLength={300}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-ligne px-3 py-1.5 text-sm"
           />
           {/* Un couple nom/valeurs par groupe non vide, envoyé au serveur. */}
           {group.name.trim() && group.values.trim() && (
@@ -222,7 +223,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
         <button
           type="button"
           onClick={addGroup}
-          className="w-fit text-xs font-medium text-gray-700 underline"
+          className="w-fit text-xs font-medium text-encre underline"
         >
           + Ajouter un groupe de variantes
         </button>
@@ -231,6 +232,19 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
   );
 }
 
+/**
+ * Formulaire produit recoloré le 15/09/2026 en même temps que sa
+ * reconstruction "langage natif" (dashboard vendeur — voir
+ * decisions-techniques.md) : ce fichier avait été oublié lors de
+ * l'application de la charte KEVA au reste du dashboard (classes Tailwind
+ * grises/rouges génériques encore en place, signalé comme "non fait" à
+ * l'époque). Recoloré au passage plutôt que dans une passe séparée, puisque
+ * chaque champ était de toute façon rouvert ici pour le `<select>`/les
+ * champs numériques. `<select>` catégorie → `NativeSelect` ; prix/prix
+ * barré/stock → `type="text" inputMode="numeric"` (même raisonnement que le
+ * frais de livraison de `shop-form.tsx` : un prix arbitraire ne se prête
+ * pas à un compteur [−]/[+], mais autant retirer les flèches du navigateur).
+ */
 export function ProductForm({
   product,
   variants,
@@ -248,7 +262,7 @@ export function ProductForm({
       {product?.id && <input type="hidden" name="productId" value={product.id} />}
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm font-medium text-gray-700">
+        <label htmlFor="title" className="text-sm font-medium text-encre">
           Titre du produit
         </label>
         <input
@@ -259,12 +273,12 @@ export function ProductForm({
           maxLength={120}
           defaultValue={product?.title ?? ""}
           placeholder="Ex : Robe wax bleue"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm font-medium text-gray-700">
+        <label htmlFor="description" className="text-sm font-medium text-encre">
           Description
         </label>
         <textarea
@@ -273,32 +287,29 @@ export function ProductForm({
           rows={3}
           defaultValue={product?.description ?? ""}
           placeholder="Matière, coupe, entretien..."
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="category" className="text-sm font-medium text-gray-700">
+        <label htmlFor="category" className="text-sm font-medium text-encre">
           Catégorie
         </label>
-        <select
+        <NativeSelect
           id="category"
           name="category"
+          label="Catégorie"
           defaultValue={product?.category ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
-          <option value="">Non catégorisé</option>
-          {CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Non catégorisé" },
+            ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+          ]}
+        />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="tags" className="text-sm font-medium text-gray-700">
-          Tags <span className="text-gray-400">(optionnel)</span>
+        <label htmlFor="tags" className="text-sm font-medium text-encre">
+          Tags <span className="text-encre/50">(optionnel)</span>
         </label>
         <input
           id="tags"
@@ -306,58 +317,58 @@ export function ProductForm({
           defaultValue={(product?.tags ?? []).join(", ")}
           placeholder="promo, nouveau, tendance"
           maxLength={300}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-encre/50">
           Mots-clés séparés par une virgule, utiles pour la recherche.
         </p>
       </div>
 
       <div className="flex gap-3">
         <div className="flex flex-1 flex-col gap-1">
-          <label htmlFor="price" className="text-sm font-medium text-gray-700">
+          <label htmlFor="price" className="text-sm font-medium text-encre">
             Prix (FCFA)
           </label>
           <input
             id="price"
             name="price"
-            type="number"
-            min={0}
-            step={1}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             required
             defaultValue={product?.price ?? ""}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-md border border-ligne px-3 py-2 text-sm"
           />
         </div>
         <div className="flex flex-1 flex-col gap-1">
-          <label htmlFor="compareAtPrice" className="text-sm font-medium text-gray-700">
-            Prix barré <span className="text-gray-400">(optionnel)</span>
+          <label htmlFor="compareAtPrice" className="text-sm font-medium text-encre">
+            Prix barré <span className="text-encre/50">(optionnel)</span>
           </label>
           <input
             id="compareAtPrice"
             name="compareAtPrice"
-            type="number"
-            min={0}
-            step={1}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             defaultValue={product?.compare_at_price ?? ""}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-md border border-ligne px-3 py-2 text-sm"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="stock" className="text-sm font-medium text-gray-700">
+        <label htmlFor="stock" className="text-sm font-medium text-encre">
           Stock disponible
         </label>
         <input
           id="stock"
           name="stock"
-          type="number"
-          min={0}
-          step={1}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           required
           defaultValue={product?.stock ?? 0}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
       </div>
 
@@ -365,7 +376,7 @@ export function ProductForm({
 
       <PhotoGallery initialUrls={images} />
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-erreur">{state.error}</p>}
 
       <SubmitButton isEdit={Boolean(product?.id)} />
     </form>
