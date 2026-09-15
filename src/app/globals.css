@@ -196,3 +196,72 @@ button:not(:disabled):active,
     animation-delay: 0s !important;
   }
 }
+
+/*
+ * Squelettes de chargement — dernier volet du chantier "langage natif"
+ * (15/09/2026, voir decisions-techniques.md). Next.js affiche automatiquement
+ * le fichier `loading.tsx` d'une route pendant que son `page.tsx` (async,
+ * en attente de Supabase) résout — un vrai <Suspense> posé par le framework
+ * lui-même, pas une bidouille. On y accroche le motif "Suspense reveal" de
+ * `<ViewTransition>" documenté par Next (mêmes constantes de durée que les
+ * transitions d'écran : sortie rapide, entrée différée) : le squelette
+ * s'efface vers le bas pendant que le vrai contenu apparaît par le bas avec
+ * un léger flou, jamais un remplacement instantané qui trahirait une page
+ * web classique.
+ */
+:root {
+  --duration-exit: 150ms;
+  --duration-enter: 210ms;
+  --duration-move: 400ms;
+}
+
+::view-transition-old(.kv-skeleton-out) {
+  animation:
+    var(--duration-exit) ease-out both kv-suspense-fade reverse,
+    var(--duration-exit) ease-out both kv-suspense-slide reverse;
+}
+::view-transition-new(.kv-content-in) {
+  animation:
+    var(--duration-enter) ease-in var(--duration-exit) both kv-suspense-fade,
+    var(--duration-move) ease-in both kv-suspense-slide;
+}
+@keyframes kv-suspense-fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes kv-suspense-slide {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Pulsation des blocs de squelette (`src/components/skeleton.tsx`) — Sable
+   plutôt qu'un gris générique, pour rester sur charte même à vide. */
+@keyframes kv-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.animate-kv-pulse {
+  animation: kv-pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-kv-pulse {
+    animation: none;
+    opacity: 0.75;
+  }
+}

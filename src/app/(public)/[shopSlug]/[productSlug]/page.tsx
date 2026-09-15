@@ -133,6 +133,7 @@ export default async function ProductPage({
       exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
       default="none"
     >
+    <ViewTransition enter="kv-content-in" default="none">
     <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <Link
         href={`/${shopSlug}`}
@@ -284,6 +285,7 @@ export default async function ProductPage({
         </section>
       )}
     </main>
+    </ViewTransition>
     </ViewTransition>
   );
 }

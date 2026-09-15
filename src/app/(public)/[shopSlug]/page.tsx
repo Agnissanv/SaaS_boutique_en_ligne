@@ -148,6 +148,7 @@ export default async function ShopPage({
       exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
       default="none"
     >
+    <ViewTransition enter="kv-content-in" default="none">
     <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
       <div className="mb-3 flex justify-end">
         <Link href="/compte" className="text-xs text-vert-actif underline">
@@ -389,6 +390,7 @@ export default async function ShopPage({
 
       <CartLink shopSlug={shopSlug} />
     </main>
+    </ViewTransition>
     </ViewTransition>
   );
 }

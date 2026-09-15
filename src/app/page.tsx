@@ -373,6 +373,7 @@ export default async function Home({
       exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
       default="none"
     >
+    <ViewTransition enter="kv-content-in" default="none">
     <main className="mx-auto max-w-6xl px-4 pb-10">
       {/* En-tête : logo/texte de marque + recherche, réunis dans une seule
           barre. Collant au défilement (13/09/2026, retour d'Isaac) : reste
@@ -618,6 +619,7 @@ export default async function Home({
         )}
       </div>
     </main>
+    </ViewTransition>
     </ViewTransition>
   );
 }
