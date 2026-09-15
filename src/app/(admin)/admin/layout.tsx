@@ -1,14 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
-
-const NAV_ITEMS = [
-  { href: "/admin", label: "Vue d'ensemble" },
-  { href: "/admin/vendeurs", label: "Vendeurs" },
-  { href: "/admin/abonnements", label: "Abonnements" },
-  { href: "/admin/transactions", label: "Transactions" },
-];
+import { AdminNav } from "./admin-nav";
 
 /**
  * Layout admin — protège /admin/* et vérifie le rôle 'admin' sur le profil.
@@ -43,11 +36,7 @@ export default async function AdminLayout({
           <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
           <span className="font-display font-semibold tracking-tight">KEVA Admin</span>
         </span>
-        {NAV_ITEMS.map((item) => (
-          <Link key={item.href} href={item.href} className="text-ivoire/80 underline hover:text-cuivre-clair">
-            {item.label}
-          </Link>
-        ))}
+        <AdminNav />
         <form action={signOut} className="ml-auto">
           <button type="submit" className="text-ivoire/70 underline hover:text-cuivre-clair">
             Déconnexion

@@ -18,6 +18,17 @@ const baseProps = {
   strokeLinejoin: "round" as const,
 };
 
+export function GridIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <rect x="2.8" y="2.8" width="6" height="6" rx="1.2" />
+      <rect x="11.2" y="2.8" width="6" height="6" rx="1.2" />
+      <rect x="2.8" y="11.2" width="6" height="6" rx="1.2" />
+      <rect x="11.2" y="11.2" width="6" height="6" rx="1.2" />
+    </svg>
+  );
+}
+
 export function StorefrontIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg {...baseProps} className={className}>
