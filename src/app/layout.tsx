@@ -32,10 +32,26 @@ export const metadata: Metadata = {
   description:
     "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
   manifest: "/manifest.json",
+  // statusBarStyle "black" plutôt que "default" (blanc) : le bandeau système
+  // iOS suit au moins la tonalité sombre de la charte KEVA sans exiger de
+  // gérer soi-même le safe-area-inset-top partout ("black-translucent"
+  // ferait passer le contenu SOUS la barre système, ce qui demanderait un
+  // padding dédié sur chaque écran — reporté à la passe "langage natif" sur
+  // la marketplace, iOS restant secondaire par rapport à Android au cahier
+  // des charges §4.4). Sur Android, c'est `viewport.themeColor` ci-dessous
+  // qui colore la barre système, déjà posé sur le vert sapin de la marque.
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black",
     title: "KEVA",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -43,6 +59,12 @@ export const viewport: Viewport = {
   themeColor: "#0e3b2c",
   width: "device-width",
   initialScale: 1,
+  // viewportFit "cover" : sans lui, les `env(safe-area-inset-*)` déjà posés
+  // sur la barre de navigation basse (`bottom-nav.tsx`) valent toujours 0 —
+  // l'app dessinait donc déjà sous l'indicateur d'accueil des iPhone à
+  // encoche sans que ce padding n'ait jamais eu d'effet réel. Nécessaire à
+  // la fois pour ça et pour l'affichage plein écran en mode PWA installée.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>KEVA — Pas de connexion</title>
+<style>
+  :root { color-scheme: light; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #0e3b2c;
+    color: #f3ead8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+    text-align: center;
+  }
+  .mark {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #04140f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mark svg { width: 28px; height: 28px; }
+  h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  p {
+    margin: 0;
+    max-width: 26rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(243, 234, 216, 0.7);
+  }
+  button {
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background: #b6784a;
+    color: #f3ead8;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  button:active { background: #8b4f2e; }
+</style>
+</head>
+<body>
+  <div class="mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#b6784a" stroke-width="1.8">
+      <path d="M8 4v16M8 12l8-8M11.5 12L16 20" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </div>
+  <h1>Pas de connexion pour l'instant</h1>
+  <p>
+    Cette page a besoin d'internet pour se charger. Vérifie ta connexion
+    Wi-Fi ou tes données mobiles, puis réessaie.
+  </p>
+  <button onclick="location.reload()">Réessayer</button>
+</body>
+</html>

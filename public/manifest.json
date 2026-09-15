@@ -1,31 +1,22 @@
 {
-  "name": "Boutique en ligne",
-  "short_name": "Boutique",
-  "description": "Créez votre boutique en ligne et recevez vos commandes avec paiement Mobile Money.",
-  "start_url": "/",
+  "name": "KEVA — Boutiques en ligne",
+  "short_name": "KEVA",
+  "description": "Créez votre boutique en ligne, gérez vos commandes et encaissez en Mobile Money, directement depuis votre téléphone.",
+  "id": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#111827",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0e3b2c",
+  "theme_color": "#0e3b2c",
+  "orientation": "portrait-primary",
   "lang": "fr",
+  "dir": "ltr",
+  "categories": ["shopping", "business"],
   "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
