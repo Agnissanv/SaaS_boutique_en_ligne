@@ -15,6 +15,13 @@ type Step = "panier" | "commande";
  * vendeur best-effort). Montants en IBM Plex Mono/Cuivre Profond, boutons
  * principaux en Cuivre Profond, focus des champs en Vert Actif, messages
  * d'erreur/succès sur les tokens sémantiques.
+ *
+ * Quantité et mode de paiement reconstruits le 15/09/2026 (chantier "langage
+ * natif", voir decisions-techniques.md — même geste que la fiche produit) :
+ * le `<input type="number">` de chaque ligne de panier devient un compteur
+ * [−] [+], et les boutons radio du mode de paiement deviennent des cartes à
+ * toucher en entier (le petit rond de radio natif est une cible bien trop
+ * étroite au doigt). Logique de commande (RPC, géolocalisation) inchangée.
  */
 export function CartCheckout({
   shopId,
@@ -129,20 +136,33 @@ export function CartCheckout({
                 )}
                 <p className="font-mono text-sm text-cuivre-profond">{item.price} FCFA</p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  value={item.quantity}
-                  onChange={(e) =>
-                    updateQuantity(item.key, Math.max(1, Number(e.target.value) || 1))
-                  }
-                  className="w-16 rounded-md border border-ligne px-2 py-1 text-sm focus:border-vert-actif focus:outline-none"
-                />
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <div className="flex items-center rounded-md border border-ligne">
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(item.key, Math.max(1, item.quantity - 1))}
+                    disabled={item.quantity <= 1}
+                    aria-label="Diminuer la quantité"
+                    className="px-2.5 py-1 text-base font-medium text-encre disabled:opacity-30"
+                  >
+                    −
+                  </button>
+                  <span aria-live="polite" className="min-w-[1.75rem] text-center font-mono text-sm text-encre">
+                    {item.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                    aria-label="Augmenter la quantité"
+                    className="px-2.5 py-1 text-base font-medium text-encre"
+                  >
+                    +
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={() => removeItem(item.key)}
-                  className="text-sm text-erreur underline"
+                  className="text-xs text-erreur underline"
                 >
                   Retirer
                 </button>
@@ -283,22 +303,41 @@ export function CartCheckout({
         )}
       </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium text-encre">Mode de paiement</legend>
-        <label className="flex items-center gap-2 text-sm text-encre">
-          <input
-            type="radio"
-            name="paymentMethod"
-            checked={paymentMethod === "cash_on_delivery"}
-            onChange={() => setPaymentMethod("cash_on_delivery")}
-          />
-          Paiement à la livraison
-        </label>
-        <label className="flex items-center gap-2 text-sm text-encre/40">
-          <input type="radio" name="paymentMethod" disabled />
-          Mobile Money (Wave, Orange Money...) — bientôt disponible
-        </label>
-      </fieldset>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-encre">Mode de paiement</span>
+        <div role="radiogroup" aria-label="Mode de paiement" className="flex flex-col gap-2">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={paymentMethod === "cash_on_delivery"}
+            onClick={() => setPaymentMethod("cash_on_delivery")}
+            className={`flex items-center justify-between gap-3 rounded-lg border px-3.5 py-3 text-left text-sm ${
+              paymentMethod === "cash_on_delivery"
+                ? "border-vert-actif bg-vert-actif/5 text-encre"
+                : "border-ligne text-encre"
+            }`}
+          >
+            Paiement à la livraison
+            <span
+              aria-hidden="true"
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                paymentMethod === "cash_on_delivery" ? "border-vert-actif" : "border-ligne"
+              }`}
+            >
+              {paymentMethod === "cash_on_delivery" && <span className="h-2.5 w-2.5 rounded-full bg-vert-actif" />}
+            </span>
+          </button>
+          <div
+            role="radio"
+            aria-checked={false}
+            aria-disabled="true"
+            className="flex items-center justify-between gap-3 rounded-lg border border-ligne px-3.5 py-3 text-sm text-encre/40"
+          >
+            Mobile Money (Wave, Orange Money...) — bientôt disponible
+            <span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border-2 border-ligne" />
+          </div>
+        </div>
+      </div>
 
       {error && <p className="text-sm text-erreur">{error}</p>}
 
