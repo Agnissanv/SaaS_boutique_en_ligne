@@ -1,28 +1,57 @@
 @import "tailwindcss";
 
 /*
- * Pas de bascule sombre/clair automatique pour l'instant : l'identité
- * visuelle n'est pas encore décidée (cf. README), et les pages utilisent des
- * classes Tailwind neutres (text-gray-900, border-gray-300...) pensées pour
- * un fond clair. Activer `prefers-color-scheme: dark` ici sans adapter
- * chaque page rendait le texte illisible (texte quasi noir sur fond quasi
- * noir) pour tout visiteur dont l'OS/navigateur est en mode sombre. On fige
- * un fond clair partout jusqu'à ce qu'un vrai thème (clair OU sombre) soit
- * choisi et appliqué de façon cohérente.
+ * Identité visuelle KEVA — figée le 14/09/2026 (voir decisions-techniques.md
+ * et la charte graphique publiée). Couleurs extraites directement du logo
+ * livré par Isaac, pas inventées à côté. `--foreground` utilise Encre plutôt
+ * qu'un gris neutre générique, pour que même le texte courant porte la
+ * palette de marque. Un seul thème pour l'instant (pas de bascule sombre
+ * automatique) : les surfaces produit (dashboard, admin, marketplace) sont
+ * pensées pour un fond clair, cohérent avec la charte.
  */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #3a3a34;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Primaires — marque */
+  --color-vert-sapin: #0e3b2c;
+  --color-vert-profond: #04140f;
+  --color-vert-actif: #1c6b4a;
+
+  /* Accent — cuivre */
+  --color-cuivre: #b6784a;
+  --color-cuivre-profond: #8b4f2e;
+  --color-cuivre-clair: #d89a6a;
+
+  /* Surfaces chaudes */
+  --color-ivoire: #f3ead8;
+  --color-sable: #e8dcc6;
+
+  /* Neutres — interface produit (remplacent les gray-*/blue-* Tailwind) */
+  --color-brume: #f7f5f1;
+  --color-encre: #3a3a34;
+  --color-ligne: #ddd6c9;
+
+  /* Sémantiques — statuts de commande */
+  --color-succes: #1c6b4a;
+  --color-attention: #c98a2c;
+  --color-erreur: #b3452f;
+
+  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+h1, h2, h3, h4 {
+  text-wrap: balance;
 }

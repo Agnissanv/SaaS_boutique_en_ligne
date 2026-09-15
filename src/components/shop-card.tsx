@@ -26,7 +26,7 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
   return (
     <Link
       href={`/${shop.slug}`}
-      className={`flex flex-col items-center gap-2 rounded border border-gray-200 p-3 text-center ${
+      className={`flex flex-col items-center gap-2 rounded border border-ligne bg-white p-3 text-center transition-shadow hover:shadow-sm ${
         className ?? ""
       }`}
     >
@@ -38,18 +38,18 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
           className="h-16 w-16 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sable text-lg font-semibold text-cuivre-profond">
           {shop.name.charAt(0).toUpperCase()}
         </div>
       )}
-      <p className="w-full truncate text-sm font-medium text-gray-900">{shop.name}</p>
+      <p className="w-full truncate text-sm font-medium text-encre">{shop.name}</p>
       {shop.category ? (
-        <p className="text-xs text-gray-500">{categoryLabel(shop.category)}</p>
+        <p className="text-xs text-encre/60">{categoryLabel(shop.category)}</p>
       ) : null}
       {shop.rating ? (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-cuivre-profond">
           <Stars rating={shop.rating.average} />{" "}
-          <span>({shop.rating.count})</span>
+          <span className="text-encre/60">({shop.rating.count})</span>
         </p>
       ) : null}
     </Link>

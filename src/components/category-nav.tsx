@@ -42,14 +42,14 @@ export function CategoryNav({
             href={buildMarketplaceHref(current, { categorie: tile.value, page: undefined })}
             className={`flex shrink-0 flex-col items-center gap-1.5 rounded-lg border px-4 py-3 text-center ${
               isActive
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-200 text-gray-700"
+                ? "border-vert-sapin bg-vert-sapin text-ivoire"
+                : "border-ligne text-encre hover:border-cuivre-clair"
             }`}
           >
             <span
               aria-hidden="true"
               className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
-                isActive ? "bg-white/20" : "bg-gray-100"
+                isActive ? "bg-white/20" : "bg-sable text-cuivre-profond"
               }`}
             >
               {tile.label.charAt(0)}

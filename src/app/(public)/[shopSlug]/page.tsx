@@ -112,7 +112,7 @@ export default async function ShopPage({
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
       <div className="mb-2 flex justify-end">
-        <Link href="/compte" className="text-xs text-gray-500 underline">
+        <Link href="/compte" className="text-xs text-vert-actif underline">
           Mon compte
         </Link>
       </div>
@@ -136,17 +136,17 @@ export default async function ShopPage({
           />
         ) : null}
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{shop.name}</h1>
+          <h1 className="font-display text-xl font-semibold text-encre">{shop.name}</h1>
           {rating ? (
-            <p className="mt-0.5 text-sm text-gray-700">
+            <p className="mt-0.5 text-sm text-encre/70">
               <Stars rating={rating.average} /> {rating.average.toFixed(1)}/5 (
               {rating.count} avis)
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-gray-400">Pas encore d&apos;avis</p>
+            <p className="mt-0.5 text-xs text-encre/50">Pas encore d&apos;avis</p>
           )}
           {shop.description ? (
-            <p className="mt-1 text-sm text-gray-600">{shop.description}</p>
+            <p className="mt-1 text-sm text-encre/70">{shop.description}</p>
           ) : null}
           {shop.whatsapp_number ? (
             <div className="mt-2">
@@ -167,11 +167,11 @@ export default async function ShopPage({
           name="q"
           defaultValue={q ?? ""}
           placeholder="Rechercher un article dans cette boutique..."
-          className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm sm:w-auto"
+          className="w-full flex-1 rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none sm:w-auto"
         />
         <button
           type="submit"
-          className="shrink-0 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+          className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
         >
           Rechercher
         </button>
@@ -183,8 +183,8 @@ export default async function ShopPage({
             href={buildHref(shopSlug, current, { categorie: undefined, page: undefined })}
             className={`rounded-full border px-3 py-1 text-xs ${
               !categorie
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-700"
+                ? "border-vert-sapin bg-vert-sapin text-ivoire"
+                : "border-ligne text-encre hover:border-cuivre-clair"
             }`}
           >
             Toutes catégories
@@ -195,8 +195,8 @@ export default async function ShopPage({
               href={buildHref(shopSlug, current, { categorie: c.value, page: undefined })}
               className={`rounded-full border px-3 py-1 text-xs ${
                 categorie === c.value
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 text-gray-700"
+                  ? "border-vert-sapin bg-vert-sapin text-ivoire"
+                  : "border-ligne text-encre hover:border-cuivre-clair"
               }`}
             >
               {c.label}
@@ -214,7 +214,7 @@ export default async function ShopPage({
       </div>
 
       {(products ?? []).length === 0 ? (
-        <p className="mt-10 text-sm text-gray-600">
+        <p className="mt-10 text-sm text-encre/70">
           {q || categorie
             ? "Aucun article ne correspond à ta recherche."
             : "Aucun produit disponible pour l'instant."}
@@ -226,7 +226,7 @@ export default async function ShopPage({
               (a, b) => a.position - b.position
             )[0]?.url;
             return (
-              <div key={product.id} className="relative rounded border border-gray-200 p-3">
+              <div key={product.id} className="relative rounded border border-ligne bg-white p-3 transition-shadow hover:shadow-sm">
                 <div className="absolute right-2 top-2 z-10">
                   <WishlistButton
                     item={{
@@ -248,12 +248,12 @@ export default async function ShopPage({
                       className="mb-2 aspect-square w-full rounded object-cover"
                     />
                   ) : (
-                    <div className="mb-2 aspect-square w-full rounded bg-gray-100" />
+                    <div className="mb-2 aspect-square w-full rounded bg-brume" />
                   )}
-                  <p className="text-sm font-medium text-gray-900">{product.title}</p>
-                  <p className="text-sm text-gray-600">{product.price} FCFA</p>
+                  <p className="text-sm font-medium text-encre">{product.title}</p>
+                  <p className="font-mono text-sm text-cuivre-profond">{product.price} FCFA</p>
                   {product.category ? (
-                    <p className="text-xs text-gray-400">{categoryLabel(product.category)}</p>
+                    <p className="text-xs text-encre/50">{categoryLabel(product.category)}</p>
                   ) : null}
                 </Link>
               </div>
@@ -265,21 +265,21 @@ export default async function ShopPage({
       {totalPages > 1 ? (
         <div className="mt-6 flex items-center justify-center gap-4 text-sm">
           {page > 1 ? (
-            <Link href={buildHref(shopSlug, current, { page: String(page - 1) })} className="underline">
+            <Link href={buildHref(shopSlug, current, { page: String(page - 1) })} className="text-vert-actif underline">
               Page précédente
             </Link>
           ) : (
-            <span className="text-gray-400">Page précédente</span>
+            <span className="text-encre/40">Page précédente</span>
           )}
-          <span className="text-gray-600">
+          <span className="text-encre/70">
             Page {page} / {totalPages}
           </span>
           {page < totalPages ? (
-            <Link href={buildHref(shopSlug, current, { page: String(page + 1) })} className="underline">
+            <Link href={buildHref(shopSlug, current, { page: String(page + 1) })} className="text-vert-actif underline">
               Page suivante
             </Link>
           ) : (
-            <span className="text-gray-400">Page suivante</span>
+            <span className="text-encre/40">Page suivante</span>
           )}
         </div>
       ) : null}

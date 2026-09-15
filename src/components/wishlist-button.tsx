@@ -32,7 +32,9 @@ export function WishlistButton({
         "flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-lg shadow"
       }
     >
-      <span aria-hidden="true">{isFavorite ? "♥" : "♡"}</span>
+      <span aria-hidden="true" className={isFavorite ? "text-cuivre-profond" : "text-encre/40"}>
+        {isFavorite ? "♥" : "♡"}
+      </span>
     </button>
   );
 }

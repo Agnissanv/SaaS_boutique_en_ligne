@@ -188,9 +188,11 @@ export default async function Home({
           voir, pas quelque chose à découvrir en scrollant. Collant au
           défilement (13/09/2026, retour d'Isaac) : reste accessible une
           fois qu'on a scrollé plus bas dans un catalogue qui s'allonge. */}
-      <header className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-4 border-b border-gray-100 bg-white px-4 py-3">
-        <Link href="/" className="shrink-0 text-lg font-semibold text-gray-900">
-          Boutique
+      <header className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-4 bg-vert-sapin px-4 py-3 text-ivoire">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo statique, pas besoin de next/image ici */}
+          <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
+          <span className="font-display text-lg font-semibold tracking-tight">KEVA</span>
         </Link>
         <form method="GET" action="/" className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1">
           {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
@@ -199,20 +201,20 @@ export default async function Home({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Rechercher un article..."
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
           />
           <button
             type="submit"
-            className="shrink-0 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+            className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
           >
             Rechercher
           </button>
         </form>
-        <div className="order-2 flex shrink-0 items-center gap-4 sm:order-3">
-          <Link href="/favoris" className="text-sm font-medium text-gray-700 underline">
+        <div className="order-2 flex shrink-0 items-center gap-4 text-sm font-medium sm:order-3">
+          <Link href="/favoris" className="hover:text-cuivre-clair">
             Mes favoris
           </Link>
-          <Link href="/compte" className="text-sm font-medium text-gray-700 underline">
+          <Link href="/compte" className="hover:text-cuivre-clair">
             Mon compte
           </Link>
         </div>
@@ -230,18 +232,18 @@ export default async function Home({
           rectangle à droite marque l'emplacement réservé à une vraie image
           ou à un carrousel promotionnel plus tard, sans qu'il faille
           retoucher la structure de la page pour l'ajouter. */}
-      <section className="mt-6 flex flex-col gap-4 rounded-lg bg-gray-900 p-6 text-white sm:flex-row sm:items-center sm:justify-between">
+      <section className="mt-6 flex flex-col gap-4 rounded-lg bg-vert-profond p-6 text-ivoire sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-md">
-          <h1 className="text-xl font-semibold sm:text-2xl">
+          <h1 className="font-display text-xl font-semibold sm:text-2xl">
             Le catalogue de toutes les boutiques en ligne, au même endroit
           </h1>
-          <p className="mt-2 text-sm text-gray-300">
+          <p className="mt-2 text-sm text-ivoire/70">
             Découvre des produits vendus directement par des vendeurs
             indépendants, partout en Côte d&apos;Ivoire.
           </p>
           <Link
             href="/inscription"
-            className="mt-4 inline-block rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-900"
+            className="mt-4 inline-block rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
           >
             Vendre sur la plateforme
           </Link>
@@ -272,9 +274,9 @@ export default async function Home({
             body: "Orange Money, MTN Money, Moov Money et Wave arrivent prochainement.",
           },
         ].map((item) => (
-          <div key={item.title} className="rounded-md border border-gray-200 p-3">
-            <p className="text-sm font-medium text-gray-900">{item.title}</p>
-            <p className="mt-1 text-xs text-gray-600">{item.body}</p>
+          <div key={item.title} className="rounded-md border border-ligne p-3">
+            <p className="text-sm font-medium text-encre">{item.title}</p>
+            <p className="mt-1 text-xs text-encre/70">{item.body}</p>
           </div>
         ))}
       </section>
@@ -284,7 +286,7 @@ export default async function Home({
           du fichier). Masquée si aucune boutique active n'existe encore. */}
       {featuredShops.length > 0 ? (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900">Boutiques de la plateforme</h2>
+          <h2 className="font-display text-lg font-semibold text-encre">Boutiques de la plateforme</h2>
           <div className="-mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-2">
             {featuredShops.map((shop) => (
               <ShopCard key={shop.slug} shop={shop} className="w-32 shrink-0" />
@@ -299,7 +301,7 @@ export default async function Home({
           le coup. */}
       {newArrivalsProducts.length > 0 ? (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900">Nouveautés</h2>
+          <h2 className="font-display text-lg font-semibold text-encre">Nouveautés</h2>
           <div className="-mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-2">
             {newArrivalsProducts.map((product) => (
               <ProductCard key={product.id} product={product} className="w-40 shrink-0" />
@@ -313,7 +315,7 @@ export default async function Home({
           ci-dessus au lieu d'être la première chose sur la page). */}
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="font-display text-lg font-semibold text-encre">
             {categorie ? categoryLabel(categorie) : "Tout le catalogue"}
           </h2>
           <SortSelect
@@ -324,14 +326,14 @@ export default async function Home({
             categorie={categorie}
           />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-encre/60">
           {filterSummary}
           {hasFilter ? (
             <>
               {" — "}
               <Link
                 href={buildMarketplaceHref(current, { q: undefined, categorie: undefined, page: undefined })}
-                className="underline"
+                className="text-vert-actif underline"
               >
                 réinitialiser les filtres
               </Link>
@@ -340,7 +342,7 @@ export default async function Home({
         </p>
 
         {catalogueProducts.length === 0 ? (
-          <p className="mt-10 text-sm text-gray-600">
+          <p className="mt-10 text-sm text-encre/70">
             {hasFilter
               ? "Aucun article ne correspond à ta recherche."
               : "Aucun article disponible pour l'instant — reviens bientôt."}
@@ -358,25 +360,25 @@ export default async function Home({
             {page > 1 ? (
               <Link
                 href={buildMarketplaceHref(current, { page: String(page - 1) })}
-                className="underline"
+                className="text-vert-actif underline"
               >
                 Page précédente
               </Link>
             ) : (
-              <span className="text-gray-400">Page précédente</span>
+              <span className="text-encre/40">Page précédente</span>
             )}
-            <span className="text-gray-600">
+            <span className="text-encre/70">
               Page {page} / {totalPages}
             </span>
             {page < totalPages ? (
               <Link
                 href={buildMarketplaceHref(current, { page: String(page + 1) })}
-                className="underline"
+                className="text-vert-actif underline"
               >
                 Page suivante
               </Link>
             ) : (
-              <span className="text-gray-400">Page suivante</span>
+              <span className="text-encre/40">Page suivante</span>
             )}
           </div>
         ) : null}

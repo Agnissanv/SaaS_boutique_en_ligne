@@ -38,12 +38,12 @@ export function SortSelect({
   }
 
   return (
-    <label className="flex shrink-0 items-center gap-2 text-xs text-gray-600">
+    <label className="flex shrink-0 items-center gap-2 text-xs text-encre/70">
       Trier par
       <select
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+        className="rounded-md border border-ligne px-2 py-1 text-xs text-encre focus:border-vert-actif focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

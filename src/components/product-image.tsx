@@ -23,7 +23,7 @@ export function ProductImage({
   const [broken, setBroken] = useState(false);
 
   if (!src || broken) {
-    return <div className={`${className ?? ""} bg-gray-100`} />;
+    return <div className={`${className ?? ""} bg-brume`} />;
   }
 
   return (

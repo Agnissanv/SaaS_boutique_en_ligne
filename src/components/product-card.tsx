@@ -39,7 +39,7 @@ export function ProductCard({
   className?: string;
 }) {
   return (
-    <div className={`relative rounded border border-gray-200 p-3 ${className ?? ""}`}>
+    <div className={`relative rounded border border-ligne bg-white p-3 transition-shadow hover:shadow-sm ${className ?? ""}`}>
       <div className="absolute right-2 top-2 z-10">
         <WishlistButton
           item={{
@@ -58,17 +58,17 @@ export function ProductCard({
           alt={product.title}
           className="mb-2 aspect-square w-full rounded object-cover"
         />
-        <p className="line-clamp-2 text-sm font-medium text-gray-900">{product.title}</p>
-        <p className="text-sm text-gray-600">{product.price} FCFA</p>
+        <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
+        <p className="font-mono text-sm text-cuivre-profond">{product.price} FCFA</p>
       </Link>
       <Link
         href={`/${product.shopSlug}`}
-        className="mt-1 block truncate text-xs text-gray-500 hover:underline"
+        className="mt-1 block truncate text-xs text-encre/60 hover:text-vert-actif hover:underline"
       >
         {product.shopName}
       </Link>
       {product.category ? (
-        <p className="text-xs text-gray-400">{categoryLabel(product.category)}</p>
+        <p className="text-xs text-encre/50">{categoryLabel(product.category)}</p>
       ) : null}
     </div>
   );

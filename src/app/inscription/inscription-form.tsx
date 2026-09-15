@@ -111,18 +111,23 @@ export function InscriptionForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-900">Créer un compte</h1>
+    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 bg-brume">
+      <Link href="/" className="mx-auto mb-6 flex items-center gap-2">
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
+        <img src="/keva-logo.jpg" alt="KEVA" className="h-10 w-10 rounded-md object-cover" />
+        <span className="font-display text-xl font-semibold tracking-tight text-vert-sapin">KEVA</span>
+      </Link>
+      <div className="rounded-xl border border-ligne bg-white p-6 shadow-sm">
+        <h1 className="font-display text-xl font-semibold text-encre">Créer un compte</h1>
 
         {view === "form" && (
           <>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-encre/70">
               Ouvre ta boutique en ligne en quelques minutes.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
-              <label className="text-sm font-medium text-gray-700" htmlFor="displayName">
+              <label className="text-sm font-medium text-encre" htmlFor="displayName">
                 Nom complet
               </label>
               <input
@@ -137,10 +142,10 @@ export function InscriptionForm() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Ex : Awa Koné"
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
               />
 
-              <label className="text-sm font-medium text-gray-700" htmlFor="email">
+              <label className="text-sm font-medium text-encre" htmlFor="email">
                 Adresse email
               </label>
               <input
@@ -152,10 +157,10 @@ export function InscriptionForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="toi@exemple.com"
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
               />
 
-              <label className="text-sm font-medium text-gray-700" htmlFor="password">
+              <label className="text-sm font-medium text-encre" htmlFor="password">
                 Mot de passe
               </label>
               <input
@@ -168,10 +173,10 @@ export function InscriptionForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
               />
 
-              <label className="text-sm font-medium text-gray-700" htmlFor="confirmPassword">
+              <label className="text-sm font-medium text-encre" htmlFor="confirmPassword">
                 Confirme le mot de passe
               </label>
               <input
@@ -184,23 +189,23 @@ export function InscriptionForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
               />
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-erreur">{error}</p>}
 
               <button
                 type="submit"
                 disabled={pending}
-                className="mt-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
               >
                 {pending ? "Création..." : "Créer mon compte"}
               </button>
             </form>
 
-            <p className="mt-4 text-center text-sm text-gray-500">
+            <p className="mt-4 text-center text-sm text-encre/60">
               Déjà un compte ?{" "}
-              <Link href="/connexion" className="underline">
+              <Link href="/connexion" className="text-vert-actif underline">
                 Se connecter
               </Link>
             </p>
@@ -209,13 +214,13 @@ export function InscriptionForm() {
 
         {view === "confirmation-envoyee" && (
           <div className="mt-6 flex flex-col gap-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-encre/70">
               Compte créé. Un email de confirmation vient d&apos;être envoyé
               à {email} — clique sur le lien qu&apos;il contient pour
               l&apos;activer. Pense à vérifier tes spams s&apos;il n&apos;arrive
               pas après quelques minutes.
             </p>
-            <Link href="/connexion" className="text-sm text-gray-500 underline">
+            <Link href="/connexion" className="text-sm text-vert-actif underline">
               Retour à la connexion
             </Link>
           </div>
@@ -223,10 +228,10 @@ export function InscriptionForm() {
 
         {view === "compte-existant" && (
           <div className="mt-6 flex flex-col gap-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-encre/70">
               Un compte existe déjà avec l&apos;adresse {email}.
             </p>
-            <Link href="/connexion" className="text-sm text-gray-500 underline">
+            <Link href="/connexion" className="text-sm text-vert-actif underline">
               Se connecter
             </Link>
           </div>

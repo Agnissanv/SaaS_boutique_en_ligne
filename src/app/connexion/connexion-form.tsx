@@ -127,13 +127,18 @@ export function ConnexionForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-900">Connexion</h1>
+    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 bg-brume">
+      <Link href="/" className="mx-auto mb-6 flex items-center gap-2">
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
+        <img src="/keva-logo.jpg" alt="KEVA" className="h-10 w-10 rounded-md object-cover" />
+        <span className="font-display text-xl font-semibold tracking-tight text-vert-sapin">KEVA</span>
+      </Link>
+      <div className="rounded-xl border border-ligne bg-white p-6 shadow-sm">
+        <h1 className="font-display text-xl font-semibold text-encre">Connexion</h1>
 
         {view === "password" && (
           <>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-encre/70">
               {useMagicLink
                 ? "Reçois un lien de connexion par email."
                 : "Connecte-toi avec ton email et ton mot de passe."}
@@ -141,7 +146,7 @@ export function ConnexionForm() {
 
             {!useMagicLink ? (
               <form onSubmit={handlePasswordLogin} className="mt-6 flex flex-col gap-3">
-                <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                <label className="text-sm font-medium text-encre" htmlFor="email">
                   Adresse email
                 </label>
                 <input
@@ -154,17 +159,17 @@ export function ConnexionForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="toi@exemple.com"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
                 />
 
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="password">
+                  <label className="text-sm font-medium text-encre" htmlFor="password">
                     Mot de passe
                   </label>
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-xs text-gray-500 underline"
+                    className="text-xs text-vert-actif underline"
                   >
                     Oublié / pas encore défini ?
                   </button>
@@ -178,15 +183,15 @@ export function ConnexionForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
                 />
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-erreur">{error}</p>}
 
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
                 >
                   {pending ? "Connexion..." : "Se connecter"}
                 </button>
@@ -197,14 +202,14 @@ export function ConnexionForm() {
                     setUseMagicLink(true);
                     setError(null);
                   }}
-                  className="text-center text-sm text-gray-500 underline"
+                  className="text-center text-sm text-encre/60 underline"
                 >
                   Se connecter par lien magique à la place
                 </button>
               </form>
             ) : (
               <form onSubmit={handleMagicLink} className="mt-6 flex flex-col gap-3">
-                <label className="text-sm font-medium text-gray-700" htmlFor="email-magic">
+                <label className="text-sm font-medium text-encre" htmlFor="email-magic">
                   Adresse email
                 </label>
                 <input
@@ -217,13 +222,13 @@ export function ConnexionForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="toi@exemple.com"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
                 />
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-erreur">{error}</p>}
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
                 >
                   {pending ? "Envoi..." : "Recevoir le lien"}
                 </button>
@@ -233,16 +238,16 @@ export function ConnexionForm() {
                     setUseMagicLink(false);
                     setError(null);
                   }}
-                  className="text-center text-sm text-gray-500 underline"
+                  className="text-center text-sm text-encre/60 underline"
                 >
                   Se connecter avec un mot de passe à la place
                 </button>
               </form>
             )}
 
-            <p className="mt-4 text-center text-sm text-gray-500">
+            <p className="mt-4 text-center text-sm text-encre/60">
               Pas encore de compte ?{" "}
-              <Link href="/inscription" className="underline">
+              <Link href="/inscription" className="text-vert-actif underline">
                 Créer un compte
               </Link>
             </p>
@@ -251,7 +256,7 @@ export function ConnexionForm() {
 
         {view === "magic-sent" && (
           <div className="mt-6 flex flex-col gap-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-encre/70">
               Email envoyé à {email}. Clique sur le lien reçu pour te
               connecter. Pense à vérifier tes spams s&apos;il n&apos;arrive
               pas après quelques minutes.
@@ -262,7 +267,7 @@ export function ConnexionForm() {
                 setView("password");
                 setError(null);
               }}
-              className="text-sm text-gray-500 underline"
+              className="text-sm text-encre/60 underline"
             >
               Retour
             </button>
@@ -271,7 +276,7 @@ export function ConnexionForm() {
 
         {view === "reset-sent" && (
           <div className="mt-6 flex flex-col gap-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-encre/70">
               Si un compte existe avec l&apos;adresse {email}, un email vient
               de lui être envoyé pour définir un mot de passe.
             </p>
@@ -281,7 +286,7 @@ export function ConnexionForm() {
                 setView("password");
                 setError(null);
               }}
-              className="text-sm text-gray-500 underline"
+              className="text-sm text-encre/60 underline"
             >
               Retour
             </button>

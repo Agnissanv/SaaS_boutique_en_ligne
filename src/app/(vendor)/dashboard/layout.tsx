@@ -36,36 +36,41 @@ export default async function DashboardLayout({
   const subscription = shop ? await getShopSubscription(supabase, shop.id) : null;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 px-4 py-3 text-sm">
-        <Link href="/dashboard">Aperçu</Link>
-        <Link href="/dashboard/produits">Produits</Link>
-        <Link href="/dashboard/commandes">Commandes</Link>
-        <Link href="/dashboard/boutique">Ma boutique</Link>
-        <Link href="/dashboard/avis">Avis</Link>
-        <Link href="/dashboard/paiements">Paiements</Link>
-        <Link href="/dashboard/abonnement">Abonnement</Link>
-        <Link href="/dashboard/profil">Profil</Link>
-        <Link href="/dashboard/aide">Aide</Link>
+    <div className="flex min-h-screen flex-col bg-brume">
+      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-vert-sapin px-4 py-3 text-sm text-ivoire">
+        <Link href="/dashboard" className="mr-2 flex shrink-0 items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
+          <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
+          <span className="font-display font-semibold tracking-tight">KEVA</span>
+        </Link>
+        <Link href="/dashboard" className="hover:text-cuivre-clair">Aperçu</Link>
+        <Link href="/dashboard/produits" className="hover:text-cuivre-clair">Produits</Link>
+        <Link href="/dashboard/commandes" className="hover:text-cuivre-clair">Commandes</Link>
+        <Link href="/dashboard/boutique" className="hover:text-cuivre-clair">Ma boutique</Link>
+        <Link href="/dashboard/avis" className="hover:text-cuivre-clair">Avis</Link>
+        <Link href="/dashboard/paiements" className="hover:text-cuivre-clair">Paiements</Link>
+        <Link href="/dashboard/abonnement" className="hover:text-cuivre-clair">Abonnement</Link>
+        <Link href="/dashboard/profil" className="hover:text-cuivre-clair">Profil</Link>
+        <Link href="/dashboard/aide" className="hover:text-cuivre-clair">Aide</Link>
         {shop?.slug && (
           <a
             href={`/${shop.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="text-gray-500 underline"
+            className="text-ivoire/70 underline hover:text-cuivre-clair"
           >
             Voir ma boutique ↗
           </a>
         )}
         <form action={signOut} className="ml-auto">
-          <button type="submit" className="text-gray-500 underline">
+          <button type="submit" className="text-ivoire/70 underline hover:text-cuivre-clair">
             Déconnexion
           </button>
         </form>
       </nav>
 
       {subscription?.state === "grace_period" && (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+        <div className="border-b border-attention/30 bg-attention/10 px-4 py-2 text-sm text-attention">
           Ton abonnement{" "}
           {subscription.planName ? `« ${subscription.planName} »` : ""} a
           expiré le{" "}
@@ -80,7 +85,7 @@ export default async function DashboardLayout({
         </div>
       )}
       {subscription?.state === "expired" && (
-        <div className="border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+        <div className="border-b border-erreur/30 bg-erreur/10 px-4 py-2 text-sm text-erreur">
           Ton abonnement est expiré : impossible d&apos;ajouter de nouveaux
           produits tant qu&apos;il n&apos;est pas renouvelé. Ta boutique reste
           visible et tu peux toujours gérer tes produits et commandes

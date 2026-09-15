@@ -36,20 +36,25 @@ export default async function AdminLayout({
   if (profile?.role !== "admin") redirect("/dashboard");
 
   return (
-    <div className="p-6">
-      <nav className="mb-6 flex flex-wrap items-center gap-4 border-b border-gray-200 pb-3 text-sm">
+    <div className="min-h-screen bg-brume">
+      <nav className="mb-6 flex flex-wrap items-center gap-4 bg-vert-profond px-6 py-3 text-sm text-ivoire">
+        <span className="mr-2 flex shrink-0 items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
+          <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
+          <span className="font-display font-semibold tracking-tight">KEVA Admin</span>
+        </span>
         {NAV_ITEMS.map((item) => (
-          <Link key={item.href} href={item.href} className="text-gray-700 underline">
+          <Link key={item.href} href={item.href} className="text-ivoire/80 underline hover:text-cuivre-clair">
             {item.label}
           </Link>
         ))}
         <form action={signOut} className="ml-auto">
-          <button type="submit" className="text-gray-500 underline">
+          <button type="submit" className="text-ivoire/70 underline hover:text-cuivre-clair">
             Déconnexion
           </button>
         </form>
       </nav>
-      {children}
+      <div className="p-6 pt-0">{children}</div>
     </div>
   );
 }
