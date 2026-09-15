@@ -1,10 +1,32 @@
 import { createClient } from "@/lib/supabase/server";
+import { StorefrontIcon, CheckCircleIcon, PauseCircleIcon, TicketIcon, CoinsIcon } from "@/components/admin/admin-icons";
+import type { ReactNode } from "react";
 
-function StatTile({ label, value }: { label: string; value: string | number }) {
+function StatTile({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  icon: ReactNode;
+  tone: "neutral" | "succes" | "erreur" | "vert";
+}) {
+  const toneClass = {
+    neutral: "bg-sable text-cuivre-profond",
+    succes: "bg-succes/15 text-succes",
+    erreur: "bg-erreur/15 text-erreur",
+    vert: "bg-vert-actif/15 text-vert-sapin",
+  }[tone];
+
   return (
-    <div className="rounded-lg border border-ligne bg-white p-4">
-      <p className="text-xs text-encre/60">{label}</p>
-      <p className="mt-1 font-display text-lg font-semibold text-encre">{value}</p>
+    <div className="flex items-center gap-3 rounded-lg border border-ligne bg-white p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${toneClass}`}>{icon}</div>
+      <div className="min-w-0">
+        <p className="truncate text-xs text-encre/60">{label}</p>
+        <p className="mt-0.5 font-display text-lg font-semibold text-encre">{value}</p>
+      </div>
     </div>
   );
 }
@@ -14,6 +36,10 @@ function StatTile({ label, value }: { label: string; value: string | number }) {
 // "*_admin_read" (0007_admin_backoffice.sql) donnent à un profil
 // role='admin' une visibilité sur toutes les boutiques/commandes/
 // abonnements, pas seulement les siens.
+//
+// Recolorée le 15/09/2026, puis redessinée le même jour avec des icônes et
+// une carte CA mise en avant — le premier passage (recolorage pur) était
+// trop plat comparé au reste du produit, retour direct d'Isaac.
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
 
@@ -54,16 +80,44 @@ export default async function AdminOverviewPage() {
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Boutiques (total)" value={shopsTotal ?? 0} />
-        <StatTile label="Boutiques actives" value={shopsActive ?? 0} />
-        <StatTile label="Boutiques suspendues" value={shopsSuspended ?? 0} />
-        <StatTile label="Abonnements actifs" value={subscriptionsActive ?? 0} />
+        <StatTile
+          label="Boutiques (total)"
+          value={shopsTotal ?? 0}
+          icon={<StorefrontIcon className="h-5 w-5" />}
+          tone="neutral"
+        />
+        <StatTile
+          label="Boutiques actives"
+          value={shopsActive ?? 0}
+          icon={<CheckCircleIcon className="h-5 w-5" />}
+          tone="succes"
+        />
+        <StatTile
+          label="Boutiques suspendues"
+          value={shopsSuspended ?? 0}
+          icon={<PauseCircleIcon className="h-5 w-5" />}
+          tone="erreur"
+        />
+        <StatTile
+          label="Abonnements actifs"
+          value={subscriptionsActive ?? 0}
+          icon={<TicketIcon className="h-5 w-5" />}
+          tone="vert"
+        />
       </div>
 
-      <p className="mt-4 text-sm text-encre/80">
-        <span className="font-medium text-encre">CA plateforme (toutes commandes non annulées) :</span>{" "}
-        <span className="font-mono text-cuivre-profond">{platformRevenue} FCFA</span>
-      </p>
+      {/* Carte CA mise en avant, plutôt qu'une simple ligne de texte : c'est
+          le chiffre le plus important de tout le back-office, il mérite plus
+          de poids visuel que les compteurs ci-dessus. */}
+      <div className="mt-4 flex items-center gap-4 rounded-lg border border-vert-sapin/20 bg-vert-profond p-5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cuivre-clair/20 text-cuivre-clair">
+          <CoinsIcon className="h-6 w-6" />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-ivoire/60">CA plateforme (commandes non annulées)</p>
+          <p className="mt-0.5 font-mono text-2xl font-semibold text-ivoire">{platformRevenue} FCFA</p>
+        </div>
+      </div>
     </div>
   );
 }

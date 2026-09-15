@@ -4,6 +4,7 @@ import {
   SUBSCRIPTION_STATE_LABELS,
   SUBSCRIPTION_STATE_BADGE_CLASS,
 } from "@/lib/subscription";
+import { TagIcon } from "@/components/admin/admin-icons";
 import { PlanSelect } from "./plan-select";
 
 type SubscriptionRow = {
@@ -17,6 +18,16 @@ type ShopRow = {
   name: string;
   slug: string;
   subscriptions: SubscriptionRow[] | SubscriptionRow | null;
+};
+
+// Classe de couleur de l'icône de plan par palier — un seul pictogramme
+// (`TagIcon`), coloré différemment, plutôt que trois formes distinctes :
+// suffisant pour distinguer les paliers d'un coup d'œil sans multiplier les
+// dessins pour trois lignes de tableau.
+const PLAN_ICON_CLASS: Record<string, string> = {
+  free: "text-encre/40",
+  essentiel: "text-vert-actif",
+  pro: "text-cuivre-profond",
 };
 
 // Gestion des abonnements (cahier des charges §3.1.C.3). Le paiement réel
@@ -47,15 +58,15 @@ export default async function AdminSubscriptionsPage() {
         manuellement ci-dessous.
       </p>
 
-      <div className="mt-6 overflow-x-auto">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-ligne text-xs text-encre/50">
-              <th className="py-2 pr-4">Boutique</th>
-              <th className="py-2 pr-4">Plan actuel</th>
-              <th className="py-2 pr-4">Statut</th>
-              <th className="py-2 pr-4">Expire le</th>
-              <th className="py-2 pr-4">Changer de plan</th>
+              <th className="py-3 pl-4 pr-4">Boutique</th>
+              <th className="py-3 pr-4">Plan actuel</th>
+              <th className="py-3 pr-4">Statut</th>
+              <th className="py-3 pr-4">Expire le</th>
+              <th className="py-3 pr-4">Changer de plan</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ligne">
@@ -70,16 +81,17 @@ export default async function AdminSubscriptionsPage() {
               const state = sub ? computeSubscriptionState(sub.expires_at) : null;
 
               return (
-                <tr key={shop.id}>
-                  <td className="py-3 pr-4">
+                <tr key={shop.id} className="transition-colors hover:bg-brume/60">
+                  <td className="py-3 pl-4 pr-4">
                     <p className="font-medium text-encre">{shop.name}</p>
                     <p className="text-xs text-encre/50">/{shop.slug}</p>
                   </td>
                   <td className="py-3 pr-4 text-encre/70">
                     {plan ? (
-                      <>
+                      <span className="flex items-center gap-1.5">
+                        <TagIcon className={`h-4 w-4 shrink-0 ${PLAN_ICON_CLASS[plan.code] ?? "text-encre/40"}`} />
                         {plan.name} <span className="font-mono text-cuivre-profond">({plan.price} FCFA)</span>
-                      </>
+                      </span>
                     ) : (
                       "Aucun"
                     )}

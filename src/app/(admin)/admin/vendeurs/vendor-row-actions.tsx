@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { CheckCircleIcon, PauseCircleIcon } from "@/components/admin/admin-icons";
 import { toggleShopStatus, updateAdminNotes } from "./actions";
 
 export function VendorRowActions({
@@ -26,12 +27,17 @@ export function VendorRowActions({
             toggleShopStatus(shopId, status === "active" ? "suspended" : "active");
           })
         }
-        className={`w-fit rounded-md border px-3 py-1 text-xs font-medium disabled:opacity-50 ${
+        className={`flex w-fit items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium disabled:opacity-50 ${
           status === "active"
             ? "border-erreur/40 text-erreur hover:bg-erreur/10"
             : "border-succes/40 text-succes hover:bg-succes/10"
         }`}
       >
+        {status === "active" ? (
+          <PauseCircleIcon className="h-3.5 w-3.5" />
+        ) : (
+          <CheckCircleIcon className="h-3.5 w-3.5" />
+        )}
         {status === "active" ? "Suspendre" : "Réactiver"}
       </button>
 
