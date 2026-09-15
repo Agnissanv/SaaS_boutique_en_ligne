@@ -15,6 +15,7 @@ type PublicProduct = {
   slug: string;
   title: string;
   price: number;
+  compare_at_price: number | null;
   category: string | null;
   product_images: { url: string; position: number }[];
 };
@@ -120,9 +121,10 @@ export default async function ShopPage({
 
   let query = supabase
     .from("products")
-    .select("id, slug, title, price, category, product_images(url, position)", {
-      count: "exact",
-    })
+    .select(
+      "id, slug, title, price, compare_at_price, category, product_images(url, position)",
+      { count: "exact" }
+    )
     .eq("shop_id", shop.id)
     .eq("is_active", true)
     .is("deleted_at", null)
@@ -306,6 +308,8 @@ export default async function ShopPage({
             const thumbnail = [...(product.product_images ?? [])].sort(
               (a, b) => a.position - b.position
             )[0]?.url;
+            const hasDiscount =
+              product.compare_at_price != null && product.compare_at_price > product.price;
             return (
               <div
                 key={product.id}
@@ -330,8 +334,13 @@ export default async function ShopPage({
                     className="mb-2 aspect-square w-full rounded object-cover"
                   />
                   <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
-                  <p className="mt-0.5 font-mono text-sm text-cuivre-profond">
+                  <p className="mt-0.5 flex items-baseline gap-1.5 font-mono text-sm text-cuivre-profond">
                     {product.price} FCFA
+                    {hasDiscount ? (
+                      <span className="font-mono text-xs text-encre/40 line-through">
+                        {product.compare_at_price} FCFA
+                      </span>
+                    ) : null}
                   </p>
                   {product.category ? (
                     <p className="text-xs text-encre/50">{categoryLabel(product.category)}</p>
