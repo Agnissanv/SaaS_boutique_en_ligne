@@ -18,6 +18,9 @@ type Variant = { id: string; name: string; value: string; extra_price: number };
  * choisit une valeur dans chaque groupe, pas une seule au total. Voir la
  * migration 0010 pour le stockage de plusieurs variantes par article de
  * commande (`order_item_variants`).
+ *
+ * Recoloré le 15/09/2026 avec la charte KEVA (voir la refonte de la fiche
+ * produit publique dans decisions-techniques.md) — comportement inchangé.
  */
 export function AddToCartForm({
   shopSlug,
@@ -62,7 +65,7 @@ export function AddToCartForm({
   const [justAdded, setJustAdded] = useState(false);
 
   if (stock <= 0) {
-    return <p className="mt-4 text-sm text-red-600">Rupture de stock.</p>;
+    return <p className="mt-4 text-sm font-medium text-erreur">Rupture de stock.</p>;
   }
 
   const selectedVariants = groups
@@ -87,10 +90,10 @@ export function AddToCartForm({
   }
 
   return (
-    <form onSubmit={handleAdd} className="mt-4 flex flex-col gap-3">
+    <form onSubmit={handleAdd} className="mt-5 flex flex-col gap-3">
       {groups.map((name) => (
         <div key={name} className="flex flex-col gap-1">
-          <label htmlFor={`variant-${name}`} className="text-sm font-medium text-gray-700">
+          <label htmlFor={`variant-${name}`} className="text-sm font-medium text-encre">
             {name}
           </label>
           <select
@@ -99,7 +102,7 @@ export function AddToCartForm({
             onChange={(e) =>
               setSelectedByGroup((prev) => ({ ...prev, [name]: e.target.value }))
             }
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-md border border-ligne bg-white px-3 py-2 text-sm text-encre focus:border-vert-actif focus:outline-none focus:ring-1 focus:ring-vert-actif"
           >
             {variants
               .filter((v) => v.name === name)
@@ -114,7 +117,7 @@ export function AddToCartForm({
       ))}
 
       <div className="flex items-center gap-3">
-        <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+        <label htmlFor="quantity" className="text-sm font-medium text-encre">
           Quantité
         </label>
         <input
@@ -124,21 +127,21 @@ export function AddToCartForm({
           max={stock}
           value={quantity}
           onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-          className="w-20 rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="w-20 rounded-md border border-ligne bg-white px-3 py-2 text-sm text-encre focus:border-vert-actif focus:outline-none focus:ring-1 focus:ring-vert-actif"
         />
       </div>
 
       <button
         type="submit"
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+        className="rounded-md bg-cuivre-profond px-4 py-2.5 text-sm font-semibold text-ivoire transition hover:bg-vert-sapin"
       >
         Ajouter au panier — {unitPrice * quantity} FCFA
       </button>
 
       {justAdded && (
-        <p className="text-sm text-green-600">
+        <p className="text-sm text-succes">
           Ajouté au panier.{" "}
-          <Link href={`/${shopSlug}/panier`} className="underline">
+          <Link href={`/${shopSlug}/panier`} className="font-medium text-vert-actif underline">
             Voir le panier ({count})
           </Link>
         </p>

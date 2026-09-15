@@ -16,6 +16,12 @@ type Image = { url: string };
  * `object-contain` (l'image entière est visible, quitte à laisser des
  * bandes vides), avec navigation entre les photos si plusieurs existent —
  * comme sur les galeries des concurrents (Jumia, etc.).
+ *
+ * Recoloré le 15/09/2026 avec la charte KEVA (voir la refonte de la fiche
+ * produit publique dans decisions-techniques.md) : format carré cohérent
+ * avec le reste des vignettes produit du site, fond de repli Brume plutôt
+ * que gris, superposition du zoom en Vert Profond (quasi noir, sur charte)
+ * plutôt qu'un noir neutre. Comportement inchangé.
  */
 export function ProductGallery({ images, title }: { images: Image[]; title: string }) {
   const [selected, setSelected] = useState(0);
@@ -45,7 +51,7 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
 
   if (images.length === 0) {
     return (
-      <div className="flex h-72 w-full items-center justify-center rounded-md bg-gray-100 text-sm text-gray-400">
+      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-brume text-sm text-encre/40">
         Pas de photo
       </div>
     );
@@ -66,14 +72,14 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
       <button
         type="button"
         onClick={() => setLightboxOpen(true)}
-        className="block w-full cursor-zoom-in"
+        className="block w-full cursor-zoom-in overflow-hidden rounded-xl border border-ligne"
         aria-label="Agrandir la photo"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- images uploadées par le vendeur, source dynamique */}
         <img
           src={images[activeIndex].url}
           alt={title}
-          className="h-72 w-full rounded-md object-cover"
+          className="aspect-square w-full object-cover"
         />
       </button>
       {images.length > 1 && (
@@ -83,8 +89,8 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
               key={img.url}
               type="button"
               onClick={() => setSelected(index)}
-              className={`h-16 w-16 shrink-0 overflow-hidden rounded border-2 ${
-                index === activeIndex ? "border-gray-900" : "border-transparent"
+              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
+                index === activeIndex ? "border-cuivre-profond" : "border-ligne"
               }`}
               aria-label={`Voir la photo ${index + 1}`}
             >
@@ -97,13 +103,13 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
 
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-vert-profond/95 p-4"
           onClick={() => setLightboxOpen(false)}
         >
           <button
             type="button"
             onClick={() => setLightboxOpen(false)}
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xl text-white"
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-ivoire/10 text-xl text-ivoire"
             aria-label="Fermer"
           >
             ×
@@ -124,7 +130,7 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
               <button
                 type="button"
                 onClick={showPrevious}
-                className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white"
+                className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ivoire/10 text-2xl text-ivoire"
                 aria-label="Photo précédente"
               >
                 ‹
@@ -132,12 +138,12 @@ export function ProductGallery({ images, title }: { images: Image[]; title: stri
               <button
                 type="button"
                 onClick={showNext}
-                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white"
+                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ivoire/10 text-2xl text-ivoire"
                 aria-label="Photo suivante"
               >
                 ›
               </button>
-              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80">
+              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-ivoire/80">
                 {activeIndex + 1} / {images.length}
               </p>
             </>

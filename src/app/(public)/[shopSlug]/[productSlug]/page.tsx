@@ -6,10 +6,11 @@ import { ProductGallery } from "./product-gallery";
 import { WhatsappShareButton } from "./whatsapp-share-button";
 import { Stars } from "@/components/stars";
 import { WishlistButton } from "@/components/wishlist-button";
+import { ProductImage } from "@/components/product-image";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
+import { LOW_STOCK_THRESHOLD } from "@/lib/products";
 
-const LOW_STOCK_THRESHOLD = 5;
 const RELATED_LIMIT = 4;
 
 type Review = {
@@ -31,7 +32,7 @@ type RelatedProduct = {
 function ReviewsSection({ reviews }: { reviews: Review[] }) {
   if (reviews.length === 0) {
     return (
-      <p className="mt-2 text-sm text-gray-500">
+      <p className="mt-3 text-sm text-encre/50">
         Aucun avis pour ce produit pour l&apos;instant.
       </p>
     );
@@ -40,17 +41,21 @@ function ReviewsSection({ reviews }: { reviews: Review[] }) {
   const average = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
 
   return (
-    <div className="mt-2">
-      <p className="text-sm font-medium text-gray-900">
-        <Stars rating={average} /> {average.toFixed(1)}/5 ({reviews.length} avis)
+    <div className="mt-4">
+      <p className="flex items-center gap-2 text-sm font-medium text-encre">
+        <Stars rating={average} />
+        <span className="font-mono">{average.toFixed(1)}/5</span>
+        <span className="text-encre/50">({reviews.length} avis)</span>
       </p>
-      <ul className="mt-3 flex flex-col gap-3">
+      <ul className="mt-4 flex flex-col gap-3">
         {reviews.map((review, index) => (
-          <li key={index} className="border-t border-gray-100 pt-3 text-sm">
-            <p className="font-medium text-gray-900">
-              <Stars rating={review.rating} /> — {review.customer_name}
+          <li key={index} className="rounded-lg border border-ligne bg-white p-4">
+            <p className="flex items-center gap-2 text-sm font-medium text-encre">
+              <Stars rating={review.rating} /> {review.customer_name}
             </p>
-            {review.comment && <p className="mt-1 text-gray-600">{review.comment}</p>}
+            {review.comment && (
+              <p className="mt-1.5 text-sm leading-relaxed text-encre/70">{review.comment}</p>
+            )}
           </li>
         ))}
       </ul>
@@ -117,100 +122,134 @@ export default async function ProductPage({
   const tags: string[] = product.tags ?? [];
   const hasDiscount =
     product.compare_at_price != null && product.compare_at_price > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / product.compare_at_price) * 100)
+    : null;
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <div className="relative">
-        <div className="absolute right-2 top-2 z-10">
-          <WishlistButton
-            item={{
-              productId: product.id,
-              shopSlug,
-              productSlug: product.slug,
-              title: product.title,
-              price: product.price,
-              imageUrl: images[0]?.url,
-            }}
-          />
-        </div>
-        <ProductGallery images={images} title={product.title} />
-      </div>
-
-      <Link href={`/${shopSlug}`} className="mt-3 inline-block text-sm text-gray-600 underline">
-        {shop.name}
-        {shopRating ? (
-          <span className="ml-1 text-gray-500">
-            — <Stars rating={shopRating.average} /> {shopRating.average.toFixed(1)}/5 (
-            {shopRating.count})
-          </span>
-        ) : null}
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <Link
+        href={`/${shopSlug}`}
+        className="inline-flex items-center gap-1 text-sm text-vert-actif hover:underline"
+      >
+        ‹ Retour à la boutique
       </Link>
 
-      {tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-            >
-              {tag}
-            </span>
-          ))}
+      <div className="mt-4 grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+        <div className="relative">
+          <div className="absolute right-3 top-3 z-10">
+            <WishlistButton
+              item={{
+                productId: product.id,
+                shopSlug,
+                productSlug: product.slug,
+                title: product.title,
+                price: product.price,
+                imageUrl: images[0]?.url,
+              }}
+            />
+          </div>
+          <ProductGallery images={images} title={product.title} />
         </div>
-      )}
 
-      <h1 className="mt-3 text-xl font-semibold text-gray-900">{product.title}</h1>
-      <p className="mt-2 text-gray-600">{product.description}</p>
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Link
+              href={`/${shopSlug}`}
+              className="flex items-center gap-2 font-medium text-vert-actif hover:underline"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-vert-sapin text-xs font-semibold text-ivoire"
+              >
+                {shop.name.charAt(0).toUpperCase()}
+              </span>
+              {shop.name}
+            </Link>
+            {shopRating ? (
+              <span className="flex items-center gap-1 text-encre/50">
+                · <Stars rating={shopRating.average} /> {shopRating.average.toFixed(1)} (
+                {shopRating.count})
+              </span>
+            ) : null}
+          </div>
 
-      <div className="mt-4 flex items-baseline gap-2">
-        <p className="text-lg font-medium text-gray-900">{product.price} FCFA</p>
-        {hasDiscount && (
-          <p className="text-sm text-gray-400 line-through">
-            {product.compare_at_price} FCFA
-          </p>
-        )}
-      </div>
+          {tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-sable px-2.5 py-1 text-xs font-medium text-cuivre-profond"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
-      {product.stock <= 0 ? (
-        <p className="mt-1 text-sm font-medium text-red-600">Rupture de stock</p>
-      ) : product.stock <= LOW_STOCK_THRESHOLD ? (
-        <p className="mt-1 text-sm font-medium text-orange-600">
-          Plus que {product.stock} en stock
-        </p>
-      ) : null}
+          <h1 className="mt-3 font-display text-2xl font-semibold text-encre sm:text-3xl">
+            {product.title}
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-encre/70">{product.description}</p>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <WhatsappShareButton title={product.title} />
-        {shop.whatsapp_number ? (
-          <WhatsappContactButton
-            whatsappNumber={shop.whatsapp_number}
-            message={`Bonjour, je suis intéressé(e) par « ${product.title} ».`}
+          <div className="mt-5 flex flex-wrap items-baseline gap-2.5">
+            <p className="font-mono text-2xl font-semibold text-cuivre-profond">
+              {product.price} FCFA
+            </p>
+            {hasDiscount && (
+              <>
+                <p className="font-mono text-sm text-encre/40 line-through">
+                  {product.compare_at_price} FCFA
+                </p>
+                <span className="rounded-full bg-erreur px-2 py-0.5 text-xs font-semibold text-ivoire">
+                  -{discountPercent}%
+                </span>
+              </>
+            )}
+          </div>
+
+          {product.stock <= 0 ? (
+            <p className="mt-2 text-sm font-medium text-erreur">Rupture de stock</p>
+          ) : product.stock <= LOW_STOCK_THRESHOLD ? (
+            <p className="mt-2 text-sm font-medium text-attention">
+              Plus que {product.stock} en stock
+            </p>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <WhatsappShareButton title={product.title} />
+            {shop.whatsapp_number ? (
+              <WhatsappContactButton
+                whatsappNumber={shop.whatsapp_number}
+                message={`Bonjour, je suis intéressé(e) par « ${product.title} ».`}
+              />
+            ) : null}
+          </div>
+
+          <AddToCartForm
+            shopSlug={shopSlug}
+            productId={product.id}
+            productSlug={product.slug}
+            title={product.title}
+            price={product.price}
+            imageUrl={images[0]?.url}
+            variants={product.product_variants ?? []}
+            stock={product.stock}
           />
-        ) : null}
+        </div>
       </div>
 
-      <AddToCartForm
-        shopSlug={shopSlug}
-        productId={product.id}
-        productSlug={product.slug}
-        title={product.title}
-        price={product.price}
-        imageUrl={images[0]?.url}
-        variants={product.product_variants ?? []}
-        stock={product.stock}
-      />
-
-      <section className="mt-8 border-t border-gray-200 pt-4">
-        <h2 className="text-sm font-medium text-gray-700">Avis clients</h2>
+      <section className="mt-12 border-t border-ligne pt-8">
+        <h2 className="font-display text-lg font-semibold text-encre">Avis clients</h2>
         <ReviewsSection reviews={reviews ?? []} />
       </section>
 
       {related.length > 0 && (
-        <section className="mt-8 border-t border-gray-200 pt-4">
-          <h2 className="text-sm font-medium text-gray-700">
+        <section className="mt-10 border-t border-ligne pt-8">
+          <h2 className="font-display text-lg font-semibold text-encre">
             Autres produits de {shop.name}
           </h2>
-          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {related.map((item) => {
               const thumbnail = [...(item.product_images ?? [])].sort(
                 (a, b) => a.position - b.position
@@ -219,20 +258,15 @@ export default async function ProductPage({
                 <Link
                   key={item.id}
                   href={`/${shopSlug}/${item.slug}`}
-                  className="rounded border border-gray-200 p-2"
+                  className="group rounded-lg border border-ligne bg-white p-2 transition hover:border-cuivre"
                 >
-                  {thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-                    <img
-                      src={thumbnail}
-                      alt={item.title}
-                      className="mb-1.5 aspect-square w-full rounded object-cover"
-                    />
-                  ) : (
-                    <div className="mb-1.5 aspect-square w-full rounded bg-gray-100" />
-                  )}
-                  <p className="truncate text-xs font-medium text-gray-900">{item.title}</p>
-                  <p className="text-xs text-gray-600">{item.price} FCFA</p>
+                  <ProductImage
+                    src={thumbnail}
+                    alt={item.title}
+                    className="mb-2 aspect-square w-full rounded-md object-cover"
+                  />
+                  <p className="truncate text-xs font-medium text-encre">{item.title}</p>
+                  <p className="font-mono text-xs text-cuivre-profond">{item.price} FCFA</p>
                 </Link>
               );
             })}
