@@ -134,7 +134,7 @@ export default async function ProductPage({
       default="none"
     >
     <ViewTransition enter="kv-content-in" default="none">
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <main className="w-full mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <Link
         href={`/${shopSlug}`}
         transitionTypes={["nav-back"]}

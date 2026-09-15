@@ -15,7 +15,7 @@ export default function ShopLoading() {
         role="status"
         aria-live="polite"
         aria-label="Chargement de la boutique"
-        className="mx-auto max-w-6xl px-4 py-6 sm:py-8"
+        className="w-full mx-auto max-w-6xl px-4 py-6 sm:py-8"
       >
         <div className="h-24 w-full rounded-xl bg-vert-profond/40 sm:h-32" />
 

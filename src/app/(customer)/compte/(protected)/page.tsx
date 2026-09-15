@@ -42,7 +42,7 @@ export default async function ComptePage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="w-full mx-auto max-w-2xl">
       <h1 className="font-display text-lg font-semibold text-encre">Mes commandes</h1>
       <p className="mt-1 text-sm text-encre/70">
         Retrouve ici toutes les commandes passées avec ce compte, chez

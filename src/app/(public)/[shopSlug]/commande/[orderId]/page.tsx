@@ -42,7 +42,7 @@ export default async function OrderConfirmationPage({
   });
 
   return (
-    <main className="mx-auto max-w-xl px-4 py-10">
+    <main className="w-full mx-auto max-w-xl px-4 py-10">
       <h1 className="font-display text-xl font-semibold text-encre">Commande confirmée</h1>
       <p className="mt-2 text-sm text-encre/70">
         Merci {order.customer_name}, ta commande chez {order.shop_name} a bien

@@ -22,7 +22,7 @@ export default function HomeLoading() {
         role="status"
         aria-live="polite"
         aria-label="Chargement du catalogue"
-        className="mx-auto max-w-6xl px-4 pb-10"
+        className="w-full mx-auto max-w-6xl px-4 pb-10"
       >
         {/* En-tête, forme seulement */}
         <div className="sticky top-0 z-20 -mx-4 flex items-center gap-4 bg-vert-sapin px-4 py-3">

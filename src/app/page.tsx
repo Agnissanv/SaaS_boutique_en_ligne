@@ -374,7 +374,7 @@ export default async function Home({
       default="none"
     >
     <ViewTransition enter="kv-content-in" default="none">
-    <main className="mx-auto max-w-6xl px-4 pb-10">
+    <main className="w-full mx-auto max-w-6xl px-4 pb-10">
       {/* En-tête : logo/texte de marque + recherche, réunis dans une seule
           barre. Collant au défilement (13/09/2026, retour d'Isaac) : reste
           accessible une fois qu'on a scrollé plus bas dans un catalogue qui

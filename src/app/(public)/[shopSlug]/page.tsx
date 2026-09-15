@@ -149,7 +149,7 @@ export default async function ShopPage({
       default="none"
     >
     <ViewTransition enter="kv-content-in" default="none">
-    <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+    <main className="w-full mx-auto max-w-6xl px-4 py-6 sm:py-8">
       <div className="mb-3 flex justify-end">
         <Link href="/compte" className="text-xs text-vert-actif underline">
           Mon compte

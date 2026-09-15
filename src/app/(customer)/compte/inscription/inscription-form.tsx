@@ -106,7 +106,7 @@ export function InscriptionClientForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 bg-brume">
+    <div className="w-full mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 bg-brume">
       <Link href="/" className="mx-auto mb-6 flex items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
         <img src="/keva-logo.jpg" alt="KEVA" className="h-10 w-10 rounded-md object-cover" />

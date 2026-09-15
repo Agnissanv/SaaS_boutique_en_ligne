@@ -22,7 +22,7 @@ export default function ProductLoading() {
         role="status"
         aria-live="polite"
         aria-label="Chargement du produit"
-        className="mx-auto max-w-6xl px-4 py-8 sm:py-10"
+        className="w-full mx-auto max-w-6xl px-4 py-8 sm:py-10"
       >
         <Skeleton className="h-4 w-40" />
 
