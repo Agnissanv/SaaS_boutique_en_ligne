@@ -6,6 +6,7 @@ import { cache, ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { truncate } from "@/lib/utils/text";
 import { CATEGORIES, categoryLabel } from "@/lib/categories";
+type CategoryTile = { value: string; label: string };
 import { CartLink } from "./cart-link";
 import { SortSelect } from "@/components/sort-select";
 import { Stars } from "@/components/stars";
@@ -191,6 +192,30 @@ export default async function ShopPage({
 
   const { data: products, count } = await query;
 
+  // Catégories réellement disponibles dans cette boutique (16/09/2026,
+  // retour d'Isaac : "les catégories de filtre présentes sur les boutiques
+  // ne doivent pas s'afficher toutes, seulement celles qui sont dispo sur
+  // la boutique du vendeur") — même raisonnement et même requête minimale
+  // (une seule colonne) que pour la marketplace globale (`src/app/page.tsx`).
+  // Calculée sur TOUS les produits actifs de la boutique, pas seulement la
+  // page courante de résultats — sinon les chips changeraient selon la page
+  // affichée, ce qui serait déroutant.
+  const { data: shopCategoriesRaw } = await supabase
+    .from("products")
+    .select("category")
+    .eq("shop_id", shop.id)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .not("category", "is", null);
+  const shopCategoryValues = new Set(
+    ((shopCategoriesRaw ?? []) as { category: string | null }[])
+      .map((p) => p.category)
+      .filter((c): c is string => Boolean(c))
+  );
+  const availableCategories: CategoryTile[] = CATEGORIES.filter((c) =>
+    shopCategoryValues.has(c.value)
+  );
+
   // Note/nombre d'avis sur les cartes produit de la grille boutique
   // (16/09/2026, voir migration 0027_product_ratings_on_listing.sql et le
   // même raisonnement appliqué à la marketplace dans `page.tsx`) — un seul
@@ -221,7 +246,24 @@ export default async function ShopPage({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 py-6 sm:py-8">
-      <div className="mb-3 flex justify-end">
+      {/* Lien retour marketplace ajouté le 16/09/2026 (retour d'Isaac : "étant
+          sur une boutique le visiteur ne peut pas aller sur la marketplace")
+          — sur mobile, la barre de navigation basse (bottom-nav.tsx) permet
+          déjà de revenir à l'accueil via son onglet "Accueil", mais elle est
+          masquée dès le breakpoint tablette (`sm:hidden`) : sans ce lien, un
+          visiteur desktop arrivant directement sur une boutique (lien
+          WhatsApp, par ex.) n'avait tout simplement aucun moyen de rejoindre
+          les autres boutiques de la plateforme. `transitionTypes={["nav-back"]}`
+          : même mouvement que le lien "Accueil" de la barre basse, on
+          remonte dans la hiérarchie plutôt que d'avancer. */}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <Link
+          href="/"
+          transitionTypes={["nav-back"]}
+          className="text-xs font-medium text-vert-actif underline"
+        >
+          ← Toutes les boutiques
+        </Link>
         <Link href="/compte" className="text-xs text-vert-actif underline">
           Mon compte
         </Link>
@@ -360,7 +402,7 @@ export default async function ShopPage({
             >
               Toutes catégories
             </Link>
-            {CATEGORIES.map((c) => (
+            {availableCategories.map((c) => (
               <Link
                 key={c.value}
                 href={buildHref(shopSlug, current, { categorie: c.value, page: undefined })}

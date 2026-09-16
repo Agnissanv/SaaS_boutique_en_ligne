@@ -8,6 +8,7 @@ import { ProductCard, type MarketplaceCardProduct } from "@/components/product-c
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { ProductImage } from "@/components/product-image";
+import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
 import { buildMarketplaceHref } from "@/lib/marketplace/filters";
 import { getShopRating } from "@/lib/reviews";
 
@@ -152,6 +153,22 @@ function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct |
   };
 }
 
+// Mélange Fisher-Yates — utilisé uniquement pour le diaporama mobile du hero
+// (voir plus bas) : "aléatoire" veut dire un ordre différent à chaque
+// chargement de page, pas un vrai tirage pondéré. Ne mute jamais le tableau
+// reçu (copie d'abord) : les mêmes tableaux (`bestSellingProducts`,
+// `newArrivalsProducts`) servent aussi, dans leur ordre d'origine, aux
+// bandes "Meilleures ventes"/"Nouveautés" plus bas sur la page.
+function shuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+const HERO_SLIDESHOW_SIZE = 6;
+
 const PRODUCT_CARD_COLUMNS =
   "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)";
 
@@ -215,6 +232,22 @@ export default async function Home({
     .eq("is_active", true)
     .is("deleted_at", null);
 
+  // Catégories réellement disponibles sur la marketplace (16/09/2026, retour
+  // d'Isaac : la bande de catégories affichait les 24 valeurs possibles, y
+  // compris celles sans aucun produit actif — un visiteur tombait sur un
+  // rayon vide). Une seule colonne utile (`category`), sur tous les produits
+  // actifs plutôt qu'un flux borné comme `categoryFeedQuery` plus bas : au vu
+  // du volume actuel de la plateforme le coût reste négligeable ; à revoir
+  // avec une RPC dédiée (distinct + count) si le catalogue grossit
+  // significativement.
+  const availableCategoriesQuery = supabase
+    .from("products")
+    .select("category, shop:shops!inner(status)")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .eq("shop.status", "active")
+    .not("category", "is", null);
+
   // Grille filtrée (recherche/catégorie), seulement construite en mode
   // filtré — inutile de payer une requête paginée de tout le catalogue
   // quand la page par défaut n'en a plus besoin.
@@ -249,6 +282,7 @@ export default async function Home({
     { data: featuredShopsRaw },
     { count: shopsCount },
     { count: productsCount },
+    { data: availableCategoriesRaw },
     catalogueResult,
     categoryFeedResult,
   ] = await Promise.all([
@@ -256,9 +290,17 @@ export default async function Home({
     featuredShopsQuery,
     shopsCountQuery,
     productsCountQuery,
+    availableCategoriesQuery,
     hasFilter ? catalogueQuery : Promise.resolve({ data: [] as RawMarketplaceProduct[], count: 0 }),
     hasFilter ? Promise.resolve({ data: [] as RawMarketplaceProduct[] }) : categoryFeedQuery,
   ]);
+
+  const availableCategoryValues = new Set(
+    ((availableCategoriesRaw ?? []) as { category: string | null }[])
+      .map((p) => p.category)
+      .filter((c): c is string => Boolean(c))
+  );
+  const availableCategories = CATEGORIES.filter((c) => availableCategoryValues.has(c.value));
 
   const { data: products, count } = catalogueResult;
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
@@ -376,6 +418,17 @@ export default async function Home({
     .filter((url): url is string => Boolean(url))
     .slice(0, HERO_COLLAGE_SIZE);
 
+  // Diaporama mobile du hero (16/09/2026, retour d'Isaac : sur mobile, les
+  // chiffres "Boutiques actives"/"Produits en vente" prennent de la place
+  // sans donner vraiment envie de cliquer — remplacés par un aperçu visuel
+  // de vrais produits, façon story). Puise dans les meilleures ventes,
+  // sinon dans les nouveautés si aucune vente n'existe encore (même repli
+  // que la bande "Meilleures ventes" plus bas) — jamais une liste vide qui
+  // ferait disparaître le bloc sans raison. Pas de nouvelle requête : ces
+  // deux tableaux sont déjà chargés (et déjà notés) ci-dessus.
+  const heroSlideshowPool = bestSellingProducts.length > 0 ? bestSellingProducts : newArrivalsProducts;
+  const heroSlideshowProducts = shuffle(heroSlideshowPool).slice(0, HERO_SLIDESHOW_SIZE);
+
   // Note de confiance par boutique : réutilise `getShopRating` (0014/§4,
   // déjà utilisée sur la fiche boutique), une requête par boutique en
   // parallèle — nombre de boutiques mises en avant volontairement plafonné
@@ -482,7 +535,7 @@ export default async function Home({
               </Link>
             </div>
             {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
-              <dl className="mt-9 flex flex-wrap justify-center gap-x-10 gap-y-3 lg:justify-start">
+              <dl className="mt-9 hidden flex-wrap justify-center gap-x-10 gap-y-3 sm:flex lg:justify-start">
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-ivoire/50">
                     Boutiques actives
@@ -501,6 +554,12 @@ export default async function Home({
                 </div>
               </dl>
             ) : null}
+
+            {/* Sur mobile, ce diaporama remplace les chiffres ci-dessus
+                (masqués `sm:hidden` faute d'espace utile pour convaincre) —
+                voir `heroSlideshowProducts` plus haut. Le composant ne
+                rend rien si la liste est vide (plateforme encore vide). */}
+            <HeroMobileSlideshow products={heroSlideshowProducts} />
           </div>
 
           {heroThumbnails.length > 0 ? (
@@ -517,9 +576,20 @@ export default async function Home({
 
       {/* Catégories : point d'entrée principal pour parcourir le catalogue,
           juste sous le hero. Étendues à 24 catégories le 15/09/2026 (round
-          2) — voir src/lib/categories.ts. */}
+          2) — voir src/lib/categories.ts. Ne montre désormais que celles
+          ayant au moins un produit actif (`availableCategories`, calculé
+          plus haut). Lien "Tout voir" ajouté le 16/09/2026 vers la nouvelle
+          page dédiée `/categories` (demande d'Isaac, "comme sur Jumia") —
+          seul point d'accès desktop, la barre de navigation basse mobile y
+          renvoie aussi via son onglet "Catégories". */}
       <div id="categories" className="mt-8 scroll-mt-20">
-        <CategoryNav current={current} active={categorie} />
+        <div className="mb-3 flex items-center justify-between px-1">
+          <h2 className="font-display text-lg font-semibold text-encre">Catégories</h2>
+          <Link href="/categories" className="text-xs font-medium text-vert-actif underline">
+            Tout voir
+          </Link>
+        </div>
+        <CategoryNav current={current} active={categorie} availableCategories={availableCategories} />
       </div>
 
       {/* Argumentaire de confiance : adapté de la rangée "services de

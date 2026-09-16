@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CATEGORIES } from "@/lib/categories";
 import { CategoryIcon } from "@/components/category-icon";
 import { buildMarketplaceHref, type MarketplaceFilters } from "@/lib/marketplace/filters";
 
@@ -39,17 +38,27 @@ import { buildMarketplaceHref, type MarketplaceFilters } from "@/lib/marketplace
  * individuelle — juste un cercle d'icône (élevé par une ombre légère) et un
  * libellé en dessous, façon Amazon/Jumia, l'état actif se lisant sur le
  * remplissage du cercle plutôt que sur un encadré entier.
+ *
+ * `availableCategories` (16/09/2026, retour d'Isaac : "les catégories de
+ * filtre... ne doivent pas s'afficher toutes, seulement celles qui sont
+ * dispo") : la liste des 24 catégories n'est plus codée en dur ici — c'est
+ * l'appelant (page d'accueil marketplace) qui calcule, via une requête sur
+ * les produits actifs, lesquelles ont réellement au moins un produit, et ne
+ * passe que celles-là. Une catégorie sans aucun produit n'est plus une
+ * tuile qui mène à un rayon vide.
  */
 export function CategoryNav({
   current,
   active,
+  availableCategories,
 }: {
   current: MarketplaceFilters;
   active?: string;
+  availableCategories: { value: string; label: string }[];
 }) {
   const tiles: { value?: string; label: string }[] = [
     { value: undefined, label: "Toutes" },
-    ...CATEGORIES.map((c) => ({ value: c.value as string, label: c.label })),
+    ...availableCategories.map((c) => ({ value: c.value, label: c.label })),
   ];
 
   return (

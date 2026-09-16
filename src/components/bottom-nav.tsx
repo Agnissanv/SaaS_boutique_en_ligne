@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
@@ -21,6 +21,16 @@ const HIDDEN_ROOTS = new Set([
   "auth",
   "api",
 ]);
+
+// "categories" ajouté le 16/09/2026 en même temps que la nouvelle page
+// dédiée `/categories` (voir plus bas, `goToCategories` → lien direct) :
+// sans cette entrée, `isShopRoute` (calculé plus bas) aurait pris ce premier
+// segment pour un slug de boutique — la page catégories aurait alors été
+// mémorisée comme "dernière boutique visitée" (useLastVisitedShop) et
+// serait ensuite apparue, invalide, dans le lien "Panier" de cette même
+// barre. Volontairement PAS dans `HIDDEN_ROOTS` : cette page reste une
+// surface client à part entière, la barre y reste visible (même raison que
+// "favoris"/"compte" plus haut).
 
 function HomeIcon() {
   return (
@@ -89,11 +99,14 @@ const TAB_CLASS = "flex flex-1 flex-col items-center justify-center gap-0.5 py-2
  *   (un seul vendeur), chez nous il est scopé par boutique (une commande =
  *   une seule boutique, voir useShopCart.ts), donc un onglet "Panier"
  *   toujours actif n'aurait pas de destination unique évidente.
- * - **"Catégories" n'ouvre pas de nouvelle page** (aucune n'existe et n'est
- *   pas prévue) : sur l'accueil, scrolle jusqu'à la bande de catégories déjà
- *   présente (`#categories`, sous le hero) ; ailleurs, y renvoie via
- *   `/#categories`. Réutilise le panneau existant plutôt que d'en dupliquer
- *   un nouveau.
+ * - **"Catégories" pointe vers une page dédiée `/categories`** (ajoutée le
+ *   16/09/2026, retour d'Isaac : "le bouton catégories doit avoir une page
+ *   dédiée bien garnie, comme sur Jumia"). Avant cette date, aucune page de
+ *   ce genre n'existait : le bouton scrollait simplement jusqu'à la bande de
+ *   catégories de la page d'accueil (`#categories`). Ce lien simple
+ *   remplace l'ancien `goToCategories()` (scroll conditionnel + navigation
+ *   `router.push`), devenu inutile une fois qu'il y a une vraie page à
+ *   toujours ouvrir, quel que soit l'endroit d'où on tape le bouton.
  *
  * Rendue une seule fois, au niveau du layout racine (`layout.tsx`), plutôt
  * que dans chaque page — visible sur les surfaces client (accueil
@@ -104,7 +117,6 @@ const TAB_CLASS = "flex flex-1 flex-col items-center justify-center gap-0.5 py-2
  */
 export function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const segments = pathname.split("/").filter(Boolean);
   const first = segments[0];
@@ -112,7 +124,9 @@ export function BottomNav() {
   const isHiddenRoute = first !== undefined && HIDDEN_ROOTS.has(first);
   const isFavoris = first === "favoris";
   const isCompte = first === "compte";
-  const isShopRoute = first !== undefined && !isHiddenRoute && !isFavoris && !isCompte;
+  const isCategoriesRoute = first === "categories";
+  const isShopRoute =
+    first !== undefined && !isHiddenRoute && !isFavoris && !isCompte && !isCategoriesRoute;
   const currentShop = isShopRoute ? first : null;
 
   const { shopSlug: lastShop, setShopSlug } = useLastVisitedShop();
@@ -135,14 +149,6 @@ export function BottomNav() {
   const isHome = segments.length === 0;
   const isPanier = isShopRoute && segments[1] === "panier";
 
-  function goToCategories() {
-    if (isHome) {
-      document.getElementById("categories")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      router.push("/#categories");
-    }
-  }
-
   return (
     <>
       {/* Cale de la même hauteur que la barre fixe ci-dessous : ajoute de
@@ -162,10 +168,13 @@ export function BottomNav() {
           Accueil
         </Link>
 
-        <button type="button" onClick={goToCategories} className={`${TAB_CLASS} text-encre/60`}>
+        <Link
+          href="/categories"
+          className={`${TAB_CLASS} ${isCategoriesRoute ? "text-cuivre-profond" : "text-encre/60"}`}
+        >
           <CategoriesIcon />
           Catégories
-        </button>
+        </Link>
 
         {effectiveShop ? (
           <Link
