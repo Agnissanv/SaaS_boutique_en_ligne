@@ -40,6 +40,7 @@ export function AddToCartForm({
   imageUrl,
   variants,
   stock,
+  accentColor,
 }: {
   shopSlug: string;
   productId: string;
@@ -49,6 +50,15 @@ export function AddToCartForm({
   imageUrl?: string;
   variants: Variant[];
   stock: number;
+  /**
+   * Couleur d'accent de la boutique — plan Pro uniquement
+   * (`can_customize_branding === "complete"`, ajouté le 16/09/2026, voir
+   * migration 0022_shop_accent_color.sql). `null`/`undefined` garde la
+   * couleur KEVA par défaut (classe Tailwind `bg-cuivre-profond`) : on
+   * n'écrase le style qu'avec une couleur explicitement choisie par le
+   * vendeur, jamais avec une valeur inventée.
+   */
+  accentColor?: string | null;
 }) {
   const { addItem, count } = useShopCart(shopSlug);
 
@@ -159,7 +169,10 @@ export function AddToCartForm({
 
       <button
         type="submit"
-        className="rounded-md bg-cuivre-profond px-4 py-2.5 text-sm font-semibold text-ivoire transition hover:bg-vert-sapin"
+        style={accentColor ? { backgroundColor: accentColor } : undefined}
+        className={`rounded-md px-4 py-2.5 text-sm font-semibold text-ivoire transition ${
+          accentColor ? "opacity-100 hover:opacity-90" : "bg-cuivre-profond hover:bg-vert-sapin"
+        }`}
       >
         Ajouter au panier — {unitPrice * quantity} FCFA
       </button>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
 import { getShopSubscription } from "@/lib/subscription";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { SHOP_ASSETS_BUCKET, storagePathFromPublicUrl } from "@/lib/supabase/storage-path";
 
 export type ProductFormState = {
@@ -12,20 +13,19 @@ export type ProductFormState = {
 };
 
 /**
- * Récupère l'id de la boutique du vendeur connecté, ou null.
- * Toutes les actions produit vérifient l'appartenance via cet id plutôt que
- * de faire confiance à une valeur envoyée par le formulaire.
+ * Récupère l'id de la boutique gérable par l'utilisateur connecté (sa
+ * boutique en tant que propriétaire, ou celle d'un collaborateur actif —
+ * plan Pro, ajouté le 16/09/2026, voir src/lib/shop-access.ts), ou
+ * `undefined`. Toutes les actions produit vérifient l'appartenance/l'accès
+ * via cet id plutôt que de faire confiance à une valeur envoyée par le
+ * formulaire.
  */
 async function getOwnedShopId(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string
 ) {
-  const { data } = await supabase
-    .from("shops")
-    .select("id")
-    .eq("owner_id", userId)
-    .maybeSingle();
-  return data?.id as string | undefined;
+  const access = await getAccessibleShop(supabase, userId);
+  return access?.shopId;
 }
 
 /** "S, M , L" -> ["S", "M", "L"] (valeurs uniques, non vides) */
@@ -115,6 +115,7 @@ export async function saveProduct(
   const priceRaw = String(formData.get("price") ?? "");
   const compareAtRaw = String(formData.get("compareAtPrice") ?? "").trim();
   const stockRaw = String(formData.get("stock") ?? "0");
+  const stockAlertThresholdRaw = String(formData.get("stockAlertThreshold") ?? "").trim();
   const tags = parseCommaList(formData.get("tags"))
     .map((t) => t.toLowerCase())
     .slice(0, MAX_TAGS);
@@ -171,6 +172,20 @@ export async function saveProduct(
     stock = UNLIMITED_STOCK_SENTINEL;
   }
 
+  // Seuil d'alerte personnalisable par produit — plan Pro uniquement
+  // (`has_advanced_stock_alerts`, ajouté le 16/09/2026). Le champ est masqué
+  // côté UI (product-form.tsx) pour les autres plans, mais revérifié ici
+  // côté serveur, même principe que canManageStock/canUseVariants juste
+  // au-dessus : `null` retombe sur LOW_STOCK_THRESHOLD (src/lib/products.ts).
+  let stockAlertThreshold: number | null = null;
+  if (subscription.features.hasAdvancedStockAlerts && stockAlertThresholdRaw) {
+    const parsed = Number(stockAlertThresholdRaw);
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      return { error: "Le seuil d'alerte doit être un nombre entier positif." };
+    }
+    stockAlertThreshold = parsed;
+  }
+
   let resolvedProductId = productId;
 
   if (productId) {
@@ -185,6 +200,7 @@ export async function saveProduct(
         price,
         compare_at_price: compareAtPrice,
         stock,
+        stock_alert_threshold: stockAlertThreshold,
         tags,
         updated_at: new Date().toISOString(),
       })
@@ -237,6 +253,7 @@ export async function saveProduct(
         price,
         compare_at_price: compareAtPrice,
         stock,
+        stock_alert_threshold: stockAlertThreshold,
         tags,
       })
       .select("id")
@@ -259,6 +276,7 @@ export async function saveProduct(
           price,
           compare_at_price: compareAtPrice,
           stock,
+          stock_alert_threshold: stockAlertThreshold,
           tags,
         })
         .select("id")

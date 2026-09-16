@@ -9,6 +9,11 @@ import { sendTransactionalEmail } from "./brevo";
  * order-notifications.ts, qui notifie le CLIENT d'un changement de statut).
  *
  * Même pattern best-effort/silencieux que le reste des emails du projet.
+ *
+ * Restreint à Business/Pro le 16/09/2026 (voir migration 0020) : partait pour
+ * toute boutique jusque-là, sans jamais vérifier le plan — l'appelant
+ * (notify-vendor-action.ts) filtre maintenant en amont via
+ * `has_order_notifications`, calculé côté base.
  */
 export async function sendNewOrderVendorEmail({
   notificationEmail,

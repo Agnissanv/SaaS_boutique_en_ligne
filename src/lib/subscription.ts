@@ -72,7 +72,6 @@ export type ShopFeatureFlags = {
   canUseVariants: boolean;
   canUsePromoCodes: boolean;
   canCustomizeBranding: "none" | "basic" | "complete";
-  canRemoveBranding: boolean;
   canExportStats: boolean;
   canMultiUser: boolean;
   maxCollaborators: number;
@@ -92,7 +91,6 @@ export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
   canUseVariants: false,
   canUsePromoCodes: false,
   canCustomizeBranding: "none",
-  canRemoveBranding: false,
   canExportStats: false,
   canMultiUser: false,
   maxCollaborators: 0,
@@ -100,7 +98,16 @@ export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
   hasAdvancedStockAlerts: false,
 };
 
-/** Décode le jsonb `features` d'un plan — tolérant à un champ manquant/mal formé (retombe sur le défaut le plus restrictif plutôt que de planter). */
+/**
+ * Décode le jsonb `features` d'un plan — tolérant à un champ manquant/mal
+ * formé (retombe sur le défaut le plus restrictif plutôt que de planter).
+ *
+ * `can_remove_branding` retiré du modèle le 16/09/2026 (décision produit
+ * d'Isaac : le badge KEVA reste visible sur toutes les boutiques, quel que
+ * soit le plan — jamais une fonctionnalité à vendre). Voir
+ * supabase/migrations/0019_drop_can_remove_branding.sql, qui retire aussi la
+ * clé du jsonb en base pour qu'elle ne puisse pas resurgir par erreur.
+ */
 function parseFeatureFlags(features: unknown): ShopFeatureFlags {
   const f = (features ?? {}) as Record<string, unknown>;
   return {
@@ -115,7 +122,6 @@ function parseFeatureFlags(features: unknown): ShopFeatureFlags {
       f.can_customize_branding === "basic" || f.can_customize_branding === "complete"
         ? f.can_customize_branding
         : "none",
-    canRemoveBranding: Boolean(f.can_remove_branding),
     canExportStats: Boolean(f.can_export_stats),
     canMultiUser: Boolean(f.can_multi_user),
     maxCollaborators: typeof f.max_collaborators === "number" ? f.max_collaborators : 0,

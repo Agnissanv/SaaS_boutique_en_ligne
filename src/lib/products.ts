@@ -16,9 +16,16 @@ export const LOW_STOCK_THRESHOLD = 5;
 
 export type StockHealth = "rupture" | "faible" | "sain";
 
-export function stockHealth(stock: number): StockHealth {
+/**
+ * `threshold` : seuil d'alerte propre au produit (`products.stock_alert_threshold`,
+ * ajouté le 16/09/2026 — plan Pro uniquement, `has_advanced_stock_alerts`,
+ * voir migration 0021_stock_alert_threshold.sql). `null`/`undefined` retombe
+ * sur `LOW_STOCK_THRESHOLD`, comme avant pour tous les autres plans.
+ */
+export function stockHealth(stock: number, threshold: number | null = LOW_STOCK_THRESHOLD): StockHealth {
+  const effectiveThreshold = threshold ?? LOW_STOCK_THRESHOLD;
   if (stock <= 0) return "rupture";
-  if (stock <= LOW_STOCK_THRESHOLD) return "faible";
+  if (stock <= effectiveThreshold) return "faible";
   return "sain";
 }
 

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getShopSubscription } from "@/lib/subscription";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
 
 type Order = {
@@ -21,21 +23,22 @@ export default async function OrdersPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id")
-    .eq("owner_id", user?.id ?? "")
-    .maybeSingle();
+  // Accessible à un collaborateur actif (plan Pro), pas seulement au
+  // propriétaire — voir src/lib/shop-access.ts.
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
 
-  if (!shop) {
+  if (!access) {
     redirect("/dashboard/boutique");
   }
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, customer_name, customer_phone, status, total_amount, created_at")
-    .eq("shop_id", shop.id)
-    .order("created_at", { ascending: false });
+  const [{ data: orders }, subscription] = await Promise.all([
+    supabase
+      .from("orders")
+      .select("id, customer_name, customer_phone, status, total_amount, created_at")
+      .eq("shop_id", access.shopId)
+      .order("created_at", { ascending: false }),
+    getShopSubscription(supabase, access.shopId),
+  ]);
 
   return (
     <ViewTransition
@@ -47,13 +50,22 @@ export default async function OrdersPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="font-display text-lg font-semibold text-encre">Commandes</h1>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- route API (fichier à télécharger), pas une page Next : <Link> tenterait une navigation client au lieu d'un téléchargement */}
-        <a
-          href="/api/dashboard/commandes/export"
-          className="rounded-md border border-ligne px-3 py-1.5 text-sm font-medium text-encre hover:bg-brume"
-        >
-          Exporter en CSV
-        </a>
+        {subscription.features.canExportStats ? (
+          // eslint-disable-next-line @next/next/no-html-link-for-pages -- route API (fichier à télécharger), pas une page Next : <Link> tenterait une navigation client au lieu d'un téléchargement
+          <a
+            href="/api/dashboard/commandes/export"
+            className="rounded-md border border-ligne px-3 py-1.5 text-sm font-medium text-encre hover:bg-brume"
+          >
+            Exporter en CSV
+          </a>
+        ) : (
+          <span
+            title="Export disponible à partir du plan Pro"
+            className="cursor-not-allowed rounded-md border border-dashed border-ligne px-3 py-1.5 text-sm font-medium text-encre/40"
+          >
+            Exporter en CSV (Pro)
+          </span>
+        )}
       </div>
 
       {(orders ?? []).length === 0 ? (

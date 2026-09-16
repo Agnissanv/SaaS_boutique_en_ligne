@@ -1,9 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
 import { isValidCategory } from "@/lib/categories";
+import { getShopSubscription } from "@/lib/subscription";
+
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 export type ShopFormState = {
   error?: string;
@@ -36,6 +40,7 @@ export async function saveShop(
   // storage.ts) — chaîne vide si le vendeur n'a pas (encore) choisi d'image.
   const logoUrl = String(formData.get("logoUrl") ?? "").trim();
   const coverUrl = String(formData.get("coverUrl") ?? "").trim();
+  const accentColorRaw = String(formData.get("accentColor") ?? "").trim();
   // Frais de livraison : optionnel, null si laissé vide (le client verra
   // alors "à confirmer avec le vendeur" — voir migration 0012).
   const deliveryFeeRaw = String(formData.get("deliveryFee") ?? "").trim();
@@ -66,6 +71,27 @@ export async function saveShop(
   }
 
   if (shopId) {
+    // Personnalisation de la marque — plan Business ("basic" : logo) ou Pro
+    // ("complete" : logo + couleur d'accent), ajouté le 16/09/2026. `logo_url`
+    // existait déjà en base et était modifiable par tous les plans jusqu'ici
+    // (jamais vérifié nulle part) — désormais revérifié ici côté serveur,
+    // même si le champ est masqué côté UI (shop-form.tsx) pour Starter.
+    // Un vendeur qui downgrade ne voit pas son logo/couleur existants
+    // effacés au prochain enregistrement d'un champ sans rapport (nom,
+    // description...) : ils restent en base, gelés, comme pour les variantes
+    // produit — le champ correspondant est simplement omis de l'`update`
+    // plutôt que forcé à `null`.
+    const subscription = await getShopSubscription(supabase, shopId);
+    const canCustomizeBranding = subscription.features.canCustomizeBranding;
+
+    let accentColor: string | null | undefined;
+    if (canCustomizeBranding === "complete") {
+      if (accentColorRaw && !HEX_COLOR_RE.test(accentColorRaw)) {
+        return { error: "Couleur d'accent invalide." };
+      }
+      accentColor = accentColorRaw || null;
+    }
+
     // Mise à jour : on ne touche pas au slug pour ne pas casser le lien
     // déjà partagé par le vendeur.
     const { error } = await supabase
@@ -74,8 +100,9 @@ export async function saveShop(
         name,
         description: description || null,
         category,
-        logo_url: logoUrl || null,
+        ...(canCustomizeBranding !== "none" ? { logo_url: logoUrl || null } : {}),
         cover_url: coverUrl || null,
+        ...(accentColor !== undefined ? { accent_color: accentColor } : {}),
         delivery_fee: deliveryFee,
         whatsapp_number: whatsappNumber || null,
         notification_email: notificationEmail || null,
@@ -106,6 +133,12 @@ export async function saveShop(
       slug = `${baseSlug}-${attempt + 1}`;
     }
 
+    // Une boutique qui vient d'être créée n'a pas encore d'abonnement
+    // (démarré juste après, via start_free_subscription plus bas) : son plan
+    // est donc toujours équivalent Starter au moment de cette création, qui
+    // n'a pas de logo/couleur d'accent — cohérent avec canCustomizeBranding
+    // === "none" pour Starter. Le vendeur les ajoutera après upgrade, depuis
+    // "Ma boutique".
     const { data: newShop, error } = await supabase
       .from("shops")
       .insert({
@@ -114,7 +147,6 @@ export async function saveShop(
         slug,
         description: description || null,
         category,
-        logo_url: logoUrl || null,
         cover_url: coverUrl || null,
         delivery_fee: deliveryFee,
         whatsapp_number: whatsappNumber || null,
@@ -141,4 +173,37 @@ export async function saveShop(
 
   revalidatePath("/dashboard/boutique");
   return { success: true };
+}
+
+/**
+ * Accepte une invitation de collaborateur (plan Pro, `can_multi_user`,
+ * ajoutée le 16/09/2026 — voir accept_shop_collaboration dans la migration
+ * 0024 et le raisonnement complet dans src/lib/shop-access.ts). Passe par
+ * une RPC `security definer` plutôt qu'un UPDATE direct : elle matche
+ * l'email du compte connecté à `invited_email` elle-même, donc rien à
+ * vérifier ici avant l'appel — l'affichage du bouton (boutique/page.tsx)
+ * suffit à garantir qu'on ne l'appelle que pour une vraie invitation en
+ * attente, et la RPC re-vérifie de toute façon côté serveur.
+ */
+export async function acceptCollaboratorInvite(formData: FormData) {
+  const shopId = String(formData.get("shopId") ?? "");
+  if (!shopId) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { error } = await supabase.rpc("accept_shop_collaboration", {
+    p_shop_id: shopId,
+  });
+
+  if (error) {
+    console.error("acceptCollaboratorInvite — erreur Supabase:", error);
+    return;
+  }
+
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }

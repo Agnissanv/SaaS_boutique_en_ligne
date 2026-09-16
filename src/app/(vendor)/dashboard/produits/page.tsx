@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { ProductList } from "./product-list";
 import { ProductFilters, type ProductFiltersValue } from "./product-filters";
 
@@ -12,6 +13,7 @@ type Product = {
   category: string | null;
   price: number;
   stock: number;
+  stock_alert_threshold: number | null;
   is_active: boolean;
   product_images: { url: string; position: number }[];
 };
@@ -51,20 +53,21 @@ export default async function ProductsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id")
-    .eq("owner_id", user?.id ?? "")
-    .maybeSingle();
+  // Produits/Commandes/Aperçu sont accessibles à un collaborateur actif, pas
+  // seulement au propriétaire (plan Pro, `can_multi_user`, ajouté le
+  // 16/09/2026 — voir src/lib/shop-access.ts pour le périmètre exact).
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
 
-  if (!shop) {
+  if (!access) {
     redirect("/dashboard/boutique");
   }
 
   let query = supabase
     .from("products")
-    .select("id, slug, title, category, price, stock, is_active, product_images(url, position)")
-    .eq("shop_id", shop.id)
+    .select(
+      "id, slug, title, category, price, stock, stock_alert_threshold, is_active, product_images(url, position)"
+    )
+    .eq("shop_id", access.shopId)
     .is("deleted_at", null);
 
   if (q) query = query.ilike("title", `%${q}%`);

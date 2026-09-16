@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { ProductForm } from "../product-form";
 
 export default async function EditProductPage({
@@ -15,20 +16,19 @@ export default async function EditProductPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id")
-    .eq("owner_id", user?.id ?? "")
-    .maybeSingle();
+  // Accessible à un collaborateur actif (plan Pro), pas seulement au
+  // propriétaire — voir src/lib/shop-access.ts.
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
 
-  if (!shop) {
+  if (!access) {
     redirect("/dashboard/boutique");
   }
+  const shop = { id: access.shopId };
 
   const { data: product } = await supabase
     .from("products")
     .select(
-      "id, title, description, category, price, compare_at_price, stock, shop_id, deleted_at, tags"
+      "id, title, description, category, price, compare_at_price, stock, shop_id, deleted_at, tags, stock_alert_threshold"
     )
     .eq("id", productId)
     .eq("shop_id", shop.id)
@@ -71,6 +71,7 @@ export default async function EditProductPage({
         images={(images ?? []).map((img) => img.url)}
         canManageStock={subscription.features.canManageStock}
         canUseVariants={subscription.features.canUseVariants}
+        canUseAdvancedStockAlerts={subscription.features.hasAdvancedStockAlerts}
       />
     </div>
     </ViewTransition>

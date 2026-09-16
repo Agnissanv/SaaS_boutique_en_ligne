@@ -26,6 +26,7 @@ type Product = {
   compare_at_price: number | null;
   stock: number;
   tags: string[] | null;
+  stock_alert_threshold: number | null;
 };
 
 const MAX_PHOTOS = 6;
@@ -251,6 +252,7 @@ export function ProductForm({
   images,
   canManageStock = true,
   canUseVariants = true,
+  canUseAdvancedStockAlerts = false,
 }: {
   product: Product | null;
   variants: Variant[];
@@ -264,6 +266,14 @@ export function ProductForm({
    */
   canManageStock?: boolean;
   canUseVariants?: boolean;
+  /**
+   * Seuil d'alerte personnalisable par produit — plan Pro uniquement
+   * (`has_advanced_stock_alerts`, ajouté le 16/09/2026). Par défaut à
+   * `false` (contrairement aux deux flags ci-dessus) : un champ en plus
+   * caché par défaut est un risque bien plus faible qu'un champ de gestion
+   * de stock manquant par erreur.
+   */
+  canUseAdvancedStockAlerts?: boolean;
 }) {
   const initialState: ProductFormState = {};
   const [state, formAction] = useActionState(saveProduct, initialState);
@@ -383,7 +393,31 @@ export function ProductForm({
             className="rounded-md border border-ligne px-3 py-2 text-sm"
           />
         </div>
-      ) : (
+      ) : null}
+
+      {canManageStock && canUseAdvancedStockAlerts ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="stockAlertThreshold" className="text-sm font-medium text-encre">
+            Seuil d&apos;alerte stock bas <span className="text-encre/50">(optionnel)</span>
+          </label>
+          <input
+            id="stockAlertThreshold"
+            name="stockAlertThreshold"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            defaultValue={product?.stock_alert_threshold ?? ""}
+            placeholder="5 par défaut"
+            className="rounded-md border border-ligne px-3 py-2 text-sm"
+          />
+          <p className="text-xs text-encre/50">
+            Tu reçois un email dès que le stock de ce produit passe à ou sous
+            ce seuil suite à une commande.
+          </p>
+        </div>
+      ) : null}
+
+      {!canManageStock && (
         <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
           Gestion du stock disponible à partir du plan Business.
         </p>

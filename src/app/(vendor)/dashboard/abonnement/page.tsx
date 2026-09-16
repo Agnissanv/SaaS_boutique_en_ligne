@@ -26,10 +26,12 @@ const FEATURE_LABELS: Record<string, string> = {
   can_export_stats: "Export des statistiques",
   can_manage_stock: "Gestion du stock",
   can_use_variants: "Variantes produits (taille, couleur...)",
-  can_remove_branding: "Sans le badge KEVA",
   can_use_promo_codes: "Codes promo",
   has_order_notifications: "Notifications de commande",
   has_advanced_stock_alerts: "Alertes de stock avancées",
+  // Pas de "can_remove_branding" ici : retiré du modèle le 16/09/2026, le
+  // badge KEVA reste visible sur toutes les boutiques quel que soit le plan
+  // (voir supabase/migrations/0019_drop_can_remove_branding.sql).
 };
 
 function humanizeKey(key: string) {

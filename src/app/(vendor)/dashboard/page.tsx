@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { LOW_STOCK_THRESHOLD } from "@/lib/products";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
 
@@ -16,6 +17,7 @@ type LowStockProduct = {
   id: string;
   title: string;
   stock: number;
+  stock_alert_threshold: number | null;
 };
 
 /** Somme `total_amount` des commandes non annulées créées depuis `since`. */
@@ -42,14 +44,22 @@ export default async function DashboardOverviewPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id, name, view_count")
-    .eq("owner_id", user?.id ?? "")
-    .maybeSingle();
+  // Aperçu accessible à un collaborateur actif (plan Pro), pas seulement au
+  // propriétaire — voir src/lib/shop-access.ts.
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
 
   // Pas encore de boutique : on guide le vendeur vers la création avant de
   // lui montrer des statistiques vides.
+  if (!access) {
+    redirect("/dashboard/boutique");
+  }
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("id, name, view_count")
+    .eq("id", access.shopId)
+    .maybeSingle();
+
   if (!shop) {
     redirect("/dashboard/boutique");
   }
@@ -84,13 +94,22 @@ export default async function DashboardOverviewPage() {
       .limit(5),
     supabase
       .from("products")
-      .select("id, title, stock")
+      .select("id, title, stock, stock_alert_threshold")
       .eq("shop_id", shop.id)
       .eq("is_active", true)
       .is("deleted_at", null)
-      .lte("stock", LOW_STOCK_THRESHOLD)
       .order("stock", { ascending: true }),
   ]);
+
+  // Le seuil d'alerte est désormais personnalisable par produit (plan Pro,
+  // `has_advanced_stock_alerts` — voir src/lib/products.ts), donc plus de
+  // seuil unique comparable directement en base côté PostgREST (pas de
+  // comparaison colonne-à-colonne dans le query builder Supabase). Filtré
+  // ici plutôt que dans la requête : le nombre de produits par boutique est
+  // borné par `max_products`, donc sans coût réel à ce stade.
+  const lowStockAlerts = (lowStockProducts as LowStockProduct[] | null ?? []).filter(
+    (p) => p.stock <= (p.stock_alert_threshold ?? LOW_STOCK_THRESHOLD)
+  );
 
   return (
     <div>
@@ -107,16 +126,20 @@ export default async function DashboardOverviewPage() {
         sur les commandes non annulées.
       </p>
 
-      {(lowStockProducts ?? []).length > 0 && (
+      {lowStockAlerts.length > 0 && (
         <div className="mt-6 rounded-lg border border-attention/30 bg-attention/10 p-4">
           <h2 className="font-display text-sm font-semibold text-attention">
-            Stock bas ({LOW_STOCK_THRESHOLD} unités ou moins)
+            Stock bas
           </h2>
           <ul className="mt-2 space-y-1 text-sm text-encre/80">
-            {(lowStockProducts as LowStockProduct[]).map((product) => (
+            {lowStockAlerts.map((product) => (
               <li key={product.id} className="flex justify-between">
                 <span>{product.title}</span>
-                <span>{product.stock} en stock</span>
+                <span>
+                  {product.stock} en stock
+                  {product.stock_alert_threshold !== null &&
+                    ` (seuil : ${product.stock_alert_threshold})`}
+                </span>
               </li>
             ))}
           </ul>

@@ -3,18 +3,24 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { getShopSubscription } from "@/lib/subscription";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { SidebarNav } from "./sidebar-nav";
 
+// `ownerOnly` : masqué pour un collaborateur (plan Pro, ajouté le
+// 16/09/2026) — mêmes pages que celles filtrées dans sidebar-nav.tsx pour
+// la version desktop, voir src/lib/shop-access.ts pour le raisonnement.
 const MOBILE_NAV_LINKS = [
-  { href: "/dashboard", label: "Aperçu" },
-  { href: "/dashboard/produits", label: "Produits" },
-  { href: "/dashboard/commandes", label: "Commandes" },
-  { href: "/dashboard/boutique", label: "Boutique" },
-  { href: "/dashboard/avis", label: "Avis" },
-  { href: "/dashboard/paiements", label: "Paiements" },
-  { href: "/dashboard/abonnement", label: "Abonnement" },
-  { href: "/dashboard/profil", label: "Profil" },
-  { href: "/dashboard/aide", label: "Aide" },
+  { href: "/dashboard", label: "Aperçu", ownerOnly: false },
+  { href: "/dashboard/produits", label: "Produits", ownerOnly: false },
+  { href: "/dashboard/commandes", label: "Commandes", ownerOnly: false },
+  { href: "/dashboard/boutique", label: "Boutique", ownerOnly: true },
+  { href: "/dashboard/avis", label: "Avis", ownerOnly: false },
+  { href: "/dashboard/codes-promo", label: "Codes promo", ownerOnly: true },
+  { href: "/dashboard/collaborateurs", label: "Collaborateurs", ownerOnly: true },
+  { href: "/dashboard/paiements", label: "Paiements", ownerOnly: true },
+  { href: "/dashboard/abonnement", label: "Abonnement", ownerOnly: true },
+  { href: "/dashboard/profil", label: "Profil", ownerOnly: false },
+  { href: "/dashboard/aide", label: "Aide", ownerOnly: false },
 ];
 
 /**
@@ -54,10 +60,18 @@ export default async function DashboardLayout({
     redirect("/connexion");
   }
 
-  const [{ data: shop }, { data: profile }] = await Promise.all([
-    supabase.from("shops").select("id, slug, name").eq("owner_id", user.id).maybeSingle(),
+  // Résout "sa" boutique : propriétaire, ou collaborateur actif (plan Pro,
+  // ajouté le 16/09/2026 — voir src/lib/shop-access.ts pour le raisonnement
+  // complet et le périmètre exact des pages accessibles à un collaborateur).
+  const [{ data: profile }, access] = await Promise.all([
     supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle(),
+    getAccessibleShop(supabase, user.id),
   ]);
+
+  const { data: shop } = access
+    ? await supabase.from("shops").select("id, slug, name").eq("id", access.shopId).maybeSingle()
+    : { data: null };
+  const isOwner = access?.isOwner ?? true;
 
   const [subscription, pendingOrdersCount] = await Promise.all([
     shop ? getShopSubscription(supabase, shop.id) : Promise.resolve(null),
@@ -82,7 +96,7 @@ export default async function DashboardLayout({
           <span className="font-display text-lg font-semibold tracking-tight">KEVA</span>
         </Link>
 
-        <SidebarNav />
+        <SidebarNav isOwner={isOwner} />
 
         <div className="border-t border-white/10 px-3 py-3 text-sm">
           {shop?.slug && (
@@ -113,7 +127,7 @@ export default async function DashboardLayout({
             {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
             <img src="/keva-logo.jpg" alt="KEVA" className="h-6 w-6 rounded object-cover" />
           </Link>
-          {MOBILE_NAV_LINKS.map((link) => (
+          {MOBILE_NAV_LINKS.filter((link) => !link.ownerOnly || isOwner).map((link) => (
             <Link key={link.href} href={link.href} className="shrink-0 rounded px-2 py-1 hover:text-cuivre-clair">
               {link.label}
             </Link>

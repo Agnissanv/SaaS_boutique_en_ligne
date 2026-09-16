@@ -105,7 +105,9 @@ export default async function ShopPage({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee")
+    .select(
+      "id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee, accent_color"
+    )
     .eq("slug", shopSlug)
     .eq("status", "active")
     .maybeSingle();
@@ -167,7 +169,10 @@ export default async function ShopPage({
             className="h-40 w-full object-cover sm:h-56"
           />
         ) : (
-          <div className="h-24 w-full bg-vert-profond sm:h-32" />
+          <div
+            style={shop.accent_color ? { backgroundColor: shop.accent_color } : undefined}
+            className={shop.accent_color ? "h-24 w-full sm:h-32" : "h-24 w-full bg-vert-profond sm:h-32"}
+          />
         )}
       </div>
 
@@ -270,9 +275,12 @@ export default async function ShopPage({
           <div className="flex flex-wrap gap-2">
             <Link
               href={buildHref(shopSlug, current, { categorie: undefined, page: undefined })}
+              style={!categorie && shop.accent_color ? { backgroundColor: shop.accent_color, borderColor: shop.accent_color } : undefined}
               className={`rounded-full border px-3 py-1 text-xs ${
                 !categorie
-                  ? "border-vert-sapin bg-vert-sapin text-ivoire"
+                  ? shop.accent_color
+                    ? "text-ivoire"
+                    : "border-vert-sapin bg-vert-sapin text-ivoire"
                   : "border-ligne text-encre hover:border-cuivre-clair"
               }`}
             >
@@ -282,9 +290,12 @@ export default async function ShopPage({
               <Link
                 key={c.value}
                 href={buildHref(shopSlug, current, { categorie: c.value, page: undefined })}
+                style={categorie === c.value && shop.accent_color ? { backgroundColor: shop.accent_color, borderColor: shop.accent_color } : undefined}
                 className={`rounded-full border px-3 py-1 text-xs ${
                   categorie === c.value
-                    ? "border-vert-sapin bg-vert-sapin text-ivoire"
+                    ? shop.accent_color
+                      ? "text-ivoire"
+                      : "border-vert-sapin bg-vert-sapin text-ivoire"
                     : "border-ligne text-encre hover:border-cuivre-clair"
                 }`}
               >

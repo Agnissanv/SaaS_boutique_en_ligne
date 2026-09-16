@@ -2,15 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { sendOrderStatusEmail } from "@/lib/email/order-notifications";
 
 const STATUSES = ["pending", "paid", "preparing", "delivered", "cancelled"] as const;
 
 /**
  * Change le statut d'une commande — vérifie que le vendeur possède bien la
- * boutique concernée, puis notifie le client par email si celui-ci en a
- * fourni un au moment de la commande (voir "Notifications client
- * automatiques" dans decisions-techniques.md — pas de champ email ->
+ * boutique concernée OU qu'il y est collaborateur actif (plan Pro, ajouté le
+ * 16/09/2026, voir src/lib/shop-access.ts), puis notifie le client par email
+ * si celui-ci en a fourni un au moment de la commande (voir "Notifications
+ * client automatiques" dans decisions-techniques.md — pas de champ email ->
  * simplement pas d'email envoyé, jamais bloquant).
  */
 export async function updateOrderStatus(orderId: string, status: string) {
@@ -22,11 +24,14 @@ export async function updateOrderStatus(orderId: string, status: string) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
+  const access = await getAccessibleShop(supabase, user.id);
+  if (!access) return;
+
   const { data: order } = await supabase
     .from("orders")
-    .select("id, shop_id, customer_email, customer_name, shops!inner(owner_id, name, slug)")
+    .select("id, shop_id, customer_email, customer_name, shops!inner(name, slug)")
     .eq("id", orderId)
-    .eq("shops.owner_id", user.id)
+    .eq("shop_id", access.shopId)
     .maybeSingle();
 
   if (!order) return;

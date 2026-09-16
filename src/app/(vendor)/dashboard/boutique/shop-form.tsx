@@ -19,6 +19,7 @@ type Shop = {
   category: string;
   logo_url?: string | null;
   cover_url?: string | null;
+  accent_color?: string | null;
   delivery_fee?: number | null;
   whatsapp_number?: string | null;
   notification_email?: string | null;
@@ -132,7 +133,20 @@ function ImageField({
  * inchangée (`saveShop` parse déjà la valeur en `Number`, quel que soit le
  * type d'input).
  */
-export function ShopForm({ shop }: { shop: Shop | null }) {
+export function ShopForm({
+  shop,
+  canCustomizeBranding = "complete",
+}: {
+  shop: Shop | null;
+  /**
+   * Personnalisation de la marque — plan Business ("basic" : logo) ou Pro
+   * ("complete" : logo + couleur d'accent), ajouté le 16/09/2026. Par défaut
+   * à "complete" pour ne rien changer si un appelant oublie de passer cette
+   * prop — le blocage réel est de toute façon revérifié côté serveur
+   * (boutique/actions.ts), même principe que canManageStock côté produits.
+   */
+  canCustomizeBranding?: "none" | "basic" | "complete";
+}) {
   const initialState: ShopFormState = {};
   const [state, formAction] = useActionState(saveShop, initialState);
 
@@ -185,18 +199,48 @@ export function ShopForm({ shop }: { shop: Shop | null }) {
         />
       </div>
 
-      <ImageField
-        label="Logo"
-        fieldName="logoUrl"
-        subpath="shop/logo"
-        initialUrl={shop?.logo_url}
-      />
+      {canCustomizeBranding !== "none" ? (
+        <ImageField
+          label="Logo"
+          fieldName="logoUrl"
+          subpath="shop/logo"
+          initialUrl={shop?.logo_url}
+        />
+      ) : (
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+          Logo personnalisé disponible à partir du plan Business.
+        </p>
+      )}
       <ImageField
         label="Image de couverture"
         fieldName="coverUrl"
         subpath="shop/cover"
         initialUrl={shop?.cover_url}
       />
+
+      {canCustomizeBranding === "complete" ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="accentColor" className="text-sm font-medium text-encre">
+            Couleur d&apos;accent <span className="text-encre/50">(optionnel)</span>
+          </label>
+          <input
+            id="accentColor"
+            name="accentColor"
+            type="color"
+            defaultValue={shop?.accent_color ?? "#8b4f2e"}
+            className="h-9 w-14 cursor-pointer rounded border border-ligne"
+          />
+          <p className="text-xs text-encre/50">
+            Remplace la couleur d&apos;accent KEVA par défaut sur ta boutique
+            publique et tes fiches produit (bouton d&apos;achat, bannière,
+            catégories actives).
+          </p>
+        </div>
+      ) : (
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+          Couleur d&apos;accent personnalisée disponible à partir du plan Pro.
+        </p>
+      )}
 
       <div className="flex flex-col gap-1">
         <label htmlFor="deliveryFee" className="text-sm font-medium text-encre">

@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { StatusForm } from "./status-form";
 import { toWhatsappNumber } from "@/lib/utils/whatsapp";
 
@@ -20,10 +21,18 @@ export default async function OrderDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Accessible à un collaborateur actif (plan Pro), pas seulement au
+  // propriétaire — voir src/lib/shop-access.ts.
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
+
+  if (!access) {
+    redirect("/dashboard/boutique");
+  }
+
   const { data: shop } = await supabase
     .from("shops")
     .select("id, name")
-    .eq("owner_id", user?.id ?? "")
+    .eq("id", access.shopId)
     .maybeSingle();
 
   if (!shop) {

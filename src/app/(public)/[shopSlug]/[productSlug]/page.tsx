@@ -75,7 +75,7 @@ export default async function ProductPage({
   const { data: product } = await supabase
     .from("products")
     .select(
-      "*, shop:shops!inner(id, slug, name, status, whatsapp_number), product_images(url, position), product_variants(id, name, value, extra_price)"
+      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, accent_color), product_images(url, position), product_variants(id, name, value, extra_price)"
     )
     .eq("slug", productSlug)
     .eq("shop.slug", shopSlug)
@@ -243,6 +243,7 @@ export default async function ProductPage({
             imageUrl={images[0]?.url}
             variants={product.product_variants ?? []}
             stock={product.stock}
+            accentColor={shop.accent_color}
           />
         </div>
       </div>

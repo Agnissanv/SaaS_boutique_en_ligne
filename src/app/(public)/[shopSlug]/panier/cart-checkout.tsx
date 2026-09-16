@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { createClient } from "@/lib/supabase/client";
-import { notifyVendorNewOrder } from "./notify-vendor-action";
+import { notifyVendorNewOrder, notifyVendorLowStock } from "./notify-vendor-action";
 
 type Step = "panier" | "commande";
 
@@ -49,6 +49,12 @@ export function CartCheckout({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Codes promo — plan Pro (`can_use_promo_codes`, ajouté le 16/09/2026).
+  // Volontairement pas de vérification/aperçu en direct : le rabais réel est
+  // calculé et appliqué par `create_order` (source de vérité, migration
+  // 0023), un code invalide/expiré remonte comme une erreur de commande
+  // normale (voir handleSubmitOrder) plutôt qu'un aller-retour séparé.
+  const [promoCode, setPromoCode] = useState("");
 
   // Beaucoup d'adresses à Abidjan n'ont pas de repère écrit fiable : on
   // propose au client de partager sa position GPS en plus de l'adresse
@@ -103,13 +109,14 @@ export function CartCheckout({
       p_delivery_lat: deliveryLat,
       p_delivery_lng: deliveryLng,
       p_customer_email: customerEmail.trim() || null,
+      p_promo_code: promoCode.trim() || null,
     });
 
     setPending(false);
 
     if (error || !orderId) {
       setError(
-        error?.message?.includes("Stock insuffisant")
+        error?.message?.includes("Stock insuffisant") || error?.message?.includes("Code promo")
           ? error.message
           : "Impossible de finaliser la commande. Réessaie."
       );
@@ -120,6 +127,7 @@ export function CartCheckout({
     // Best-effort, non bloquant : on ne fait jamais attendre le client pour
     // l'envoi d'un email au vendeur (voir notify-vendor-action.ts).
     notifyVendorNewOrder(orderId).catch(() => {});
+    notifyVendorLowStock(orderId).catch(() => {});
     router.push(`/${shopSlug}/commande/${orderId}`);
   }
 
@@ -217,6 +225,22 @@ export function CartCheckout({
           <dd className="font-mono text-cuivre-profond">{total + (deliveryFee ?? 0)} FCFA</dd>
         </div>
       </dl>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="promoCode" className="text-sm font-medium text-encre">
+          Code promo <span className="text-encre/50">(optionnel)</span>
+        </label>
+        <input
+          id="promoCode"
+          value={promoCode}
+          onChange={(e) => setPromoCode(e.target.value)}
+          placeholder="Ex : BIENVENUE10"
+          className="rounded-md border border-ligne px-3 py-2 text-sm uppercase focus:border-vert-actif focus:outline-none"
+        />
+        <p className="text-xs text-encre/50">
+          Le rabais est appliqué au moment de valider la commande.
+        </p>
+      </div>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="customerName" className="text-sm font-medium text-encre">

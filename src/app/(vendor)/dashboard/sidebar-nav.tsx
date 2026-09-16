@@ -3,7 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type NavItem = { href: string; label: string; icon: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement };
+type NavItem = {
+  href: string;
+  label: string;
+  icon: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
+  /**
+   * Masqué pour un collaborateur (plan Pro, `can_multi_user`, ajouté le
+   * 16/09/2026) — réglages boutique, codes promo, gestion des
+   * collaborateurs, paiements et abonnement restent réservés au
+   * propriétaire. Voir src/lib/shop-access.ts pour le raisonnement complet.
+   */
+  ownerOnly?: boolean;
+};
 type NavSection = { label?: string; items: NavItem[] };
 
 const NAV_SECTIONS: NavSection[] = [
@@ -18,9 +29,11 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: "Boutique",
     items: [
-      { href: "/dashboard/boutique", label: "Ma boutique", icon: IconStorefront },
-      { href: "/dashboard/paiements", label: "Paiements", icon: IconWallet },
-      { href: "/dashboard/abonnement", label: "Abonnement", icon: IconBadge },
+      { href: "/dashboard/boutique", label: "Ma boutique", icon: IconStorefront, ownerOnly: true },
+      { href: "/dashboard/codes-promo", label: "Codes promo", icon: IconTag, ownerOnly: true },
+      { href: "/dashboard/collaborateurs", label: "Collaborateurs", icon: IconUsers, ownerOnly: true },
+      { href: "/dashboard/paiements", label: "Paiements", icon: IconWallet, ownerOnly: true },
+      { href: "/dashboard/abonnement", label: "Abonnement", icon: IconBadge, ownerOnly: true },
     ],
   },
   {
@@ -39,42 +52,51 @@ const NAV_SECTIONS: NavSection[] = [
  * `usePathname()` et surligner le lien actif — le reste du layout parent
  * reste un Server Component (accès direct à Supabase pour shop/profil/
  * abonnement).
+ *
+ * `isOwner` (ajouté le 16/09/2026, multi-utilisateurs plan Pro) : un
+ * collaborateur ne voit pas les entrées `ownerOnly` — calculé une seule
+ * fois dans layout.tsx via src/lib/shop-access.ts et transmis ici.
  */
-export function SidebarNav() {
+export function SidebarNav({ isOwner }: { isOwner: boolean }) {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
-      {NAV_SECTIONS.map((section, i) => (
-        <div key={i}>
-          {section.label && (
-            <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-ivoire/45">
-              {section.label}
-            </p>
-          )}
-          <ul className="flex flex-col gap-0.5">
-            {section.items.map((item) => {
-              const active = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
-                      active
-                        ? "bg-white/10 font-medium text-ivoire"
-                        : "text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+      {NAV_SECTIONS.map((section, i) => {
+        const items = section.items.filter((item) => !item.ownerOnly || isOwner);
+        if (items.length === 0) return null;
+
+        return (
+          <div key={i}>
+            {section.label && (
+              <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-ivoire/45">
+                {section.label}
+              </p>
+            )}
+            <ul className="flex flex-col gap-0.5">
+              {items.map((item) => {
+                const active = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
+                        active
+                          ? "bg-white/10 font-medium text-ivoire"
+                          : "text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
     </nav>
   );
 }
@@ -143,6 +165,28 @@ function IconBadge(props: React.SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <circle cx="12" cy="9" r="6" />
       <path d="M8.5 14.5 7 21l5-2.5 5 2.5-1.5-6.5" />
+    </svg>
+  );
+}
+
+/** Ajoutée le 16/09/2026 pour "Codes promo" (plan Pro, can_use_promo_codes). */
+function IconTag(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12.5 3.5h5a2 2 0 0 1 2 2v5a2 2 0 0 1-.6 1.4l-8 8a2 2 0 0 1-2.8 0l-5-5a2 2 0 0 1 0-2.8l8-8a2 2 0 0 1 1.4-.6Z" />
+      <circle cx="16.5" cy="7.5" r="1.25" />
+    </svg>
+  );
+}
+
+/** Ajoutée le 16/09/2026 pour "Collaborateurs" (plan Pro, can_multi_user). */
+function IconUsers(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5" />
+      <circle cx="17" cy="8.5" r="2.3" />
+      <path d="M15.7 14.7c2.4.5 4.3 2.5 4.3 5.3" />
     </svg>
   );
 }

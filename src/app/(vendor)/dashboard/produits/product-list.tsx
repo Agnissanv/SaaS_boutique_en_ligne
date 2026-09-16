@@ -18,6 +18,7 @@ type Product = {
   category: string | null;
   price: number;
   stock: number;
+  stock_alert_threshold: number | null;
   is_active: boolean;
   product_images: { url: string; position: number }[];
 };
@@ -218,7 +219,7 @@ function ProductTable({ products, selected, onToggleSelected, onToggleActive, pe
                 </td>
                 <td className="px-3 py-2.5 text-encre/70">{product.price} FCFA</td>
                 <td className="px-3 py-2.5">
-                  <StockBar stock={product.stock} />
+                  <StockBar stock={product.stock} threshold={product.stock_alert_threshold} />
                 </td>
                 <td className="px-3 py-2.5">
                   <ActiveToggle
@@ -281,7 +282,7 @@ function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pen
               {product.category ? categoryLabel(product.category) : "—"} · {product.price} FCFA
             </p>
             <div className="mt-2">
-              <StockBar stock={product.stock} />
+              <StockBar stock={product.stock} threshold={product.stock_alert_threshold} />
             </div>
             <div className="mt-3 flex items-center gap-2.5 text-xs text-encre/70">
               <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
@@ -304,15 +305,20 @@ function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pen
 }
 
 /**
- * Barre de santé du stock — couleur + longueur relative à
- * LOW_STOCK_THRESHOLD, jamais un chiffre "objectif" inventé (la maquette
- * d'origine affichait un ratio type 900/1000 qui n'a pas d'équivalent dans
- * nos données). Longueur bornée entre 10% (toujours visible, même en
- * rupture) et 100% (atteint à 5x le seuil d'alerte, au-delà tout est "plein").
+ * Barre de santé du stock — couleur + longueur relative au seuil d'alerte,
+ * jamais un chiffre "objectif" inventé (la maquette d'origine affichait un
+ * ratio type 900/1000 qui n'a pas d'équivalent dans nos données). Longueur
+ * bornée entre 10% (toujours visible, même en rupture) et 100% (atteint à 5x
+ * le seuil, au-delà tout est "plein").
+ *
+ * `threshold` : seuil personnalisé du produit (plan Pro, ajouté le
+ * 16/09/2026 — voir src/lib/products.ts) ; `null` retombe sur
+ * `LOW_STOCK_THRESHOLD` comme avant pour tous les autres plans.
  */
-function StockBar({ stock }: { stock: number }) {
-  const health = stockHealth(stock);
-  const pct = Math.min(100, Math.max(10, (stock / (LOW_STOCK_THRESHOLD * 5)) * 100));
+function StockBar({ stock, threshold }: { stock: number; threshold: number | null }) {
+  const effectiveThreshold = threshold ?? LOW_STOCK_THRESHOLD;
+  const health = stockHealth(stock, effectiveThreshold);
+  const pct = Math.min(100, Math.max(10, (stock / (effectiveThreshold * 5)) * 100));
   return (
     <div className="w-full min-w-[7rem]">
       <div className="flex items-center justify-between text-xs text-encre/60">

@@ -3,6 +3,7 @@ import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { ProductForm } from "../product-form";
 
 export default async function NewProductPage({
@@ -16,16 +17,15 @@ export default async function NewProductPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id")
-    .eq("owner_id", user?.id ?? "")
-    .maybeSingle();
+  // Accessible à un collaborateur actif (plan Pro), pas seulement au
+  // propriétaire — voir src/lib/shop-access.ts.
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
 
   // Pas de boutique : impossible d'attacher un produit à quoi que ce soit.
-  if (!shop) {
+  if (!access) {
     redirect("/dashboard/boutique");
   }
+  const shop = { id: access.shopId };
 
   // Duplication d'un produit existant (?depuis=<id>) — demandé par Isaac le
   // 14/09/2026 : au lieu de repartir d'un formulaire vide pour un produit très
@@ -44,13 +44,16 @@ export default async function NewProductPage({
     compare_at_price: number | null;
     stock: number;
     tags: string[] | null;
+    stock_alert_threshold: number | null;
   } | null = null;
   let duplicateVariants: { name: string; value: string }[] = [];
 
   if (depuis) {
     const { data: source } = await supabase
       .from("products")
-      .select("title, description, category, price, compare_at_price, stock, tags")
+      .select(
+        "title, description, category, price, compare_at_price, stock, tags, stock_alert_threshold"
+      )
       .eq("id", depuis)
       .eq("shop_id", shop.id)
       .is("deleted_at", null)
@@ -121,6 +124,7 @@ export default async function NewProductPage({
         images={[]}
         canManageStock={subscription.features.canManageStock}
         canUseVariants={subscription.features.canUseVariants}
+        canUseAdvancedStockAlerts={subscription.features.hasAdvancedStockAlerts}
       />
     </div>
     </ViewTransition>
