@@ -1,14 +1,22 @@
 /**
- * Client CinetPay — API "1.0 Aurora", réécrit le 15/09/2026.
+ * Client CinetPay — API "1.0 Aurora", réécrit le 15/09/2026, corrigé le
+ * 16/09/2026 (mauvais nom de domaine — voir plus bas).
  *
  * Contexte : la première version de ce fichier avait été écrite à partir de
  * la documentation générale trouvée en ligne (Checkout v2 : `apikey` +
  * `site_id`, base `api-checkout.cinetpay.com/v2`). En configurant son compte
  * avec Isaac, on a découvert que son tableau de bord CinetPay documente une
- * version différente et plus récente de l'API ("1.0 Aurora", base
- * `api.cinetpay.com`) — contrat entièrement relu directement depuis cette
- * documentation intégrée à son compte, page par page, avant de réécrire ce
- * fichier. Voir decisions-techniques.md pour le détail de la découverte.
+ * version différente et plus récente de l'API ("1.0 Aurora") — contrat
+ * entièrement relu directement depuis cette documentation intégrée à son
+ * compte, page par page, avant de réécrire ce fichier. Voir
+ * decisions-techniques.md pour le détail de la découverte.
+ *
+ * Correction du 16/09/2026 : le premier test réel sur Vercel a échoué avec
+ * `SyntaxError: Unexpected token '<', "<!DOCTYPE "...` — la requête vers
+ * `api.cinetpay.com` recevait une page HTML au lieu du JSON attendu. La page
+ * "Vue d'ensemble" de la doc du compte d'Isaac précise, dans son encadré
+ * conseil : "utilisez l'environnement sandbox (`api.cinetpay.net`) pour vos
+ * premiers tests" — le bon domaine est `.net`, pas `.com`.
  *
  * Authentification en DEUX temps (différence majeure avec la v2 Checkout) :
  * 1. `POST /v1/oauth/login` avec `{ api_key, api_password }` renvoie un
@@ -37,7 +45,7 @@
  * fois la bascule confirmée par un vrai test.)
  */
 
-const CINETPAY_BASE_URL = "https://api.cinetpay.com";
+const CINETPAY_BASE_URL = "https://api.cinetpay.net";
 
 function getCredentials() {
   const apiKey = process.env.CINETPAY_API_KEY;
