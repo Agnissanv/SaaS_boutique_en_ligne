@@ -333,6 +333,41 @@ export default async function Home({
     }
   }
 
+  // Note/nombre d'avis sur les cartes produit (16/09/2026, voir migration
+  // 0027_product_ratings_on_listing.sql) — un seul appel groupé pour TOUTE la
+  // page (nouveautés + meilleures ventes + toutes les bandes par catégorie +
+  // la grille filtrée), quel que soit le nombre de produits affichés,
+  // plutôt qu'une requête par produit. Mutation en place des tableaux déjà
+  // construits ci-dessus : plus simple que de reconstruire chaque liste,
+  // sans changer leur forme (`rating` est un champ optionnel de
+  // `MarketplaceCardProduct`).
+  const allDisplayedProductIds = Array.from(
+    new Set([
+      ...catalogueProducts.map((p) => p.id),
+      ...newArrivalsProducts.map((p) => p.id),
+      ...bestSellingProducts.map((p) => p.id),
+      ...categoryRows.flatMap((row) => row.products.map((p) => p.id)),
+    ])
+  );
+
+  if (allDisplayedProductIds.length > 0) {
+    const { data: ratingsRaw } = await supabase.rpc("get_products_ratings", {
+      p_product_ids: allDisplayedProductIds,
+    });
+    const ratingsMap = new Map(
+      (
+        (ratingsRaw ?? []) as { product_id: string; average: number; review_count: number }[]
+      ).map((r) => [r.product_id, { average: r.average, count: r.review_count }])
+    );
+    const applyRatings = (list: MarketplaceCardProduct[]) => {
+      for (const p of list) p.rating = ratingsMap.get(p.id) ?? null;
+    };
+    applyRatings(catalogueProducts);
+    applyRatings(newArrivalsProducts);
+    applyRatings(bestSellingProducts);
+    for (const row of categoryRows) applyRatings(row.products);
+  }
+
   // Collage du hero : les vignettes des toutes dernières nouveautés, déjà
   // chargées ci-dessus — pas de requête supplémentaire. De vraies photos
   // envoyées par de vrais vendeurs, jamais une image de stock générique.

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ViewTransition } from "react";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
+import { Stars } from "@/components/stars";
 import { categoryLabel } from "@/lib/categories";
 
 export type MarketplaceCardProduct = {
@@ -13,6 +14,15 @@ export type MarketplaceCardProduct = {
   thumbnail?: string;
   shopSlug: string;
   shopName: string;
+  /**
+   * Note moyenne + nombre d'avis — ajoutée le 16/09/2026 (enrichissement
+   * "preuve sociale dès la liste", voir migration
+   * 0027_product_ratings_on_listing.sql). `undefined` : pas encore
+   * chargée/non applicable (repli silencieux, pas de rendu) ; `null` :
+   * chargée mais aucun avis pour ce produit (idem, pas de rendu — jamais de
+   * "0 avis" qui donnerait une impression de boutique vide).
+   */
+  rating?: { average: number; count: number } | null;
 };
 
 /**
@@ -77,6 +87,12 @@ export function ProductCard({
         </ViewTransition>
         <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
         <p className="font-mono text-sm text-cuivre-profond">{product.price} FCFA</p>
+        {product.rating ? (
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-encre/60">
+            <Stars rating={product.rating.average} />
+            <span>({product.rating.count})</span>
+          </p>
+        ) : null}
       </Link>
       <Link
         href={`/${product.shopSlug}`}

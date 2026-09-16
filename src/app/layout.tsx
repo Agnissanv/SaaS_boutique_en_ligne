@@ -27,10 +27,41 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+// `metadataBase` (16/09/2026, enrichissement partage social) : nécessaire
+// pour que les `openGraph.images` déclarés avec un chemin relatif (ex.
+// "/keva-logo.jpg", utilisé en repli boutique/produit sans photo) se
+// résolvent en URL absolue — sans ça, Next.js les laisse relatifs et la
+// plupart des clients de prévisualisation (WhatsApp, Instagram, Messenger)
+// n'affichent alors aucune image. Même variable d'environnement que les
+// liens envoyés par email ailleurs dans le projet (ex. `commandes/actions.ts`).
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "KEVA — créez votre boutique en ligne en 5 minutes",
   description:
     "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
+  // Valeurs de repli pour les pages qui n'ont pas encore de `generateMetadata`
+  // propre — les pages boutique (`[shopSlug]`) et produit
+  // (`[shopSlug]/[productSlug]`) déclarent les leurs, qui prennent le dessus
+  // (Next.js fusionne les métadonnées de la mise en page vers la page, la
+  // page la plus profonde gagnant sur les champs qu'elle redéfinit).
+  openGraph: {
+    title: "KEVA",
+    description:
+      "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
+    siteName: "KEVA",
+    images: ["/keva-logo.jpg"],
+    locale: "fr_CI",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "KEVA",
+    description:
+      "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
+    images: ["/keva-logo.jpg"],
+  },
   manifest: "/manifest.json",
   // statusBarStyle "black" plutôt que "default" (blanc) : le bandeau système
   // iOS suit au moins la tonalité sombre de la charte KEVA sans exiger de

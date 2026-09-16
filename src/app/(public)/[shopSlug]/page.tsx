@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ViewTransition } from "react";
+import Image from "next/image";
+import { cache, ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { truncate } from "@/lib/utils/text";
 import { CATEGORIES, categoryLabel } from "@/lib/categories";
 import { CartLink } from "./cart-link";
 import { SortSelect } from "@/components/sort-select";
@@ -56,6 +59,61 @@ function deliveryLabel(fee: number | null): string {
   return `${fee} FCFA`;
 }
 
+// `cache()` (React) : mémoïse cette requête pour la durée d'une seule
+// requête serveur, afin que `generateMetadata` et le composant de page
+// ci-dessous — tous deux exécutés par Next.js pour la même navigation —
+// partagent le même appel Supabase au lieu de le dupliquer. Ajouté le
+// 16/09/2026 en même temps que `generateMetadata` : avant, la boutique
+// n'était chargée qu'une fois, dans la page elle-même.
+const getShopForPublicPage = cache(async (shopSlug: string) => {
+  const supabase = await createClient();
+  const { data: shop } = await supabase
+    .from("shops")
+    .select(
+      "id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee, accent_color"
+    )
+    .eq("slug", shopSlug)
+    .eq("status", "active")
+    .maybeSingle();
+  return shop;
+});
+
+/**
+ * Métadonnées + carte de partage (Open Graph/Twitter) — ajoutées le
+ * 16/09/2026. Isaac, en comparant KEVA à la concurrence : le lien de
+ * boutique est le principal canal de croissance du produit (cf. cahier des
+ * charges §1.4, "expérience WhatsApp native"), or sans ces balises, un lien
+ * collé dans un statut WhatsApp ou une story Instagram n'affichait qu'une
+ * carte vide ou générique — aucune vignette, aucun nom de boutique. Repli
+ * sur le logo si la boutique n'a pas de photo de couverture, puis sur le
+ * logo KEVA (jamais un rectangle vide) si elle n'a ni l'un ni l'autre.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ shopSlug: string }>;
+}): Promise<Metadata> {
+  const { shopSlug } = await params;
+  const shop = await getShopForPublicPage(shopSlug);
+
+  if (!shop) {
+    return { title: "Boutique introuvable — KEVA" };
+  }
+
+  const title = `${shop.name} — Boutique KEVA`;
+  const description = shop.description
+    ? truncate(shop.description, 155)
+    : `Découvre les produits de ${shop.name} sur KEVA : commande sans compte, paiement à la livraison.`;
+  const image = shop.cover_url || shop.logo_url || "/keva-logo.jpg";
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [image], type: "website" },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
+
 /**
  * Page boutique publique — catalogue produits d'un vendeur, lien que chaque
  * commerçant partage à ses clients (WhatsApp, Instagram, bio...).
@@ -101,18 +159,10 @@ export default async function ShopPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const supabase = await createClient();
-
-  const { data: shop } = await supabase
-    .from("shops")
-    .select(
-      "id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee, accent_color"
-    )
-    .eq("slug", shopSlug)
-    .eq("status", "active")
-    .maybeSingle();
-
+  const shop = await getShopForPublicPage(shopSlug);
   if (!shop) notFound();
+
+  const supabase = await createClient();
 
   const rating = await getShopRating(supabase, shop.id);
 
@@ -141,6 +191,25 @@ export default async function ShopPage({
 
   const { data: products, count } = await query;
 
+  // Note/nombre d'avis sur les cartes produit de la grille boutique
+  // (16/09/2026, voir migration 0027_product_ratings_on_listing.sql et le
+  // même raisonnement appliqué à la marketplace dans `page.tsx`) — un seul
+  // appel groupé pour toute la page (au plus `PAGE_SIZE` produits).
+  const productIds = (products ?? []).map((p) => p.id);
+  const ratingsByProduct = new Map<string, { average: number; count: number }>();
+  if (productIds.length > 0) {
+    const { data: ratingsRaw } = await supabase.rpc("get_products_ratings", {
+      p_product_ids: productIds,
+    });
+    for (const r of (ratingsRaw ?? []) as {
+      product_id: string;
+      average: number;
+      review_count: number;
+    }[]) {
+      ratingsByProduct.set(r.product_id, { average: r.average, count: r.review_count });
+    }
+  }
+
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
   const current = { q, categorie, tri, page: pageParam };
 
@@ -159,15 +228,23 @@ export default async function ShopPage({
       </div>
 
       {/* Bannière — image de couverture du vendeur si renseignée, sinon un
-          fond vert profond neutre plutôt qu'un blanc vide. */}
+          fond vert profond neutre plutôt qu'un blanc vide. Passée à
+          next/image le 16/09/2026 (enrichissement performance) : c'est
+          l'image la plus lourde de toute la page boutique, la première que
+          le navigateur doit charger — voir `product-image.tsx` pour le même
+          raisonnement appliqué aux vignettes produit. */}
       <div className="overflow-hidden rounded-xl">
         {shop.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-          <img
-            src={shop.cover_url}
-            alt=""
-            className="h-40 w-full object-cover sm:h-56"
-          />
+          <div className="relative h-40 w-full sm:h-56">
+            <Image
+              src={shop.cover_url}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 1024px) 1024px, 100vw"
+              className="object-cover"
+            />
+          </div>
         ) : (
           <div
             style={shop.accent_color ? { backgroundColor: shop.accent_color } : undefined}
@@ -183,12 +260,9 @@ export default async function ShopPage({
       <div className="relative z-10 -mt-8 rounded-xl border border-ligne bg-white p-4 shadow-sm sm:-mt-12 sm:p-6">
         <div className="flex flex-wrap items-start gap-4">
           {shop.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-            <img
-              src={shop.logo_url}
-              alt={shop.name}
-              className="h-16 w-16 shrink-0 rounded-full border-4 border-white object-cover shadow sm:h-20 sm:w-20"
-            />
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-4 border-white shadow sm:h-20 sm:w-20">
+              <Image src={shop.logo_url} alt={shop.name} fill sizes="80px" className="object-cover" />
+            </div>
           ) : (
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-sable text-xl font-semibold text-cuivre-profond shadow sm:h-20 sm:w-20">
               {shop.name.charAt(0).toUpperCase()}
@@ -328,6 +402,7 @@ export default async function ShopPage({
             )[0]?.url;
             const hasDiscount =
               product.compare_at_price != null && product.compare_at_price > product.price;
+            const rating = ratingsByProduct.get(product.id) ?? null;
             return (
               <div
                 key={product.id}
@@ -367,6 +442,12 @@ export default async function ShopPage({
                       </span>
                     ) : null}
                   </p>
+                  {rating ? (
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-encre/60">
+                      <Stars rating={rating.average} />
+                      <span>({rating.count})</span>
+                    </p>
+                  ) : null}
                   {product.category ? (
                     <p className="text-xs text-encre/50">{categoryLabel(product.category)}</p>
                   ) : null}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 /**
  * Image produit avec repli propre si l'URL est cassée (fichier supprimé du
@@ -20,6 +21,22 @@ import { useState } from "react";
  * de laisser un vide qui a l'air cassé. Même trait que les autres icônes
  * dessinées à la main du projet (`category-icon.tsx`, `admin-icons.tsx`) :
  * `currentColor`, épaisseur `1.5`, pas de librairie.
+ *
+ * Passé à `next/image` le 16/09/2026 (enrichissement performance, voir
+ * decisions-techniques.md) — jusque-là un `<img>` brut, avec le
+ * eslint-disable qui va avec. Ce composant est le SEUL point de rendu des
+ * photos produit dans tout le projet (fiche produit, page boutique,
+ * marketplace, cartes), donc le seul endroit à changer pour que toutes ces
+ * pages bénéficient du redimensionnement responsive et du lazy-loading
+ * automatique de `next/image` — voir `next.config.ts` pour l'autorisation du
+ * domaine Supabase Storage. `fill` plutôt que `width`/`height` fixes : tous
+ * les appelants dimensionnent déjà la vignette par une classe Tailwind sur
+ * le conteneur (`aspect-square w-full`, ou une taille fixe pour le collage du
+ * hero) — `fill` réutilise cette boîte telle quelle sans dupliquer la
+ * dimension ailleurs. `sizes` approxime les grilles réellement utilisées
+ * (2 à 6 colonnes selon la largeur d'écran, cf. page d'accueil/boutique) :
+ * une valeur légèrement pessimiste plutôt qu'exacte par page, pour rester un
+ * seul composant partagé.
  */
 export function ProductImage({
   src,
@@ -49,7 +66,15 @@ export function ProductImage({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-    <img src={src} alt={alt} className={className} onError={() => setBroken(true)} />
+    <div className={`relative overflow-hidden ${className ?? ""}`}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
+        className="object-cover"
+        onError={() => setBroken(true)}
+      />
+    </div>
   );
 }

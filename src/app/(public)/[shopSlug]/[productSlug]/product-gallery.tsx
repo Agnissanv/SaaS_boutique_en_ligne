@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { ViewTransition } from "react";
+import Image from "next/image";
 
-type Image = { url: string };
+type GalleryPhoto = { url: string };
 
 /**
  * Galerie photo (image principale + miniatures cliquables), à la place du
@@ -36,7 +37,7 @@ export function ProductGallery({
   title,
   productId,
 }: {
-  images: Image[];
+  images: GalleryPhoto[];
   title: string;
   productId: string;
 }) {
@@ -89,14 +90,16 @@ export function ProductGallery({
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="block w-full cursor-zoom-in overflow-hidden rounded-xl border border-ligne"
+          className="relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-xl border border-ligne"
           aria-label="Agrandir la photo"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- images uploadées par le vendeur, source dynamique */}
-          <img
+          <Image
             src={images[activeIndex].url}
             alt={title}
-            className="aspect-square w-full object-cover"
+            fill
+            priority
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
           />
         </button>
       </ViewTransition>
@@ -107,13 +110,12 @@ export function ProductGallery({
               key={img.url}
               type="button"
               onClick={() => setSelected(index)}
-              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
+              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
                 index === activeIndex ? "border-cuivre-profond" : "border-ligne"
               }`}
               aria-label={`Voir la photo ${index + 1}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- idem */}
-              <img src={img.url} alt="" className="h-full w-full object-cover" />
+              <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
         </div>
@@ -134,8 +136,16 @@ export function ProductGallery({
           </button>
 
           {/* object-contain plutôt que object-cover : l'image entière reste
-              visible ici, même si elle est recadrée dans la galerie normale. */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- idem */}
+              visible ici, même si elle est recadrée dans la galerie normale.
+              Laissé en `<img>` brut volontairement (pas converti à
+              next/image comme le reste de cette galerie, 16/09/2026) : ce
+              zoom ne se charge qu'à l'ouverture, jamais au chargement initial
+              de la page (donc hors du périmètre de l'optimisation perf visée
+              ici), et `next/image` en mode `fill` imposerait un conteneur aux
+              dimensions fixes qui casserait le clic sur la zone "vide" autour
+              de la photo pour fermer le zoom (comportement actuel, à
+              préserver). */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- voir commentaire ci-dessus */}
           <img
             src={images[activeIndex].url}
             alt={title}

@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ViewTransition } from "react";
+import { cache, ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { truncate } from "@/lib/utils/text";
 import { AddToCartForm } from "./add-to-cart-form";
+import { StickyAddToCartBar } from "./sticky-add-to-cart-bar";
 import { ProductGallery } from "./product-gallery";
 import { WhatsappShareButton } from "./whatsapp-share-button";
 import { Stars } from "@/components/stars";
@@ -64,14 +67,13 @@ function ReviewsSection({ reviews }: { reviews: Review[] }) {
   );
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ shopSlug: string; productSlug: string }>;
-}) {
-  const { shopSlug, productSlug } = await params;
+// `cache()` (React) : même raisonnement que `getShopForPublicPage` dans la
+// page boutique — mémoïse la requête produit pour la durée d'une seule
+// requête serveur, partagée entre `generateMetadata` et le composant de page
+// ci-dessous plutôt que dupliquée. Ajoutée le 16/09/2026 en même temps que
+// `generateMetadata`.
+const getProductForPublicPage = cache(async (shopSlug: string, productSlug: string) => {
   const supabase = await createClient();
-
   const { data: product } = await supabase
     .from("products")
     .select(
@@ -83,8 +85,57 @@ export default async function ProductPage({
     .eq("is_active", true)
     .is("deleted_at", null)
     .maybeSingle();
+  return product;
+});
 
+/**
+ * Métadonnées + carte de partage (Open Graph/Twitter) — ajoutées le
+ * 16/09/2026, même raisonnement que la page boutique (voir
+ * `[shopSlug]/page.tsx`) : le bouton "Partager sur WhatsApp" de cette même
+ * page (`whatsapp-share-button.tsx`) envoyait déjà un lien produit, mais sans
+ * ces balises ce lien s'affichait sans aucune vignette côté destinataire.
+ * Repli sur la première photo produit, puis la boutique, puis le logo KEVA.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ shopSlug: string; productSlug: string }>;
+}): Promise<Metadata> {
+  const { shopSlug, productSlug } = await params;
+  const product = await getProductForPublicPage(shopSlug, productSlug);
+
+  if (!product) {
+    return { title: "Produit introuvable — KEVA" };
+  }
+
+  const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
+  const title = `${product.title} — ${shop.name} | KEVA`;
+  const description = product.description
+    ? truncate(product.description, 155)
+    : `${product.title} à ${product.price} FCFA, disponible sur la boutique ${shop.name} sur KEVA.`;
+  const images = [...(product.product_images ?? [])].sort(
+    (a: { position: number }, b: { position: number }) => a.position - b.position
+  );
+  const image = images[0]?.url || "/keva-logo.jpg";
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [image], type: "website" },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ shopSlug: string; productSlug: string }>;
+}) {
+  const { shopSlug, productSlug } = await params;
+  const product = await getProductForPublicPage(shopSlug, productSlug);
   if (!product) notFound();
+
+  const supabase = await createClient();
 
   // Compteur de vues PAR PRODUIT (plan Business+, "produits les plus vus" —
   // ajouté le 16/09/2026, voir migration 0025_advanced_stats.sql). Même
@@ -241,19 +292,30 @@ export default async function ProductPage({
             ) : null}
           </div>
 
-          <AddToCartForm
-            shopSlug={shopSlug}
-            productId={product.id}
-            productSlug={product.slug}
-            title={product.title}
-            price={product.price}
-            imageUrl={images[0]?.url}
-            variants={product.product_variants ?? []}
-            stock={product.stock}
-            accentColor={shop.accent_color}
-          />
+          {/* `id="acheter"` : cible du scroll de la barre fixe mobile
+              (`sticky-add-to-cart-bar.tsx`), voir son commentaire pour le
+              raisonnement complet. */}
+          <div id="acheter" className="scroll-mt-4">
+            <AddToCartForm
+              shopSlug={shopSlug}
+              productId={product.id}
+              productSlug={product.slug}
+              title={product.title}
+              price={product.price}
+              imageUrl={images[0]?.url}
+              variants={product.product_variants ?? []}
+              stock={product.stock}
+              accentColor={shop.accent_color}
+            />
+          </div>
         </div>
       </div>
+
+      <StickyAddToCartBar
+        price={product.price}
+        stock={product.stock}
+        accentColor={shop.accent_color}
+      />
 
       <section className="mt-12 border-t border-ligne pt-8">
         <h2 className="font-display text-lg font-semibold text-encre">Avis clients</h2>
