@@ -16,25 +16,74 @@ type Plan = {
 };
 
 /**
- * Affiche `features` (jsonb, forme libre) de façon lisible sans supposer sa
- * structure exacte.
+ * Libellés lisibles pour les clés connues de `features` (jsonb, forme libre
+ * en base). Une clé absente de cette table retombe sur un libellé généré
+ * (préfixe can_/has_ retiré, underscores → espaces) plutôt que de planter, au
+ * cas où un nouveau flag serait ajouté en base sans être documenté ici.
+ */
+const FEATURE_LABELS: Record<string, string> = {
+  can_multi_user: "Multi-utilisateurs",
+  can_export_stats: "Export des statistiques",
+  can_manage_stock: "Gestion du stock",
+  can_use_variants: "Variantes produits (taille, couleur...)",
+  can_remove_branding: "Sans le badge KEVA",
+  can_use_promo_codes: "Codes promo",
+  has_order_notifications: "Notifications de commande",
+  has_advanced_stock_alerts: "Alertes de stock avancées",
+};
+
+function humanizeKey(key: string) {
+  return key.replace(/^can_|^has_/, "").replace(/_/g, " ");
+}
+
+/**
+ * Met en forme une seule entrée de `features` pour un vendeur — jamais la clé
+ * brute. Renvoie `null` quand la valeur ne représente pas un avantage à
+ * afficher (booléen à `false`, 0 collaborateur, personnalisation "none"...).
+ */
+function formatFeature(key: string, value: unknown): string | null {
+  if (key === "max_products") {
+    return value === null || value === undefined
+      ? "Produits illimités"
+      : `${value} produits max`;
+  }
+  if (key === "max_collaborators") {
+    const n = Number(value);
+    if (!n) return null;
+    return `${n} collaborateur${n > 1 ? "s" : ""}`;
+  }
+  if (key === "can_customize_branding") {
+    if (value === "complete") return "Personnalisation complète de la marque";
+    if (value === "basic") return "Personnalisation basique de la marque";
+    return null; // "none" — pas un avantage à afficher
+  }
+  if (typeof value === "boolean") {
+    return value ? (FEATURE_LABELS[key] ?? humanizeKey(key)) : null;
+  }
+  return `${FEATURE_LABELS[key] ?? humanizeKey(key)} : ${value}`;
+}
+
+/**
+ * Affiche `features` de façon lisible pour un vendeur — jamais les clés
+ * brutes de la base (`can_manage_stock`, `max_products : null`...).
  *
- * Bug corrigé le 16/09/2026 : pour une valeur booléenne, le code affichait la
- * clé (`key`) qu'elle vaille `true` ou `false` — rien ne filtrait les `false`.
- * Résultat : les trois plans (Starter/Business/Pro) partageant le même jeu de
- * clés dans leur JSON `features`, les trois cartes affichaient la liste
- * complète des clés, identique partout, sans jamais refléter qui a vraiment
- * quoi (repéré par Isaac en comparant les cartes à l'œil). Une valeur
- * booléenne à `false` est maintenant simplement omise de la liste : seules
- * les fonctionnalités réellement actives pour ce plan s'affichent.
+ * Historique : un premier bug (corrigé le 16/09/2026) affichait la clé d'un
+ * booléen qu'il vaille `true` ou `false`, donc la même liste complète sur les
+ * trois plans (repéré par Isaac à l'œil). Une fois ce filtre ajouté, les clés
+ * elles-mêmes restaient affichées telles quelles ("can_manage_stock",
+ * "max_products : null") — repéré aussitôt par Isaac comme illisible pour un
+ * client final. Corrigé le jour même avec `FEATURE_LABELS`/`formatFeature`
+ * ci-dessus : chaque clé connue a un libellé français, et les valeurs qui ne
+ * sont pas un avantage réel (0 collaborateur, personnalisation "none") sont
+ * omises plutôt qu'affichées littéralement.
  */
 function renderFeatures(features: Plan["features"]) {
   if (!features) return null;
   const items = Array.isArray(features)
     ? features.map((f) => String(f))
     : Object.entries(features)
-        .filter(([, value]) => typeof value !== "boolean" || value === true)
-        .map(([key, value]) => (typeof value === "boolean" ? key : `${key} : ${value}`));
+        .map(([key, value]) => formatFeature(key, value))
+        .filter((item): item is string => item !== null);
 
   if (items.length === 0) return null;
 
