@@ -15,14 +15,26 @@ type Plan = {
   features: Record<string, unknown> | string[] | null;
 };
 
-/** Affiche `features` (jsonb, forme libre) de façon lisible sans supposer sa structure exacte. */
+/**
+ * Affiche `features` (jsonb, forme libre) de façon lisible sans supposer sa
+ * structure exacte.
+ *
+ * Bug corrigé le 16/09/2026 : pour une valeur booléenne, le code affichait la
+ * clé (`key`) qu'elle vaille `true` ou `false` — rien ne filtrait les `false`.
+ * Résultat : les trois plans (Starter/Business/Pro) partageant le même jeu de
+ * clés dans leur JSON `features`, les trois cartes affichaient la liste
+ * complète des clés, identique partout, sans jamais refléter qui a vraiment
+ * quoi (repéré par Isaac en comparant les cartes à l'œil). Une valeur
+ * booléenne à `false` est maintenant simplement omise de la liste : seules
+ * les fonctionnalités réellement actives pour ce plan s'affichent.
+ */
 function renderFeatures(features: Plan["features"]) {
   if (!features) return null;
   const items = Array.isArray(features)
     ? features.map((f) => String(f))
-    : Object.entries(features).map(([key, value]) =>
-        typeof value === "boolean" ? key : `${key} : ${value}`
-      );
+    : Object.entries(features)
+        .filter(([, value]) => typeof value !== "boolean" || value === true)
+        .map(([key, value]) => (typeof value === "boolean" ? key : `${key} : ${value}`));
 
   if (items.length === 0) return null;
 
