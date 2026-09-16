@@ -23,6 +23,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/dashboard", label: "Aperçu", icon: IconGrid },
       { href: "/dashboard/produits", label: "Produits", icon: IconBox },
       { href: "/dashboard/commandes", label: "Commandes", icon: IconReceipt },
+      { href: "/dashboard/statistiques", label: "Statistiques", icon: IconChart },
       { href: "/dashboard/avis", label: "Avis", icon: IconStar },
     ],
   },
@@ -127,6 +128,16 @@ function IconReceipt(props: React.SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
       <path d="M9 8h6M9 12h6" />
+    </svg>
+  );
+}
+
+/** Ajoutée le 16/09/2026 pour "Statistiques" (plan Business+, has_advanced_stats). */
+function IconChart(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 20V10M12 20V4M20 20v-7" />
+      <path d="M3 20h18" />
     </svg>
   );
 }

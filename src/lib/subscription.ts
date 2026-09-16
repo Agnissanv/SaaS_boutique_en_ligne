@@ -77,6 +77,15 @@ export type ShopFeatureFlags = {
   maxCollaborators: number;
   hasOrderNotifications: boolean;
   hasAdvancedStockAlerts: boolean;
+  /**
+   * Statistiques avec graphiques (Business+) — ajouté le 16/09/2026, voir
+   * `/dashboard/statistiques` : courbe de CA, produits les plus vendus/vus,
+   * répartition des commandes par statut. Distinct de `hasFullStats`
+   * (Pro uniquement) qui ajoute le taux de conversion et la comparaison de
+   * périodes par-dessus ces mêmes graphiques.
+   */
+  hasAdvancedStats: boolean;
+  hasFullStats: boolean;
 };
 
 /**
@@ -96,6 +105,8 @@ export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
   maxCollaborators: 0,
   hasOrderNotifications: false,
   hasAdvancedStockAlerts: false,
+  hasAdvancedStats: false,
+  hasFullStats: false,
 };
 
 /**
@@ -127,6 +138,8 @@ function parseFeatureFlags(features: unknown): ShopFeatureFlags {
     maxCollaborators: typeof f.max_collaborators === "number" ? f.max_collaborators : 0,
     hasOrderNotifications: Boolean(f.has_order_notifications),
     hasAdvancedStockAlerts: Boolean(f.has_advanced_stock_alerts),
+    hasAdvancedStats: Boolean(f.has_advanced_stats),
+    hasFullStats: Boolean(f.has_full_stats),
   };
 }
 

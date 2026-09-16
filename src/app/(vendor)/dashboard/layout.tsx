@@ -13,6 +13,7 @@ const MOBILE_NAV_LINKS = [
   { href: "/dashboard", label: "Aperçu", ownerOnly: false },
   { href: "/dashboard/produits", label: "Produits", ownerOnly: false },
   { href: "/dashboard/commandes", label: "Commandes", ownerOnly: false },
+  { href: "/dashboard/statistiques", label: "Statistiques", ownerOnly: false },
   { href: "/dashboard/boutique", label: "Boutique", ownerOnly: true },
   { href: "/dashboard/avis", label: "Avis", ownerOnly: false },
   { href: "/dashboard/codes-promo", label: "Codes promo", ownerOnly: true },

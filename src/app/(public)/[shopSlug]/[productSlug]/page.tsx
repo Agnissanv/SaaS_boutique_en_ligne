@@ -86,6 +86,13 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
+  // Compteur de vues PAR PRODUIT (plan Business+, "produits les plus vus" —
+  // ajouté le 16/09/2026, voir migration 0025_advanced_stats.sql). Même
+  // principe que `increment_shop_view` (migration 0005) : simple incrément,
+  // pas de déduplication par visiteur, erreur ignorée pour ne jamais bloquer
+  // l'affichage de la fiche produit.
+  await supabase.rpc("increment_product_view", { p_product_id: product.id });
+
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
 
   const { data: reviews } = await supabase

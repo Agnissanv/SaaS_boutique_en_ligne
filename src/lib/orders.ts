@@ -32,3 +32,17 @@ export const ORDER_STATUS_BADGE_CLASS: Record<string, string> = {
   delivered: "bg-succes/15 text-succes",
   cancelled: "bg-erreur/15 text-erreur",
 };
+
+/**
+ * Classes en aplat (pas en badge translucide) pour les barres de répartition
+ * de `/dashboard/statistiques` (16/09/2026, plan Business+) — mêmes tokens
+ * sémantiques que `ORDER_STATUS_BADGE_CLASS` ci-dessus, réutilisés plutôt que
+ * d'inventer une nouvelle palette pour ce graphique.
+ */
+export const ORDER_STATUS_BAR_CLASS: Record<string, string> = {
+  pending: "bg-attention",
+  paid: "bg-vert-actif",
+  preparing: "bg-vert-actif",
+  delivered: "bg-succes",
+  cancelled: "bg-erreur",
+};
