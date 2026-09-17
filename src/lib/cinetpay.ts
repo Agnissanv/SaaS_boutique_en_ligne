@@ -74,6 +74,26 @@
  * — c'est un petit script à faire tourner sur la VM, pas du code Next.js).
  */
 
+/**
+ * Interrupteur de pause — ajouté le 17/09/2026 : le compte "Aurora" est
+ * bloqué (`NOT_ALLOWED`, IP non whitelistée, voir plus haut) et Isaac attend
+ * la validation de son compte sur l'ancien back office CinetPay (API
+ * "Checkout" classique, `apikey`/`site_id`, sans liste blanche IP à priori —
+ * validation en cours, délai annoncé de 2-3 jours). En attendant, on
+ * masque proprement le paiement en ligne côté vendeur (voir
+ * /dashboard/abonnement/page.tsx et actions.ts) plutôt que de laisser un
+ * bouton qui échouerait à coup sûr. L'attribution manuelle d'un plan par un
+ * admin (/admin/abonnements) reste possible pendant la pause.
+ *
+ * Pour réactiver une fois l'ancien back office validé (et `cinetpay.ts`
+ * adapté à la bonne API si besoin) : mettre `CINETPAY_PAYMENTS_ENABLED=true`
+ * sur Vercel (ou simplement retirer la variable, `true` étant la valeur par
+ * défaut).
+ */
+export function isCinetPayEnabled(): boolean {
+  return process.env.CINETPAY_PAYMENTS_ENABLED !== "false";
+}
+
 const CINETPAY_BASE_URL = process.env.CINETPAY_RELAY_URL || "https://api.cinetpay.net";
 
 /** En-tête d'authentification du relais — objet vide (aucun en-tête ajouté)

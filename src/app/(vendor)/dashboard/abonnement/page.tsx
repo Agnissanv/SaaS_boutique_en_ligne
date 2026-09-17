@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   getShopSubscription,
   SUBSCRIPTION_STATE_LABELS,
 } from "@/lib/subscription";
+import { isCinetPayEnabled } from "@/lib/cinetpay";
 import { UpgradeButton } from "./upgrade-button";
 
 type Plan = {
@@ -138,6 +140,13 @@ export default async function SubscriptionPage() {
       .order("price", { ascending: true }),
   ]);
 
+  // Pause du 17/09/2026 — voir `isCinetPayEnabled` dans cinetpay.ts. Le
+  // bouton de paiement est masqué plutôt que laissé cliquable pour échouer :
+  // un vendeur qui veut quand même changer de plan pendant la pause est
+  // orienté vers le contact, l'admin pouvant toujours assigner un plan
+  // manuellement depuis /admin/abonnements.
+  const cinetPayEnabled = isCinetPayEnabled();
+
   return (
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Mon abonnement</h1>
@@ -175,10 +184,20 @@ export default async function SubscriptionPage() {
       <h2 className="mt-8 font-display text-sm font-semibold text-encre">
         Plans disponibles
       </h2>
-      <p className="mt-1 text-xs text-encre/60">
-        Paiement Mobile Money sécurisé via CinetPay — le plan est activé dès
-        confirmation du paiement.
-      </p>
+      {cinetPayEnabled ? (
+        <p className="mt-1 text-xs text-encre/60">
+          Paiement Mobile Money sécurisé via CinetPay — le plan est activé dès
+          confirmation du paiement.
+        </p>
+      ) : (
+        <p className="mt-1 rounded-md bg-sable px-2 py-1.5 text-xs text-encre/70">
+          Le paiement en ligne est temporairement indisponible.{" "}
+          <Link href="/dashboard/aide" className="underline">
+            Contacte-nous
+          </Link>{" "}
+          pour mettre à niveau ton abonnement.
+        </p>
+      )}
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {(plans as Plan[] | null)?.map((plan) => (
@@ -209,7 +228,7 @@ export default async function SubscriptionPage() {
               / {plan.duration_days} jours
             </p>
             {renderFeatures(plan.features)}
-            {plan.price > 0 && plan.code !== subscription.planCode && (
+            {cinetPayEnabled && plan.price > 0 && plan.code !== subscription.planCode && (
               <UpgradeButton planCode={plan.code} planName={plan.name} />
             )}
           </div>

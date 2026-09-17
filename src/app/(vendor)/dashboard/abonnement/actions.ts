@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
-import { initiateCinetPayPayment } from "@/lib/cinetpay";
+import { initiateCinetPayPayment, isCinetPayEnabled } from "@/lib/cinetpay";
 
 export type InitiatePaymentState = {
   error?: string;
@@ -44,6 +44,16 @@ export async function initiateSubscriptionPayment(
   _prevState: InitiatePaymentState,
   formData: FormData
 ): Promise<InitiatePaymentState> {
+  // Pause du 17/09/2026 — voir le commentaire sur `isCinetPayEnabled` dans
+  // cinetpay.ts. Vérifié avant toute écriture en base : inutile de créer une
+  // tentative de paiement qu'on sait déjà vouée à l'échec.
+  if (!isCinetPayEnabled()) {
+    return {
+      error:
+        "Le paiement en ligne est temporairement indisponible. Contacte-nous pour mettre à niveau ton abonnement.",
+    };
+  }
+
   const planCode = String(formData.get("planCode") ?? "");
   if (!planCode) {
     return { error: "Plan invalide." };
