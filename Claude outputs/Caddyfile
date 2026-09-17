@@ -1,0 +1,11 @@
+# Caddyfile — sert le relais CinetPay en HTTPS (certificat Let's Encrypt
+# automatique et gratuit, renouvelé tout seul par Caddy) et le relaie en
+# local vers relay.js (qui n'écoute que sur 127.0.0.1, jamais exposé
+# directement).
+#
+# Remplacer le sous-domaine ci-dessous par celui réellement pointé vers l'IP
+# de la VM (enregistrement DNS de type A) — voir DEPLOIEMENT.md.
+
+cinetpay-relay.agnissanisaac.com {
+    reverse_proxy 127.0.0.1:8080
+}

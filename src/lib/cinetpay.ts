@@ -43,9 +43,50 @@
  * (CINETPAY_SITE_ID n'existe plus dans cette version de l'API — ce concept de
  * "site" n'apparaît nulle part dans la doc Aurora : à retirer de Vercel une
  * fois la bascule confirmée par un vrai test.)
+ *
+ * **Relais IP fixe ajouté le 17/09/2026** — confirmé en direct dans les logs
+ * runtime Vercel : `getAccessToken` échoue avec `code: 2011, status:
+ * "NOT_ALLOWED", description: "This Ip is not withlisted"`, sur l'appel
+ * `/v1/oauth/login` lui-même (donc avant même d'atteindre l'API de paiement).
+ * CinetPay exige que l'IP appelante soit sur liste blanche — or Vercel
+ * n'assigne PAS d'IP sortante fixe par défaut (confirmé par la doc Vercel :
+ * "Vercel deployments use dynamic IPs by default", une IP fixe étant une
+ * fonctionnalité payante — Static IPs/Secure Compute, Pro/Enterprise
+ * uniquement). Isaac ne souhaite pas payer pour ça tant que le produit n'a
+ * pas encore de revenu.
+ *
+ * Solution retenue, à coût nul : un petit relais HTTP tournant sur une VM à
+ * IP fixe et gratuite à vie (offre "Always Free" Google Cloud `e2-micro` ou
+ * Oracle Cloud) — KEVA (Vercel) appelle ce relais au lieu d'appeler
+ * directement `api.cinetpay.net`, le relais (dont l'IP EST fixe, elle) relaie
+ * vers CinetPay. C'est cette IP de la VM qu'il faut faire whitelister par
+ * CinetPay, pas une IP Vercel (qui change).
+ *
+ * `CINETPAY_RELAY_URL` (optionnelle) : URL de base du relais (ex.
+ * `https://cinetpay-relay.agnissanisaac.com`). Si absente, comportement
+ * inchangé — appel direct à `api.cinetpay.net` comme avant (donc ce
+ * changement ne casse rien tant qu'Isaac n'a pas déployé le relais).
+ * `CINETPAY_RELAY_SECRET` (requise si `CINETPAY_RELAY_URL` est définie) :
+ * partagée avec le relais via l'en-tête `X-Relay-Secret`, pour qu'il refuse
+ * tout appel qui ne vient pas de KEVA (sinon n'importe qui découvrant l'URL
+ * du relais pourrait s'en servir comme proxy anonyme vers CinetPay). Code du
+ * relais et procédure de déploiement fournis à part (hors du repo applicatif
+ * — c'est un petit script à faire tourner sur la VM, pas du code Next.js).
  */
 
-const CINETPAY_BASE_URL = "https://api.cinetpay.net";
+const CINETPAY_BASE_URL = process.env.CINETPAY_RELAY_URL || "https://api.cinetpay.net";
+
+/** En-tête d'authentification du relais — objet vide (aucun en-tête ajouté)
+ * si `CINETPAY_RELAY_URL` n'est pas configurée, pour ne rien changer au
+ * comportement actuel (appel direct à CinetPay). */
+function relayHeaders(): Record<string, string> {
+  if (!process.env.CINETPAY_RELAY_URL) return {};
+  const secret = process.env.CINETPAY_RELAY_SECRET;
+  if (!secret) {
+    throw new Error("CINETPAY_RELAY_URL est définie mais CINETPAY_RELAY_SECRET est manquante.");
+  }
+  return { "X-Relay-Secret": secret };
+}
 
 function getCredentials() {
   const apiKey = process.env.CINETPAY_API_KEY;
@@ -76,7 +117,7 @@ async function getAccessToken(): Promise<string> {
 
   const response = await fetch(`${CINETPAY_BASE_URL}/v1/oauth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...relayHeaders() },
     body: JSON.stringify({ api_key: apiKey, api_password: apiPassword }),
   });
 
@@ -129,6 +170,7 @@ export async function initiateCinetPayPayment(
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        ...relayHeaders(),
       },
       body: JSON.stringify({
         currency: "XOF",
@@ -211,7 +253,7 @@ export async function checkCinetPayTransactionStatus(
       `${CINETPAY_BASE_URL}/v1/payment/${encodeURIComponent(transactionId)}`,
       {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, ...relayHeaders() },
       }
     );
 
