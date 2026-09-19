@@ -465,45 +465,41 @@ export default async function Home({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 pb-10">
-      {/* En-tête : logo/texte de marque + recherche, réunis dans une seule
-          barre. Collant au défilement (13/09/2026, retour d'Isaac) : reste
-          accessible une fois qu'on a scrollé plus bas dans un catalogue qui
-          s'allonge. */}
-      <header className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-4 bg-vert-sapin px-4 py-3 text-ivoire">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- logo statique, pas besoin de next/image ici */}
-          <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
-          <span className="font-display text-lg font-semibold tracking-tight">KEVA</span>
-        </Link>
-        <form method="GET" action="/" className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1">
-          {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
-          <input
-            type="text"
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Rechercher un article..."
-            className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
-          />
-          <button
-            type="submit"
-            className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
-          >
-            Rechercher
-          </button>
-        </form>
-        {/* Masqués sur mobile (<640px) : Favoris/Compte sont désormais
-            accessibles via la barre de navigation basse (bottom-nav.tsx,
-            15/09/2026) — éviter un double accès redondant sur un en-tête déjà
-            étroit. Restent visibles sur desktop, où cette barre est masquée. */}
-        <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
-          <Link href="/favoris" className="hover:text-cuivre-clair">
-            Mes favoris
-          </Link>
-          <Link href="/compte" className="hover:text-cuivre-clair">
-            Mon compte
-          </Link>
-        </div>
-      </header>
+<header className="sticky top-0 z-20 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-sapin px-4 py-3 text-ivoire">
+  <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4">
+    <Link href="/" className="flex shrink-0 items-center gap-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
+      <span className="font-display text-lg font-semibold tracking-tight">KEVA</span>
+    </Link>
+
+    <form method="GET" action="/" className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1">
+      {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
+      <input
+        type="text"
+        name="q"
+        defaultValue={q ?? ""}
+        placeholder="Rechercher un article..."
+        className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
+      />
+      <button
+        type="submit"
+        className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
+      >
+        Rechercher
+      </button>
+    </form>
+
+    <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
+      <Link href="/favoris" className="hover:text-cuivre-clair">
+        Mes favoris
+      </Link>
+      <Link href="/compte" className="hover:text-cuivre-clair">
+        Mon compte
+      </Link>
+    </div>
+  </div>
+</header>
 
 {/* Hero — full width corrigé */}
 <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
