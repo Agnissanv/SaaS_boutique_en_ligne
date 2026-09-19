@@ -505,67 +505,63 @@ export default async function Home({
         </div>
       </header>
 
-      {/* Hero : vitrine de toute la plateforme. Signature de marque KEVA
-          ("Vendez. Encaissez. Grandissez."), gros titre en Fraunces, collage
-          de vraies photos produit, chiffres réels de la plateforme. */}
-      <section className="-mx-4 bg-vert-profond px-4 py-12 text-ivoire sm:py-16">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-between">
+      {/* Hero — version plus affirmée */}
+      <section className="-mx-4 bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
+          
           <div className="max-w-xl text-center lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cuivre-clair">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-cuivre-clair">
               Vendez · Encaissez · Grandissez
             </p>
-            <h1 className="mt-3 text-balance font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-              Le catalogue de toutes les boutiques en ligne, au même endroit
+
+            <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
+              Toutes les boutiques<br className="hidden sm:block" />
+              en un seul endroit
             </h1>
-            <p className="mt-4 text-[15px] leading-relaxed text-ivoire/70">
-              Découvre des produits vendus directement par des vendeurs
-              indépendants, partout en Côte d&apos;Ivoire — commande sans
-              compte, paie à la livraison.
+
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ivoire/65">
+              Des vendeurs indépendants partout en Côte d’Ivoire.
+              Commande sans compte, paie à la livraison.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <a
                 href="#catalogue"
-                className="rounded-md bg-cuivre-profond px-5 py-2.5 text-sm font-semibold text-ivoire transition hover:bg-cuivre"
+                className="rounded-md bg-cuivre px-6 py-3 text-sm font-semibold text-vert-profond transition hover:bg-cuivre-clair"
               >
-                Découvrir le catalogue
+                Voir le catalogue
               </a>
               <Link
                 href="/inscription"
-                className="rounded-md border border-ivoire/25 px-5 py-2.5 text-sm font-medium text-ivoire transition hover:border-cuivre-clair hover:text-cuivre-clair"
+                className="rounded-md border border-ivoire/20 px-6 py-3 text-sm font-medium text-ivoire/90 transition hover:border-cuivre-clair hover:text-cuivre-clair"
               >
-                Vendre sur la plateforme
+                Ouvrir ma boutique
               </Link>
             </div>
+
             {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
-              <dl className="mt-9 hidden flex-wrap justify-center gap-x-10 gap-y-3 sm:flex lg:justify-start">
+              <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-ivoire/50">
-                    Boutiques actives
-                  </dt>
-                  <dd className="font-mono text-2xl font-semibold text-ivoire">
+                  <p className="font-mono text-xl font-semibold text-ivoire">
                     {shopsCount ?? 0}
-                  </dd>
+                  </p>
+                  <p className="mt-0.5 text-xs text-ivoire/45">boutiques</p>
                 </div>
+                <div className="h-8 w-px bg-ivoire/15" />
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-ivoire/50">
-                    Produits en vente
-                  </dt>
-                  <dd className="font-mono text-2xl font-semibold text-ivoire">
+                  <p className="font-mono text-xl font-semibold text-ivoire">
                     {productsCount ?? 0}
-                  </dd>
+                  </p>
+                  <p className="mt-0.5 text-xs text-ivoire/45">produits</p>
                 </div>
-              </dl>
+              </div>
             ) : null}
 
-            {/* Sur mobile, ce diaporama remplace les chiffres ci-dessus
-                (masqués `sm:hidden` faute d'espace utile pour convaincre) —
-                voir `heroSlideshowProducts` plus haut. Le composant ne
-                rend rien si la liste est vide (plateforme encore vide). */}
             <HeroMobileSlideshow products={heroSlideshowProducts} />
           </div>
 
           {heroThumbnails.length > 0 ? (
-            <div className="relative hidden h-52 w-52 shrink-0 sm:block" aria-hidden="true">
+            <div className="relative hidden h-56 w-56 shrink-0 sm:block" aria-hidden="true">
               {heroThumbnails.map((url, index) => (
                 <div key={url} className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}>
                   <ProductImage src={url} alt="" className="h-full w-full rounded-lg object-cover" />
