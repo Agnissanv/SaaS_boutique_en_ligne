@@ -505,72 +505,72 @@ export default async function Home({
         </div>
       </header>
 
-      {/* Hero — version plus affirmée */}
-      <section className="-mx-4 bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
-          
-          <div className="max-w-xl text-center lg:text-left">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-cuivre-clair">
-              Vendez · Encaissez · Grandissez
+{/* Hero — full width corrigé */}
+<section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
+  <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
+    
+    <div className="max-w-xl text-center lg:text-left">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-cuivre-clair">
+        Vendez · Encaissez · Grandissez
+      </p>
+
+      <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
+        Toutes les boutiques<br className="hidden sm:block" />
+        en un seul endroit
+      </h1>
+
+      <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ivoire/65">
+        Des vendeurs indépendants partout en Côte d’Ivoire.
+        Commande sans compte, paie à la livraison.
+      </p>
+
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+        <a
+          href="#catalogue"
+          className="rounded-md bg-cuivre px-6 py-3 text-sm font-semibold text-vert-profond transition hover:bg-cuivre-clair"
+        >
+          Voir le catalogue
+        </a>
+        <Link
+          href="/inscription"
+          className="rounded-md border border-ivoire/20 px-6 py-3 text-sm font-medium text-ivoire/90 transition hover:border-cuivre-clair hover:text-cuivre-clair"
+        >
+          Ouvrir ma boutique
+        </Link>
+      </div>
+
+      {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
+        <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
+          <div>
+            <p className="font-mono text-xl font-semibold text-ivoire">
+              {shopsCount ?? 0}
             </p>
-
-            <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
-              Toutes les boutiques<br className="hidden sm:block" />
-              en un seul endroit
-            </h1>
-
-            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ivoire/65">
-              Des vendeurs indépendants partout en Côte d’Ivoire.
-              Commande sans compte, paie à la livraison.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <a
-                href="#catalogue"
-                className="rounded-md bg-cuivre px-6 py-3 text-sm font-semibold text-vert-profond transition hover:bg-cuivre-clair"
-              >
-                Voir le catalogue
-              </a>
-              <Link
-                href="/inscription"
-                className="rounded-md border border-ivoire/20 px-6 py-3 text-sm font-medium text-ivoire/90 transition hover:border-cuivre-clair hover:text-cuivre-clair"
-              >
-                Ouvrir ma boutique
-              </Link>
-            </div>
-
-            {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
-              <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
-                <div>
-                  <p className="font-mono text-xl font-semibold text-ivoire">
-                    {shopsCount ?? 0}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ivoire/45">boutiques</p>
-                </div>
-                <div className="h-8 w-px bg-ivoire/15" />
-                <div>
-                  <p className="font-mono text-xl font-semibold text-ivoire">
-                    {productsCount ?? 0}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ivoire/45">produits</p>
-                </div>
-              </div>
-            ) : null}
-
-            <HeroMobileSlideshow products={heroSlideshowProducts} />
+            <p className="mt-0.5 text-xs text-ivoire/45">boutiques</p>
           </div>
-
-          {heroThumbnails.length > 0 ? (
-            <div className="relative hidden h-56 w-56 shrink-0 sm:block" aria-hidden="true">
-              {heroThumbnails.map((url, index) => (
-                <div key={url} className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}>
-                  <ProductImage src={url} alt="" className="h-full w-full rounded-lg object-cover" />
-                </div>
-              ))}
-            </div>
-          ) : null}
+          <div className="h-8 w-px bg-ivoire/15" />
+          <div>
+            <p className="font-mono text-xl font-semibold text-ivoire">
+              {productsCount ?? 0}
+            </p>
+            <p className="mt-0.5 text-xs text-ivoire/45">produits</p>
+          </div>
         </div>
-      </section>
+      ) : null}
+
+      <HeroMobileSlideshow products={heroSlideshowProducts} />
+    </div>
+
+    {heroThumbnails.length > 0 ? (
+      <div className="relative hidden h-56 w-56 shrink-0 sm:block" aria-hidden="true">
+        {heroThumbnails.map((url, index) => (
+          <div key={url} className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}>
+            <ProductImage src={url} alt="" className="h-full w-full rounded-lg object-cover" />
+          </div>
+        ))}
+      </div>
+    ) : null}
+  </div>
+</section>
 
       {/* Catégories : point d'entrée principal pour parcourir le catalogue,
           juste sous le hero. Étendues à 24 catégories le 15/09/2026 (round
