@@ -10,6 +10,14 @@ export type MarketplaceCardProduct = {
   slug: string;
   title: string;
   price: number;
+  /**
+   * Prix barré — ajouté le 17/09/2026 pour généraliser à cette carte
+   * (marketplace, page d'accueil, favoris) l'affichage déjà en place sur la
+   * page boutique et la fiche produit. `undefined` : pas sélectionné par
+   * l'appelant (repli silencieux, comme `rating`) ; `null` : sélectionné mais
+   * aucun prix barré pour ce produit.
+   */
+  compareAtPrice?: number | null;
   category: string | null;
   thumbnail?: string;
   shopSlug: string;
@@ -61,6 +69,9 @@ export function ProductCard({
   product: MarketplaceCardProduct;
   className?: string;
 }) {
+  const hasDiscount =
+    product.compareAtPrice != null && product.compareAtPrice > product.price;
+
   return (
     <div
       className={`relative rounded-lg border border-ligne bg-white p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md ${className ?? ""}`}
@@ -73,6 +84,7 @@ export function ProductCard({
             productSlug: product.slug,
             title: product.title,
             price: product.price,
+            compareAtPrice: product.compareAtPrice,
             imageUrl: product.thumbnail,
           }}
         />
@@ -86,7 +98,18 @@ export function ProductCard({
           />
         </ViewTransition>
         <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
-        <p className="font-mono text-sm text-cuivre-profond">{product.price} FCFA</p>
+        {/* flex-wrap : sur les cartes les plus étroites (bandes horizontales,
+            grille à 2 colonnes), prix + prix barré avec des montants à 6
+            chiffres ne tiennent pas toujours sur une seule ligne — même
+            traitement que la page boutique publique. */}
+        <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-cuivre-profond">
+          {product.price} FCFA
+          {hasDiscount ? (
+            <span className="font-mono text-xs text-encre/40 line-through">
+              {product.compareAtPrice} FCFA
+            </span>
+          ) : null}
+        </p>
         {product.rating ? (
           <p className="mt-0.5 flex items-center gap-1 text-xs text-encre/60">
             <Stars rating={product.rating.average} />

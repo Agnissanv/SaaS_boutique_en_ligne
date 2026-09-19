@@ -211,6 +211,7 @@ export default async function ProductPage({
                 productSlug: product.slug,
                 title: product.title,
                 price: product.price,
+                compareAtPrice: product.compare_at_price,
                 imageUrl: images[0]?.url,
               }}
             />

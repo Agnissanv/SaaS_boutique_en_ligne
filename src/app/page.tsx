@@ -125,6 +125,7 @@ type RawMarketplaceProduct = {
   slug: string;
   title: string;
   price: number;
+  compare_at_price: number | null;
   category: string | null;
   product_images: { url: string; position: number }[];
   shop: { slug: string; name: string } | { slug: string; name: string }[] | null;
@@ -146,6 +147,7 @@ function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct |
     slug: product.slug,
     title: product.title,
     price: product.price,
+    compareAtPrice: product.compare_at_price,
     category: product.category,
     thumbnail,
     shopSlug: shop.slug,
@@ -170,7 +172,7 @@ function shuffle<T>(items: T[]): T[] {
 const HERO_SLIDESHOW_SIZE = 6;
 
 const PRODUCT_CARD_COLUMNS =
-  "id, slug, title, price, category, product_images(url, position), shop:shops!inner(slug, name, status)";
+  "id, slug, title, price, compare_at_price, category, product_images(url, position), shop:shops!inner(slug, name, status)";
 
 export default async function Home({
   searchParams,

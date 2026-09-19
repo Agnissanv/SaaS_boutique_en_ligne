@@ -8,6 +8,13 @@ export type WishlistItem = {
   productSlug: string;
   title: string;
   price: number;
+  /**
+   * Prix barré — ajouté le 17/09/2026 pour afficher la réduction sur la page
+   * favoris elle-même, pas seulement là où le produit a été ajouté.
+   * Optionnel : les favoris déjà enregistrés en localStorage avant cet ajout
+   * n'ont pas ce champ, et s'affichent simplement sans prix barré.
+   */
+  compareAtPrice?: number | null;
   imageUrl?: string;
 };
 

@@ -458,6 +458,7 @@ export default async function ShopPage({
                       productSlug: product.slug,
                       title: product.title,
                       price: product.price,
+                      compareAtPrice: product.compare_at_price,
                       imageUrl: thumbnail,
                     }}
                   />
