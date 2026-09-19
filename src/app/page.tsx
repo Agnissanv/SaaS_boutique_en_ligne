@@ -465,8 +465,9 @@ export default async function Home({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 pb-10">
-<header className="sticky top-0 z-20 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-sapin px-4 py-3 text-ivoire">
-  <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4">
+{/* Header full-bleed */}
+<header className="sticky top-0 z-20 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-sapin text-ivoire">
+  <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
     <Link href="/" className="flex shrink-0 items-center gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
