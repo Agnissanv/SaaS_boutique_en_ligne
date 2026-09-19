@@ -457,269 +457,315 @@ export default async function Home({
         : resultLabel;
   const gridTitle = categorie ? categoryLabel(categorie) : "Résultats de recherche";
 
-  return (
+    return (
     <ViewTransition
       enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
       exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
       default="none"
     >
-    <ViewTransition enter="kv-content-in" default="none">
-    <main className="w-full mx-auto max-w-6xl px-4 pb-10">
-{/* Header full-bleed */}
-<header className="sticky top-0 z-20 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-sapin text-ivoire">
-  <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
-    <Link href="/" className="flex shrink-0 items-center gap-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
-      <span className="font-display text-lg font-semibold tracking-tight">KEVA</span>
-    </Link>
-
-    <form method="GET" action="/" className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1">
-      {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
-      <input
-        type="text"
-        name="q"
-        defaultValue={q ?? ""}
-        placeholder="Rechercher un article..."
-        className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
-      />
-      <button
-        type="submit"
-        className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
-      >
-        Rechercher
-      </button>
-    </form>
-
-    <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
-      <Link href="/favoris" className="hover:text-cuivre-clair">
-        Mes favoris
-      </Link>
-      <Link href="/compte" className="hover:text-cuivre-clair">
-        Mon compte
-      </Link>
-    </div>
-  </div>
-</header>
-
-{/* Hero — full width corrigé */}
-<section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
-  <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
-    
-    <div className="max-w-xl text-center lg:text-left">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-cuivre-clair">
-        Vendez · Encaissez · Grandissez
-      </p>
-
-      <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
-        Toutes les boutiques<br className="hidden sm:block" />
-        en un seul endroit
-      </h1>
-
-      <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ivoire/65">
-        Des vendeurs indépendants partout en Côte d’Ivoire.
-        Commande sans compte, paie à la livraison.
-      </p>
-
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-        <a
-          href="#catalogue"
-          className="rounded-md bg-cuivre px-6 py-3 text-sm font-semibold text-vert-profond transition hover:bg-cuivre-clair"
-        >
-          Voir le catalogue
-        </a>
-        <Link
-          href="/inscription"
-          className="rounded-md border border-ivoire/20 px-6 py-3 text-sm font-medium text-ivoire/90 transition hover:border-cuivre-clair hover:text-cuivre-clair"
-        >
-          Ouvrir ma boutique
-        </Link>
-      </div>
-
-      {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
-        <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
-          <div>
-            <p className="font-mono text-xl font-semibold text-ivoire">
-              {shopsCount ?? 0}
-            </p>
-            <p className="mt-0.5 text-xs text-ivoire/45">boutiques</p>
-          </div>
-          <div className="h-8 w-px bg-ivoire/15" />
-          <div>
-            <p className="font-mono text-xl font-semibold text-ivoire">
-              {productsCount ?? 0}
-            </p>
-            <p className="mt-0.5 text-xs text-ivoire/45">produits</p>
-          </div>
-        </div>
-      ) : null}
-
-      <HeroMobileSlideshow products={heroSlideshowProducts} />
-    </div>
-
-    {heroThumbnails.length > 0 ? (
-      <div className="relative hidden h-56 w-56 shrink-0 sm:block" aria-hidden="true">
-        {heroThumbnails.map((url, index) => (
-          <div key={url} className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}>
-            <ProductImage src={url} alt="" className="h-full w-full rounded-lg object-cover" />
-          </div>
-        ))}
-      </div>
-    ) : null}
-  </div>
-</section>
-
-      {/* Catégories : point d'entrée principal pour parcourir le catalogue,
-          juste sous le hero. Étendues à 24 catégories le 15/09/2026 (round
-          2) — voir src/lib/categories.ts. Ne montre désormais que celles
-          ayant au moins un produit actif (`availableCategories`, calculé
-          plus haut). Lien "Tout voir" ajouté le 16/09/2026 vers la nouvelle
-          page dédiée `/categories` (demande d'Isaac, "comme sur Jumia") —
-          seul point d'accès desktop, la barre de navigation basse mobile y
-          renvoie aussi via son onglet "Catégories". */}
-      <div id="categories" className="mt-8 scroll-mt-20">
-        <div className="mb-3 flex items-center justify-between px-1">
-          <h2 className="font-display text-lg font-semibold text-encre">Catégories</h2>
-          <Link href="/categories" className="text-xs font-medium text-vert-actif underline">
-            Tout voir
-          </Link>
-        </div>
-        <CategoryNav current={current} active={categorie} availableCategories={availableCategories} />
-      </div>
-
-      {/* Argumentaire de confiance : adapté de la rangée "services de
-          qualité" de Jumia, avec seulement ce qui est vrai aujourd'hui. */}
-      <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {TRUST_ITEMS.map((item) => (
-          <div key={item.title} className="flex items-start gap-3 rounded-lg border border-ligne bg-white p-4">
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sable text-cuivre-profond"
-            >
-              {item.icon}
-            </span>
-            <div>
-              <p className="text-sm font-medium text-encre">{item.title}</p>
-              <p className="mt-1 text-xs text-encre/70">{item.body}</p>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* Boutiques de la plateforme : met en avant les vendeurs eux-mêmes,
-          pas seulement leurs produits. Masquée si aucune boutique active
-          n'existe encore. Restée visible même en mode filtré. */}
-      {featuredShops.length > 0 ? (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold text-encre">Boutiques de la plateforme</h2>
-          <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth">
-            {featuredShops.map((shop) => (
-              <ShopCard key={shop.slug} shop={shop} className="w-36 shrink-0 snap-start" />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <div id="catalogue" className="scroll-mt-20">
-        {hasFilter ? (
-          /* Mode filtré : grille classique triable/paginée — recherche
-             texte et/ou catégorie choisie explicitement (via CategoryNav ou
-             un lien "Voir tout"). C'est le seul endroit de la page où le
-             catalogue est affiché "à plat" plutôt qu'en bandes, précisément
-             parce qu'un résultat filtré reste un ensemble borné et déjà
-             qualifié par l'utilisateur — pas "tout le catalogue" d'un coup. */
-          <section className="mt-10">
-            <div className="rounded-lg border border-ligne bg-white p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-display text-lg font-semibold text-encre">{gridTitle}</h2>
-                <SortSelect
-                  basePath="/"
-                  value={sort}
-                  options={SORTS as unknown as { value: string; label: string }[]}
-                  q={q}
-                  categorie={categorie}
+      <ViewTransition enter="kv-content-in" default="none">
+        <>
+          {/* ========== HEADER (full width) ========== */}
+          <header className="sticky top-0 z-20 w-full bg-vert-sapin text-ivoire">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
+              <Link href="/" className="flex shrink-0 items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/keva-logo.jpg"
+                  alt="KEVA"
+                  className="h-9 w-9 rounded-md object-cover"
                 />
-              </div>
-              <p className="mt-1 text-xs text-encre/60">
-                {filterSummary}
-                {" — "}
-                <Link
-                  href={buildMarketplaceHref(current, { q: undefined, categorie: undefined, page: undefined })}
-                  className="text-vert-actif underline"
+                <span className="font-display text-lg font-semibold tracking-tight">
+                  KEVA
+                </span>
+              </Link>
+
+              <form
+                method="GET"
+                action="/"
+                className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1"
+              >
+                {categorie ? (
+                  <input type="hidden" name="categorie" value={categorie} />
+                ) : null}
+                <input
+                  type="text"
+                  name="q"
+                  defaultValue={q ?? ""}
+                  placeholder="Rechercher un article..."
+                  className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
+                />
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
                 >
-                  réinitialiser les filtres
+                  Rechercher
+                </button>
+              </form>
+
+              <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
+                <Link href="/favoris" className="hover:text-cuivre-clair">
+                  Mes favoris
                 </Link>
-              </p>
+                <Link href="/compte" className="hover:text-cuivre-clair">
+                  Mon compte
+                </Link>
+              </div>
+            </div>
+          </header>
+
+          {/* ========== HERO (full width) ========== */}
+          <section className="w-full bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
+            <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-xl text-center lg:text-left">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-cuivre-clair">
+                  Vendez · Encaissez · Grandissez
+                </p>
+
+                <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
+                  Toutes les boutiques
+                  <br className="hidden sm:block" />
+                  en un seul endroit
+                </h1>
+
+                <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ivoire/65">
+                  Des vendeurs indépendants partout en Côte d’Ivoire.
+                  Commande sans compte, paie à la livraison.
+                </p>
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                  <a
+                    href="#catalogue"
+                    className="rounded-md bg-cuivre px-6 py-3 text-sm font-semibold text-vert-profond transition hover:bg-cuivre-clair"
+                  >
+                    Voir le catalogue
+                  </a>
+                  <Link
+                    href="/inscription"
+                    className="rounded-md border border-ivoire/20 px-6 py-3 text-sm font-medium text-ivoire/90 transition hover:border-cuivre-clair hover:text-cuivre-clair"
+                  >
+                    Ouvrir ma boutique
+                  </Link>
+                </div>
+
+                {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
+                  <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
+                    <div>
+                      <p className="font-mono text-xl font-semibold text-ivoire">
+                        {shopsCount ?? 0}
+                      </p>
+                      <p className="mt-0.5 text-xs text-ivoire/45">boutiques</p>
+                    </div>
+                    <div className="h-8 w-px bg-ivoire/15" />
+                    <div>
+                      <p className="font-mono text-xl font-semibold text-ivoire">
+                        {productsCount ?? 0}
+                      </p>
+                      <p className="mt-0.5 text-xs text-ivoire/45">produits</p>
+                    </div>
+                  </div>
+                ) : null}
+
+                <HeroMobileSlideshow products={heroSlideshowProducts} />
+              </div>
+
+              {heroThumbnails.length > 0 ? (
+                <div
+                  className="relative hidden h-56 w-56 shrink-0 sm:block"
+                  aria-hidden="true"
+                >
+                  {heroThumbnails.map((url, index) => (
+                    <div
+                      key={url}
+                      className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}
+                    >
+                      <ProductImage
+                        src={url}
+                        alt=""
+                        className="h-full w-full rounded-lg object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          {/* ========== CONTENU (limité en largeur) ========== */}
+          <main className="mx-auto w-full max-w-6xl px-4 pb-10">
+            {/* Catégories */}
+            <div id="categories" className="mt-8 scroll-mt-20">
+              <div className="mb-3 flex items-center justify-between px-1">
+                <h2 className="font-display text-lg font-semibold text-encre">
+                  Catégories
+                </h2>
+                <Link
+                  href="/categories"
+                  className="text-xs font-medium text-vert-actif underline"
+                >
+                  Tout voir
+                </Link>
+              </div>
+              <CategoryNav
+                current={current}
+                active={categorie}
+                availableCategories={availableCategories}
+              />
             </div>
 
-            {catalogueProducts.length === 0 ? (
-              <p className="mt-10 text-sm text-encre/70">Aucun article ne correspond à ta recherche.</p>
-            ) : (
-              <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {catalogueProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            )}
+            {/* Argumentaire de confiance */}
+            <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {TRUST_ITEMS.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-start gap-3 rounded-lg border border-ligne bg-white p-4"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sable text-cuivre-profond"
+                  >
+                    {item.icon}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-encre">{item.title}</p>
+                    <p className="mt-1 text-xs text-encre/70">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </section>
 
-            {totalPages > 1 ? (
-              <div className="mt-8 flex items-center justify-center gap-2 text-sm">
-                {page > 1 ? (
-                  <Link
-                    href={buildMarketplaceHref(current, { page: String(page - 1) })}
-                    className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
-                  >
-                    ‹ Précédent
-                  </Link>
-                ) : (
-                  <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
-                    ‹ Précédent
-                  </span>
-                )}
-                <span className="px-2 font-mono text-encre/70">
-                  {page} / {totalPages}
-                </span>
-                {page < totalPages ? (
-                  <Link
-                    href={buildMarketplaceHref(current, { page: String(page + 1) })}
-                    className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
-                  >
-                    Suivant ›
-                  </Link>
-                ) : (
-                  <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
-                    Suivant ›
-                  </span>
-                )}
-              </div>
+            {/* Boutiques de la plateforme */}
+            {featuredShops.length > 0 ? (
+              <section className="mt-10">
+                <h2 className="font-display text-lg font-semibold text-encre">
+                  Boutiques de la plateforme
+                </h2>
+                <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth">
+                  {featuredShops.map((shop) => (
+                    <ShopCard
+                      key={shop.slug}
+                      shop={shop}
+                      className="w-36 shrink-0 snap-start"
+                    />
+                  ))}
+                </div>
+              </section>
             ) : null}
-          </section>
-        ) : (
-          /* Mode par défaut : disposition par bandes façon Jumia/Amazon —
-             Nouveautés, Meilleures ventes, puis une bande par catégorie
-             ayant au moins un produit actif. Jamais de grille "tout le
-             catalogue" affichée d'un coup, même à grande échelle. */
-          <>
-            <ProductRow title="Nouveautés" products={newArrivalsProducts} />
-            <ProductRow title="Meilleures ventes" products={bestSellingProducts} />
-            {categoryRows.map((row) => (
-              <ProductRow
-                key={row.value}
-                title={row.label}
-                products={row.products}
-                viewAllHref={buildMarketplaceHref(current, { categorie: row.value, page: undefined })}
-              />
-            ))}
-            {newArrivalsProducts.length === 0 && categoryRows.length === 0 ? (
-              <p className="mt-10 text-sm text-encre/70">
-                Aucun article disponible pour l&apos;instant — reviens bientôt.
-              </p>
-            ) : null}
-          </>
-        )}
-      </div>
-    </main>
-    </ViewTransition>
+
+            {/* Catalogue */}
+            <div id="catalogue" className="scroll-mt-20">
+              {hasFilter ? (
+                <section className="mt-10">
+                  <div className="rounded-lg border border-ligne bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h2 className="font-display text-lg font-semibold text-encre">
+                        {gridTitle}
+                      </h2>
+                      <SortSelect
+                        basePath="/"
+                        value={sort}
+                        options={
+                          SORTS as unknown as { value: string; label: string }[]
+                        }
+                        q={q}
+                        categorie={categorie}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-encre/60">
+                      {filterSummary}
+                      {" — "}
+                      <Link
+                        href={buildMarketplaceHref(current, {
+                          q: undefined,
+                          categorie: undefined,
+                          page: undefined,
+                        })}
+                        className="text-vert-actif underline"
+                      >
+                        réinitialiser les filtres
+                      </Link>
+                    </p>
+                  </div>
+
+                  {catalogueProducts.length === 0 ? (
+                    <p className="mt-10 text-sm text-encre/70">
+                      Aucun article ne correspond à ta recherche.
+                    </p>
+                  ) : (
+                    <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                      {catalogueProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  )}
+
+                  {totalPages > 1 ? (
+                    <div className="mt-8 flex items-center justify-center gap-2 text-sm">
+                      {page > 1 ? (
+                        <Link
+                          href={buildMarketplaceHref(current, {
+                            page: String(page - 1),
+                          })}
+                          className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
+                        >
+                          ‹ Précédent
+                        </Link>
+                      ) : (
+                        <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
+                          ‹ Précédent
+                        </span>
+                      )}
+                      <span className="px-2 font-mono text-encre/70">
+                        {page} / {totalPages}
+                      </span>
+                      {page < totalPages ? (
+                        <Link
+                          href={buildMarketplaceHref(current, {
+                            page: String(page + 1),
+                          })}
+                          className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
+                        >
+                          Suivant ›
+                        </Link>
+                      ) : (
+                        <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">
+                          Suivant ›
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+                </section>
+              ) : (
+                <>
+                  <ProductRow title="Nouveautés" products={newArrivalsProducts} />
+                  <ProductRow
+                    title="Meilleures ventes"
+                    products={bestSellingProducts}
+                  />
+                  {categoryRows.map((row) => (
+                    <ProductRow
+                      key={row.value}
+                      title={row.label}
+                      products={row.products}
+                      viewAllHref={buildMarketplaceHref(current, {
+                        categorie: row.value,
+                        page: undefined,
+                      })}
+                    />
+                  ))}
+                  {newArrivalsProducts.length === 0 &&
+                  categoryRows.length === 0 ? (
+                    <p className="mt-10 text-sm text-encre/70">
+                      Aucun article disponible pour l&apos;instant — reviens
+                      bientôt.
+                    </p>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </main>
+        </>
+      </ViewTransition>
     </ViewTransition>
   );
 }
