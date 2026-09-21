@@ -117,7 +117,7 @@ export default async function ComptePage() {
         </h2>
         <div className="overflow-hidden rounded-xl border border-ligne bg-white">
           <AccountLink href="#" label="Conditions d’utilisation" />
-          <AccountLink href="#" label="Politique de confidentialité" last />
+          <AccountLink href="/politique-confidentialite" label="Politique de confidentialité" last />
         </div>
       </section>
 
