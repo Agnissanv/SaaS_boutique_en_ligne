@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Stars } from "@/components/stars";
+import { ReviewReplyForm } from "./reply-form";
 
 type Review = {
   id: string;
@@ -10,6 +11,8 @@ type Review = {
   customer_name: string;
   created_at: string;
   order_id: string | null;
+  seller_reply: string | null;
+  seller_reply_at: string | null;
   products: { id: string; title: string; slug: string } | { id: string; title: string; slug: string }[] | null;
 };
 
@@ -35,8 +38,13 @@ function VerifiedPurchaseBadge() {
  * Rendue possible par la nouvelle policy `product_reviews_owner_read`
  * (migration 0013) : sans elle, un produit désactivé aurait masqué ses avis
  * même à son propriétaire (la policy publique exige produit + boutique
- * actifs). Lecture seule : aucune écriture vendeur sur les avis, cf. 0011
- * ("avis non modifiable par le vendeur").
+ * actifs).
+ *
+ * Le vendeur ne peut toujours pas modifier l'avis lui-même (note, commentaire,
+ * nom du client — cf. 0011 "avis non modifiable par le vendeur"), mais peut
+ * depuis le 21/09/2026 y répondre publiquement (voir migration 0028,
+ * `reply-form.tsx`) : une réponse vendeur, séparée de l'avis, qui s'affiche
+ * aussi sur la fiche produit publique.
  */
 export default async function ReviewsPage() {
   const supabase = await createClient();
@@ -56,7 +64,9 @@ export default async function ReviewsPage() {
 
   const { data: reviews } = await supabase
     .from("product_reviews")
-    .select("id, rating, comment, customer_name, created_at, order_id, products!inner(id, title, slug, shop_id)")
+    .select(
+      "id, rating, comment, customer_name, created_at, order_id, seller_reply, seller_reply_at, products!inner(id, title, slug, shop_id)"
+    )
     .eq("products.shop_id", shop.id)
     .order("created_at", { ascending: false });
 
@@ -106,6 +116,11 @@ export default async function ReviewsPage() {
                 <p className="mt-1 text-xs text-encre/50">
                   {new Date(review.created_at).toLocaleDateString("fr-FR")}
                 </p>
+                <ReviewReplyForm
+                  key={review.seller_reply_at ?? "none"}
+                  reviewId={review.id}
+                  initialReply={review.seller_reply}
+                />
               </li>
             );
           })}

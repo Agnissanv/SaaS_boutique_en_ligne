@@ -25,6 +25,7 @@ type Review = {
   comment: string | null;
   created_at: string;
   order_id: string | null;
+  seller_reply: string | null;
 };
 
 /**
@@ -60,8 +61,14 @@ type RelatedProduct = {
   product_images: { url: string; position: number }[];
 };
 
-/** Note moyenne + liste des avis (cf. migration 0011, submit_product_review). */
-function ReviewsSection({ reviews }: { reviews: Review[] }) {
+/**
+ * Note moyenne + liste des avis (cf. migration 0011, submit_product_review).
+ * Réponse vendeur (migration 0028, tâche #78 du 21/09/2026) affichée sous le
+ * commentaire du client, visuellement rattachée (fond `brume`, léger
+ * décalage) pour bien la distinguer de l'avis lui-même — jamais confondue
+ * avec un second avis.
+ */
+function ReviewsSection({ reviews, shopName }: { reviews: Review[]; shopName: string }) {
   if (reviews.length === 0) {
     return (
       <p className="mt-3 text-sm text-encre/50">
@@ -88,6 +95,14 @@ function ReviewsSection({ reviews }: { reviews: Review[] }) {
             </p>
             {review.comment && (
               <p className="mt-1.5 text-sm leading-relaxed text-encre/70">{review.comment}</p>
+            )}
+            {review.seller_reply && (
+              <div className="mt-3 rounded-md bg-brume p-3">
+                <p className="text-xs font-medium text-encre/70">Réponse de {shopName}</p>
+                <p className="mt-1 text-sm leading-relaxed text-encre/80">
+                  {review.seller_reply}
+                </p>
+              </div>
             )}
           </li>
         ))}
@@ -177,7 +192,7 @@ export default async function ProductPage({
 
   const { data: reviews } = await supabase
     .from("product_reviews")
-    .select("customer_name, rating, comment, created_at, order_id")
+    .select("customer_name, rating, comment, created_at, order_id, seller_reply")
     .eq("product_id", product.id)
     .order("created_at", { ascending: false });
 
@@ -361,7 +376,7 @@ export default async function ProductPage({
 
       <section className="mt-12 border-t border-ligne pt-8">
         <h2 className="font-display text-lg font-semibold text-encre">Avis clients</h2>
-        <ReviewsSection reviews={reviews ?? []} />
+        <ReviewsSection reviews={reviews ?? []} shopName={shop.name} />
       </section>
 
       {related.length > 0 && (
