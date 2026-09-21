@@ -9,6 +9,8 @@ import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { ProductImage } from "@/components/product-image";
 import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
+import { MarketplaceSearch } from "@/components/marketplace-search";
+import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { buildMarketplaceHref } from "@/lib/marketplace/filters";
 import { getShopRating } from "@/lib/reviews";
 
@@ -480,28 +482,7 @@ export default async function Home({
                 </span>
               </Link>
 
-              <form
-                method="GET"
-                action="/"
-                className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1"
-              >
-                {categorie ? (
-                  <input type="hidden" name="categorie" value={categorie} />
-                ) : null}
-                <input
-                  type="text"
-                  name="q"
-                  defaultValue={q ?? ""}
-                  placeholder="Rechercher un article..."
-                  className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
-                />
-                <button
-                  type="submit"
-                  className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
-                >
-                  Rechercher
-                </button>
-              </form>
+              <MarketplaceSearch defaultValue={q ?? ""} categorie={categorie} />
 
               <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
                 <Link href="/favoris" className="hover:text-cuivre-clair">
@@ -737,6 +718,7 @@ export default async function Home({
                 </section>
               ) : (
                 <>
+                  <RecentlyViewedRow />
                   <ProductRow title="Nouveautés" products={newArrivalsProducts} />
                   <ProductRow
                     title="Meilleures ventes"

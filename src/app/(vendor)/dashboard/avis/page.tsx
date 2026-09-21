@@ -9,8 +9,22 @@ type Review = {
   comment: string | null;
   customer_name: string;
   created_at: string;
+  order_id: string | null;
   products: { id: string; title: string; slug: string } | { id: string; title: string; slug: string }[] | null;
 };
+
+/** Même badge que sur la fiche produit publique — voir sa doc là-bas. */
+function VerifiedPurchaseBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-succes/15 px-2 py-0.5 text-[11px] font-medium text-succes">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M7 10.2l2 2 4-4.4" />
+      </svg>
+      Achat vérifié
+    </span>
+  );
+}
 
 /**
  * Page "Avis" — créée le 15/09/2026, manque identifié dans l'analyse du
@@ -42,7 +56,7 @@ export default async function ReviewsPage() {
 
   const { data: reviews } = await supabase
     .from("product_reviews")
-    .select("id, rating, comment, customer_name, created_at, products!inner(id, title, slug, shop_id)")
+    .select("id, rating, comment, customer_name, created_at, order_id, products!inner(id, title, slug, shop_id)")
     .eq("products.shop_id", shop.id)
     .order("created_at", { ascending: false });
 
@@ -74,8 +88,9 @@ export default async function ReviewsPage() {
               : review.products;
             return (
               <li key={review.id} className="py-3">
-                <p className="text-sm font-medium text-encre">
-                  <Stars rating={review.rating} /> — {review.customer_name}
+                <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-encre">
+                  <span><Stars rating={review.rating} /> — {review.customer_name}</span>
+                  {review.order_id ? <VerifiedPurchaseBadge /> : null}
                 </p>
                 {product && (
                   <Link

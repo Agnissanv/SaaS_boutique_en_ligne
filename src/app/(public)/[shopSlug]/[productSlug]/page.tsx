@@ -14,6 +14,8 @@ import { ProductImage } from "@/components/product-image";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 import { LOW_STOCK_THRESHOLD } from "@/lib/products";
+import { RecordProductView } from "@/components/record-product-view";
+import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 
 const RELATED_LIMIT = 4;
 
@@ -22,7 +24,33 @@ type Review = {
   rating: number;
   comment: string | null;
   created_at: string;
+  order_id: string | null;
 };
+
+/**
+ * Badge "Achat vérifié" — ajouté le 21/09/2026 (cahier des charges, avis
+ * clients). Contrairement au badge "vendeur vérifié" volontairement écarté
+ * plus haut sur la page boutique (aucun système de vérification vendeur
+ * n'existe), celui-ci n'est pas un mensonge visuel : la migration 0011
+ * (`submit_product_review`) interdit déjà tout avis qui ne correspond pas à
+ * une commande réelle contenant ce produit — `order_id` est donc une vraie
+ * preuve d'achat, pas une déclaration sur l'honneur. Un avis sans `order_id`
+ * ne devrait normalement jamais exister (aucune policy ne permet d'insérer
+ * autrement), sauf commande supprimée entre-temps (`on delete set null`) —
+ * dans ce cas rare, le badge disparaît simplement plutôt que d'afficher une
+ * preuve qu'on ne peut plus vérifier.
+ */
+function VerifiedPurchaseBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-succes/15 px-2 py-0.5 text-[11px] font-medium text-succes">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M7 10.2l2 2 4-4.4" />
+      </svg>
+      Achat vérifié
+    </span>
+  );
+}
 
 type RelatedProduct = {
   id: string;
@@ -54,8 +82,9 @@ function ReviewsSection({ reviews }: { reviews: Review[] }) {
       <ul className="mt-4 flex flex-col gap-3">
         {reviews.map((review, index) => (
           <li key={index} className="rounded-lg border border-ligne bg-white p-4">
-            <p className="flex items-center gap-2 text-sm font-medium text-encre">
+            <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-encre">
               <Stars rating={review.rating} /> {review.customer_name}
+              {review.order_id ? <VerifiedPurchaseBadge /> : null}
             </p>
             {review.comment && (
               <p className="mt-1.5 text-sm leading-relaxed text-encre/70">{review.comment}</p>
@@ -148,7 +177,7 @@ export default async function ProductPage({
 
   const { data: reviews } = await supabase
     .from("product_reviews")
-    .select("customer_name, rating, comment, created_at")
+    .select("customer_name, rating, comment, created_at, order_id")
     .eq("product_id", product.id)
     .order("created_at", { ascending: false });
 
@@ -193,6 +222,18 @@ export default async function ProductPage({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <RecordProductView
+        item={{
+          productId: product.id,
+          shopSlug,
+          shopName: shop.name,
+          productSlug: product.slug,
+          title: product.title,
+          price: product.price,
+          compareAtPrice: product.compare_at_price,
+          imageUrl: images[0]?.url,
+        }}
+      />
       <Link
         href={`/${shopSlug}`}
         transitionTypes={["nav-back"]}
@@ -355,6 +396,8 @@ export default async function ProductPage({
           </div>
         </section>
       )}
+
+      <RecentlyViewedRow excludeProductId={product.id} />
     </main>
     </ViewTransition>
     </ViewTransition>
