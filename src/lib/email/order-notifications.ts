@@ -1,4 +1,5 @@
 import { sendTransactionalEmail } from "./brevo";
+import { ORDER_STATUS_CUSTOMER_MESSAGE } from "@/lib/orders";
 
 /**
  * Email automatique au client quand le vendeur change le statut de sa
@@ -10,25 +11,18 @@ import { sendTransactionalEmail } from "./brevo";
  * Best-effort et silencieux : appelé depuis une Server Action après la vraie
  * mise à jour en base, ne doit jamais faire échouer l'action elle-même si
  * l'email ne part pas (client sans email, Brevo indisponible, etc.).
+ *
+ * `STATUS_MESSAGES` local retiré le 21/09/2026 (espace de notification
+ * unifié) au profit de `ORDER_STATUS_CUSTOMER_MESSAGE` (src/lib/orders.ts),
+ * désormais partagé avec la notification en base — un seul texte par statut,
+ * pas deux à faire évoluer en parallèle. "delivered" reste géré séparément
+ * ici (pas dans le module partagé) : c'est le seul statut où le texte email
+ * diffère volontairement du texte de la notification en base (email plus
+ * détaillé, invite explicitement à revenir sur la page de commande).
  */
-
-const STATUS_MESSAGES: Partial<Record<string, { subject: string; body: string }>> = {
-  paid: {
-    subject: "Ta commande a été confirmée",
-    body: "Bonne nouvelle : ta commande a été confirmée par le vendeur.",
-  },
-  preparing: {
-    subject: "Ta commande est en préparation",
-    body: "Le vendeur a commencé à préparer ta commande.",
-  },
-  delivered: {
-    subject: "Ta commande a été livrée",
-    body: "Ta commande a été marquée comme livrée. N'hésite pas à laisser un avis sur les produits reçus depuis la page de ta commande.",
-  },
-  cancelled: {
-    subject: "Ta commande a été annulée",
-    body: "Ta commande a été annulée par le vendeur. Contacte-le directement si tu as des questions.",
-  },
+const DELIVERED_MESSAGE = {
+  subject: "Ta commande a été livrée",
+  body: "Ta commande a été marquée comme livrée. N'hésite pas à laisser un avis sur les produits reçus depuis la page de ta commande.",
 };
 
 export async function sendOrderStatusEmail({
@@ -46,7 +40,8 @@ export async function sendOrderStatusEmail({
 }): Promise<void> {
   if (!customerEmail) return;
 
-  const message = STATUS_MESSAGES[status];
+  const shared = ORDER_STATUS_CUSTOMER_MESSAGE[status];
+  const message = status === "delivered" ? DELIVERED_MESSAGE : shared && { subject: shared.title, body: shared.body };
   if (!message) return; // "pending" (état initial) ou statut inconnu : rien à notifier.
 
   await sendTransactionalEmail({

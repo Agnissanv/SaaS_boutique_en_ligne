@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 
 /**
  * Connexion client — portail séparé de /connexion (vendeur/admin), à la
@@ -221,6 +222,15 @@ export function ConnexionClientForm() {
                 </button>
               </form>
             )}
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-ligne" />
+              <span className="text-xs text-encre/40">ou</span>
+              <div className="h-px flex-1 bg-ligne" />
+            </div>
+            <div className="mt-4">
+              <GoogleAuthButton portal="customer" />
+            </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Pas encore de compte ?{" "}

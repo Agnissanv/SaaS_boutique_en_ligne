@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 
 /**
  * Inscription client — ajoutée le 15/09/2026 (§ comptes client optionnels,
@@ -23,16 +24,25 @@ import { PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
  * Recolorée en charte KEVA le 15/09/2026 (côté client) — même carte/logo que
  * inscription-form.tsx (vendeur), seul le lien de retour pointe vers
  * /compte/connexion au lieu de /connexion.
+ *
+ * Pré-remplissage via ?name=&phone= ajouté le 21/09/2026 — alimenté par la
+ * bannière "Créer mon compte" de la page de confirmation de commande
+ * (/[shopSlug]/commande/[orderId]) : on connaît déjà ces infos juste après
+ * l'achat, autant éviter de les refaire saisir ("juste après avoir passé à
+ * l'achat, on lui propose de créer un compte", Isaac). Route déjà en
+ * `dynamic = "force-dynamic"` (page.tsx) donc pas de souci de prerendering
+ * avec useSearchParams ici.
  */
 export function InscriptionClientForm() {
   const router = useRouter();
   const supabase = createClient();
+  const searchParams = useSearchParams();
 
   type View = "form" | "confirmation-envoyee" | "compte-existant";
   const [view, setView] = useState<View>("form");
 
-  const [displayName, setDisplayName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [displayName, setDisplayName] = useState(searchParams.get("name") ?? "");
+  const [phone, setPhone] = useState(searchParams.get("phone") ?? "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -217,6 +227,15 @@ export function InscriptionClientForm() {
                 {pending ? "Création..." : "Créer mon compte"}
               </button>
             </form>
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-ligne" />
+              <span className="text-xs text-encre/40">ou</span>
+              <div className="h-px flex-1 bg-ligne" />
+            </div>
+            <div className="mt-4">
+              <GoogleAuthButton portal="customer" />
+            </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Déjà un compte ?{" "}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PASSWORD_MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 
 /**
  * Inscription vendeur — ajoutée le 13/09/2026 à la demande d'Isaac ("vu
@@ -118,12 +119,18 @@ export function InscriptionForm() {
         <span className="font-display text-xl font-semibold tracking-tight text-vert-sapin">KEVA</span>
       </Link>
       <div className="rounded-xl border border-ligne bg-white p-6 shadow-sm">
-        <h1 className="font-display text-xl font-semibold text-encre">Créer un compte</h1>
+        {/* Accroche de marque intégrée visuellement ici le 17/09/2026 —
+            jusque-là présente uniquement dans le <title> (layout.tsx). Cette
+            page d'inscription vendeur est l'endroit naturel : c'est
+            exactement la promesse qu'elle tient. */}
+        <h1 className="font-display text-xl font-semibold text-encre">
+          Crée ta boutique en ligne en 5 minutes
+        </h1>
 
         {view === "form" && (
           <>
             <p className="mt-1 text-sm text-encre/70">
-              Ouvre ta boutique en ligne en quelques minutes.
+              Ton nom, ton email et un mot de passe suffisent pour commencer.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
@@ -202,6 +209,15 @@ export function InscriptionForm() {
                 {pending ? "Création..." : "Créer mon compte"}
               </button>
             </form>
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-ligne" />
+              <span className="text-xs text-encre/40">ou</span>
+              <div className="h-px flex-1 bg-ligne" />
+            </div>
+            <div className="mt-4">
+              <GoogleAuthButton />
+            </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Déjà un compte ?{" "}

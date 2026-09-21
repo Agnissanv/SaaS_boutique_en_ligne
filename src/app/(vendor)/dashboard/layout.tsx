@@ -22,10 +22,10 @@ import { MobileNavDrawer } from "./mobile-nav-drawer";
  *   KEVA figée"), donc le fond sombre reste nécessaire pour l'utiliser tel
  *   quel plutôt que de fabriquer une variante manquante.
  * - Pas d'icônes de messagerie/notifications factices dans la barre du
- *   haut : la maquette en affiche avec des compteurs, mais rien de tel
- *   n'existe encore côté KEVA (pas de messagerie interne). La seule pastille
- *   affichée (commandes en attente) est branchée sur une vraie donnée
- *   (`orders.status = 'pending'`), jamais un chiffre inventé.
+ *   haut à l'origine : la maquette en affiche avec des compteurs, mais rien
+ *   de tel n'existait encore côté KEVA. Corrigé le 21/09/2026 (voir
+ *   ci-dessous) : la pastille reste branchée sur une vraie donnée, jamais un
+ *   chiffre inventé.
  *
  * Affiche aussi la bannière d'abonnement (cf. `src/lib/subscription.ts` et
  * §3.1.A.7 du cahier des charges) sur toutes les pages du dashboard.
@@ -44,6 +44,14 @@ import { MobileNavDrawer } from "./mobile-nav-drawer";
  * déconnexion) est le même contenu que le pied de la sidebar desktop
  * ci-dessous, juste dupliqué en JSX (pas en logique) pour être passé en
  * prop à un Client Component.
+ *
+ * **Cloche = notifications, plus seulement commandes en attente (21/09/2026)**
+ * — demande d'Isaac : "un espace notification qui concerne seulement les
+ * commandes... je veux un vrai espace notification qui concerne tout".
+ * `pendingOrdersCount` (requête directe sur orders.status) est remplacé par
+ * un comptage de `notifications.is_read = false`, et le lien pointe
+ * désormais vers /dashboard/notifications plutôt que /dashboard/commandes.
+ * Voir src/lib/notifications.ts et cette route pour le reste du système.
  */
 export default async function DashboardLayout({
   children,
@@ -72,16 +80,14 @@ export default async function DashboardLayout({
     : { data: null };
   const isOwner = access?.isOwner ?? true;
 
-  const [subscription, pendingOrdersCount] = await Promise.all([
+  const [subscription, unreadNotificationsCount] = await Promise.all([
     shop ? getShopSubscription(supabase, shop.id) : Promise.resolve(null),
-    shop
-      ? supabase
-          .from("orders")
-          .select("id", { count: "exact", head: true })
-          .eq("shop_id", shop.id)
-          .eq("status", "pending")
-          .then(({ count }) => count ?? 0)
-      : Promise.resolve(0),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", user.id)
+      .eq("is_read", false)
+      .then(({ count }) => count ?? 0),
   ]);
 
   const initial = (profile?.display_name || user.email || "?").trim().charAt(0).toUpperCase();
@@ -183,14 +189,14 @@ export default async function DashboardLayout({
           </form>
 
           <Link
-            href="/dashboard/commandes"
-            title="Commandes en attente"
+            href="/dashboard/notifications"
+            title="Notifications"
             className="relative ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ligne text-encre/70 hover:border-cuivre-clair hover:text-cuivre-profond"
           >
             <IconBell className="h-4 w-4" />
-            {pendingOrdersCount > 0 && (
+            {unreadNotificationsCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-erreur px-1 text-[10px] font-medium text-white">
-                {pendingOrdersCount}
+                {unreadNotificationsCount}
               </span>
             )}
           </Link>

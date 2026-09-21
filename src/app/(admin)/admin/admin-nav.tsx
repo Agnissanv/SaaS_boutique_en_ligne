@@ -10,7 +10,13 @@ type NavItem = {
   icon: (props: { className?: string }) => React.ReactElement;
 };
 
-const NAV_ITEMS: NavItem[] = [
+/**
+ * Exportée depuis le 21/09/2026 (nav mobile admin, voir `admin-mobile-nav.tsx`)
+ * pour que le tiroir mobile réutilise exactement la même liste que la barre
+ * horizontale desktop — un seul endroit à mettre à jour si un lien admin
+ * change un jour, comme `SidebarNav`/`MobileNavDrawer` côté vendeur.
+ */
+export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Vue d'ensemble", icon: GridIcon },
   { href: "/admin/vendeurs", label: "Vendeurs", icon: StorefrontIcon },
   { href: "/admin/abonnements", label: "Abonnements", icon: TicketIcon },
@@ -25,12 +31,19 @@ const NAV_ITEMS: NavItem[] = [
  * pas besoin d'une sidebar verticale comme le vendeur) mais reprend le même
  * traitement pill/icône + état actif que le reste de la direction
  * artistique KEVA.
+ *
+ * **Masquée sous `sm` depuis le 21/09/2026** (voir `admin-mobile-nav.tsx`) :
+ * avec `flex-wrap`, cette barre mélangeait jusqu'ici logo, les 4 liens et le
+ * bouton de déconnexion sur la même ligne, qui retombaient en plusieurs
+ * lignes désordonnées dès que ça ne tenait plus ("vraiment dégueulasse" sur
+ * mobile, signalé par Isaac) — remplacée en dessous de `sm` par un tiroir,
+ * même schéma que le dashboard vendeur.
  */
 export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div className="hidden items-center gap-1 sm:flex">
       {NAV_ITEMS.map((item) => {
         const active = pathname === item.href;
         const Icon = item.icon;

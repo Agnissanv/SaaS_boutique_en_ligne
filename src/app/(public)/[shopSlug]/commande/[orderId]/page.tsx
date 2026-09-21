@@ -2,12 +2,17 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewForm } from "./review-form";
+import { CancelOrderButton } from "./cancel-order-button";
 import { ORDER_STATUS_BADGE_CLASS, ORDER_STATUS_LABELS } from "@/lib/orders";
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash_on_delivery: "Paiement à la livraison",
   mobile_money: "Mobile Money",
 };
+
+// Statuts pour lesquels l'annulation a un sens — voir cancel_order
+// (migration 0030) qui applique la même règle côté serveur.
+const CANCELLABLE_STATUSES = ["pending", "paid", "preparing"];
 
 /**
  * Confirmation de commande + reçu (cahier des charges §3.1.B.6).
@@ -21,6 +26,17 @@ const PAYMENT_LABELS: Record<string, string> = {
  * dictionnaire de statuts local dupliqué a été retiré au profit du module
  * partagé `src/lib/orders.ts` (déjà utilisé par le dashboard vendeur et par
  * /compte) ; le statut s'affiche désormais en badge coloré.
+ *
+ * 21/09/2026 (demande d'Isaac) — trois ajouts :
+ *  - Annulation client (CancelOrderButton), visible seulement pour les
+ *    statuts encore annulables.
+ *  - Avis client repoussé à after-livraison uniquement ("un client n'a pas
+ *    le droit de mettre son avis... alors qu'il n'a pas encore touché le
+ *    produit") — submit_product_review le refuse aussi côté serveur.
+ *  - Bannière de création de compte pour les visiteurs non connectés
+ *    ("juste après avoir passé à l'achat, on lui propose de créer un
+ *    compte pour avoir un meilleur suivi") — pré-remplit nom/téléphone via
+ *    des query params repris par le formulaire d'inscription client.
  */
 export default async function OrderConfirmationPage({
   params,
@@ -41,6 +57,10 @@ export default async function OrderConfirmationPage({
     p_order_id: orderId,
   });
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="w-full mx-auto max-w-xl px-4 py-10">
       <h1 className="font-display text-xl font-semibold text-encre">Commande confirmée</h1>
@@ -48,6 +68,21 @@ export default async function OrderConfirmationPage({
         Merci {order.customer_name}, ta commande chez {order.shop_name} a bien
         été enregistrée.
       </p>
+
+      {!user && (
+        <div className="mt-4 flex flex-col gap-2 rounded-md border border-vert-actif/30 bg-vert-actif/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-encre">
+            Crée un compte pour suivre toutes tes commandes au même endroit,
+            chez n&apos;importe quel vendeur KEVA.
+          </p>
+          <Link
+            href={`/compte/inscription?name=${encodeURIComponent(order.customer_name)}&phone=${encodeURIComponent(order.customer_phone)}`}
+            className="shrink-0 rounded-md bg-vert-actif px-3 py-1.5 text-center text-xs font-medium text-ivoire hover:bg-vert-sapin"
+          >
+            Créer mon compte
+          </Link>
+        </div>
+      )}
 
       <dl className="mt-6 divide-y divide-ligne text-sm">
         <div className="flex justify-between py-2">
@@ -85,6 +120,12 @@ export default async function OrderConfirmationPage({
         >
           📍 Ta position partagée
         </a>
+      )}
+
+      {CANCELLABLE_STATUSES.includes(order.status) && (
+        <div className="mt-4">
+          <CancelOrderButton orderId={order.id} />
+        </div>
       )}
 
       <h2 className="mt-6 text-sm font-medium text-encre">Détail</h2>
@@ -135,26 +176,29 @@ export default async function OrderConfirmationPage({
       {(items ?? []).length > 0 && (
         <section className="mt-8 border-t border-ligne pt-4">
           <h2 className="text-sm font-medium text-encre">Laisser un avis</h2>
-          <p className="mt-1 text-xs text-encre/40">
-            Pas encore reçu ta commande ? Pas de souci, tu peux garder cette
-            page (ou son lien) et revenir laisser ton avis plus tard.
-          </p>
-          <div className="mt-3 flex flex-col gap-3">
-            {Array.from(
-              new Map(
-                (
-                  items as { product_id: string; product_title: string }[]
-                ).map((item) => [item.product_id, item])
-              ).values()
-            ).map((item) => (
-              <ReviewForm
-                key={item.product_id}
-                orderId={order.id}
-                productId={item.product_id}
-                productTitle={item.product_title}
-              />
-            ))}
-          </div>
+          {order.status === "delivered" ? (
+            <div className="mt-3 flex flex-col gap-3">
+              {Array.from(
+                new Map(
+                  (
+                    items as { product_id: string; product_title: string }[]
+                  ).map((item) => [item.product_id, item])
+                ).values()
+              ).map((item) => (
+                <ReviewForm
+                  key={item.product_id}
+                  orderId={order.id}
+                  productId={item.product_id}
+                  productTitle={item.product_title}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-1 text-xs text-encre/40">
+              Tu pourras laisser un avis une fois ta commande marquée comme
+              livrée.
+            </p>
+          )}
         </section>
       )}
 

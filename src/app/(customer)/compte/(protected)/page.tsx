@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { getAccessibleShop } from "@/lib/shop-access";
 
+// Lien "Notifications" corrigé le 21/09/2026 : pointait vers /compte/profil
+// (un stub, jamais implémenté) — repointé vers le nouvel espace de
+// notification client (/compte/notifications, voir ce dossier), avec un
+// badge du nombre de non-lues, même principe que la cloche du dashboard
+// vendeur (dashboard/layout.tsx).
 export default async function ComptePage() {
   const supabase = await createClient();
   const {
@@ -14,9 +19,17 @@ export default async function ComptePage() {
   // silencieusement (`profile` toujours `null`), le nom affiché retombait
   // donc systématiquement sur la partie locale de l'email plutôt que le
   // vrai nom du client.
-  const [{ data: profile }, access] = await Promise.all([
+  const [{ data: profile }, access, unreadNotificationsCount] = await Promise.all([
     supabase.from("profiles").select("display_name, phone").eq("id", user?.id ?? "").single(),
     user ? getAccessibleShop(supabase, user.id) : Promise.resolve(null),
+    user
+      ? supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("profile_id", user.id)
+          .eq("is_read", false)
+          .then(({ count }) => count ?? 0)
+      : Promise.resolve(0),
   ]);
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Mon compte";
@@ -60,7 +73,12 @@ export default async function ComptePage() {
         <div className="overflow-hidden rounded-xl border border-ligne bg-white">
           <AccountLink href="/compte/profil" label="Informations personnelles" />
           <AccountLink href="/compte/profil" label="Sécurité & connexion" />
-          <AccountLink href="/compte/profil" label="Notifications" last />
+          <AccountLink
+            href="/compte/notifications"
+            label="Notifications"
+            badge={unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined}
+            last
+          />
         </div>
       </section>
 
@@ -119,10 +137,12 @@ export default async function ComptePage() {
 function AccountLink({
   href,
   label,
+  badge,
   last = false,
 }: {
   href: string;
   label: string;
+  badge?: number;
   last?: boolean;
 }) {
   return (
@@ -132,7 +152,14 @@ function AccountLink({
         last ? "" : "border-b border-ligne"
       }`}
     >
-      <span>{label}</span>
+      <span className="flex items-center gap-2">
+        {label}
+        {badge != null && (
+          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-erreur px-1 text-[10px] font-medium text-white">
+            {badge}
+          </span>
+        )}
+      </span>
       <span className="text-encre/30">›</span>
     </Link>
   );

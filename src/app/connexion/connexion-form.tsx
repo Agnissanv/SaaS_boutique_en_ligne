@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { resolveHomePath } from "@/lib/auth-constants";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 
 /**
  * Connexion vendeur/admin — deux méthodes (13/09/2026, suite à la remarque
@@ -245,6 +246,15 @@ export function ConnexionForm() {
                 </button>
               </form>
             )}
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-ligne" />
+              <span className="text-xs text-encre/40">ou</span>
+              <div className="h-px flex-1 bg-ligne" />
+            </div>
+            <div className="mt-4">
+              <GoogleAuthButton />
+            </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Pas encore de compte ?{" "}
