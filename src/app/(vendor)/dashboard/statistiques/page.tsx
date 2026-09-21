@@ -389,7 +389,7 @@ export default async function StatistiquesPage({
         </div>
       )}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatTile
           label="Panier moyen"
           value={`${FMT_FCFA.format(Math.round(currentAvgOrderValue))} FCFA`}
@@ -407,7 +407,7 @@ export default async function StatistiquesPage({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-ligne bg-white p-4">
           <h2 className="font-display text-sm font-semibold text-encre">
             Produits les plus vendus
@@ -437,7 +437,7 @@ export default async function StatistiquesPage({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-ligne bg-white p-4">
           <h2 className="font-display text-sm font-semibold text-encre">
             Commandes par statut ({periodLabel})
@@ -494,7 +494,7 @@ export default async function StatistiquesPage({
 
       {subscription.features.hasFullStats && (
         <>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatTile
               label="Clients uniques"
               value={String(customerPeriodStats?.unique_customers ?? 0)}
@@ -512,7 +512,7 @@ export default async function StatistiquesPage({
             />
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-ligne bg-white p-4">
               <h2 className="font-display text-sm font-semibold text-encre">
                 Meilleurs clients
