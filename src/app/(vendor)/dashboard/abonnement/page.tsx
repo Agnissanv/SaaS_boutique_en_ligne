@@ -168,6 +168,16 @@ export default async function SubscriptionPage() {
             {new Date(subscription.expiresAt).toLocaleDateString("fr-FR")}
           </p>
         )}
+        {subscription.isTrial && subscription.state !== "expired" && (
+          <p className="mt-2 rounded-md bg-vert-sapin/10 px-2 py-1.5 text-sm text-vert-sapin">
+            🎁 Mois d&apos;essai offert pour ton lancement : toutes les
+            fonctionnalités Pro, gratuitement jusqu&apos;au{" "}
+            {subscription.expiresAt &&
+              new Date(subscription.expiresAt).toLocaleDateString("fr-FR")}
+            . Passe ensuite à un plan payant pour continuer d&apos;en
+            profiter.
+          </p>
+        )}
         {subscription.state === "grace_period" && (
           <p className="mt-2 text-sm text-attention">
             Période de grâce en cours — contacte-nous pour renouveler avant

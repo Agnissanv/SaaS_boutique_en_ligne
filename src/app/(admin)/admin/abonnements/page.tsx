@@ -10,6 +10,7 @@ import { PlanSelect } from "./plan-select";
 type SubscriptionRow = {
   id: string;
   expires_at: string;
+  is_trial: boolean;
   plan: { code: string; name: string; price: number } | { code: string; name: string; price: number }[] | null;
 };
 
@@ -24,9 +25,15 @@ type ShopRow = {
 // (`TagIcon`), coloré différemment, plutôt que trois formes distinctes :
 // suffisant pour distinguer les paliers d'un coup d'œil sans multiplier les
 // dessins pour trois lignes de tableau.
+//
+// Corrigé le 21/09/2026 (repéré en passant) : ces clés étaient restées sur
+// les anciens codes de plan (`free`/`essentiel`) après leur renommage en
+// `starter`/`business` par la migration 0016_subscription_plans_v2.sql — ne
+// correspondaient donc plus jamais, et les deux premiers paliers retombaient
+// silencieusement sur le gris par défaut depuis cette migration.
 const PLAN_ICON_CLASS: Record<string, string> = {
-  free: "text-encre/40",
-  essentiel: "text-vert-actif",
+  starter: "text-encre/40",
+  business: "text-vert-actif",
   pro: "text-cuivre-profond",
 };
 
@@ -45,7 +52,7 @@ export default async function AdminSubscriptionsPage() {
   const { data: shops } = await supabase
     .from("shops")
     .select(
-      "id, name, slug, subscriptions(id, expires_at, plan:subscription_plans(code, name, price))"
+      "id, name, slug, subscriptions(id, expires_at, is_trial, plan:subscription_plans(code, name, price))"
     )
     .order("name");
 
@@ -91,6 +98,14 @@ export default async function AdminSubscriptionsPage() {
                       <span className="flex items-center gap-1.5">
                         <TagIcon className={`h-4 w-4 shrink-0 ${PLAN_ICON_CLASS[plan.code] ?? "text-encre/40"}`} />
                         {plan.name} <span className="font-mono text-cuivre-profond">({plan.price} FCFA)</span>
+                        {sub?.is_trial && (
+                          <span
+                            className="rounded bg-vert-sapin/15 px-1.5 py-0.5 text-xs font-medium text-vert-sapin"
+                            title="Mois d'essai offert au lancement — pas un paiement réel"
+                          >
+                            Essai
+                          </span>
+                        )}
                       </span>
                     ) : (
                       "Aucun"

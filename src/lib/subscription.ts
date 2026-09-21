@@ -151,10 +151,19 @@ export type ShopSubscriptionInfo = {
   /** Date à partir de laquelle le blocage réel s'applique (fin de la période de grâce). */
   graceEndsAt: string | null;
   features: ShopFeatureFlags;
+  /**
+   * Mois d'essai Pro offert à la création de la boutique (21/09/2026, voir
+   * `start_free_subscription` / migration 0029), distinct d'un vrai paiement
+   * ou d'une assignation manuelle admin (les deux mettent `is_trial = false`
+   * via `applyPlanToShop`) — permet d'avertir le vendeur qu'il s'agit d'un
+   * cadeau temporaire plutôt que de le laisser croire à un abonnement payé.
+   */
+  isTrial: boolean;
 };
 
 type SubscriptionRow = {
   expires_at: string;
+  is_trial: boolean;
   plan:
     | { code: string; name: string; features: unknown }
     | { code: string; name: string; features: unknown }[]
@@ -173,7 +182,7 @@ export async function getShopSubscription(
 ): Promise<ShopSubscriptionInfo> {
   const { data } = await supabase
     .from("subscriptions")
-    .select("expires_at, plan:subscription_plans(code, name, features)")
+    .select("expires_at, is_trial, plan:subscription_plans(code, name, features)")
     .eq("shop_id", shopId)
     .order("started_at", { ascending: false })
     .limit(1)
@@ -189,6 +198,7 @@ export async function getShopSubscription(
       expiresAt: null,
       graceEndsAt: null,
       features: DEFAULT_FEATURE_FLAGS,
+      isTrial: false,
     };
   }
 
@@ -205,6 +215,7 @@ export async function getShopSubscription(
     expiresAt: row.expires_at,
     graceEndsAt,
     features: parseFeatureFlags(plan?.features),
+    isTrial: row.is_trial,
   };
 }
 
@@ -265,6 +276,9 @@ export async function applyPlanToShop(
         status: "active",
         started_at: new Date().toISOString(),
         expires_at: expiresAt,
+        // Toute assignation réelle de plan (admin ou paiement CinetPay
+        // confirmé) efface le statut d'essai — voir migration 0029.
+        is_trial: false,
       })
       .eq("id", existing.id);
   } else {
@@ -274,6 +288,7 @@ export async function applyPlanToShop(
       status: "active",
       started_at: new Date().toISOString(),
       expires_at: expiresAt,
+      is_trial: false,
     });
   }
 
