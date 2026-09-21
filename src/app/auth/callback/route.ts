@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { roleHomePath } from "@/lib/auth-constants";
+import { resolveHomePath } from "@/lib/auth-constants";
 
 /**
  * Point d'arrivée du lien magique envoyé par email (Supabase Auth).
@@ -14,10 +14,12 @@ import { roleHomePath } from "@/lib/auth-constants";
  *
  * Avec `emailRedirectTo` pointé ici (voir connexion-form.tsx), le lien
  * atterrit sur cette route, qui échange le code contre une session, puis
- * redirige vers l'espace correspondant au rôle du compte (portail de
- * connexion unique, cf. demande d'Isaac du 13/09/2026 : "un vrai portail...
- * qui reconnaît le rôle de chacun") — pas un `/dashboard` toujours fixe,
- * qui obligeait un admin à taper /admin lui-même après connexion.
+ * redirige vers l'espace correspondant au compte (portail de connexion
+ * unique, cf. demande d'Isaac du 13/09/2026 : "un vrai portail... qui
+ * reconnaît le rôle de chacun") — pas un `/dashboard` toujours fixe, qui
+ * obligeait un admin à taper /admin lui-même après connexion. Depuis le
+ * 21/09/2026, `resolveHomePath` regarde aussi ce que le compte possède
+ * réellement (boutique), pas seulement `profiles.role` — voir sa doc.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -42,7 +44,7 @@ export async function GET(request: Request) {
         .eq("id", user.id)
         .maybeSingle();
 
-      const destination = roleHomePath(profile?.role);
+      const destination = await resolveHomePath(supabase, user.id, profile?.role);
       return NextResponse.redirect(`${origin}${destination}`);
     }
   }

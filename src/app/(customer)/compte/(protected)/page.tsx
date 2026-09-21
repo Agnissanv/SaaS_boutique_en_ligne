@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
+import { getAccessibleShop } from "@/lib/shop-access";
 
 export default async function ComptePage() {
   const supabase = await createClient();
@@ -8,13 +9,17 @@ export default async function ComptePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, phone")
-    .eq("id", user?.id ?? "")
-    .single();
+  // Colonne corrigée le 21/09/2026 : `profiles` n'a jamais eu de `full_name`
+  // (voir `display_name`, migration 0001) — cette requête échouait
+  // silencieusement (`profile` toujours `null`), le nom affiché retombait
+  // donc systématiquement sur la partie locale de l'email plutôt que le
+  // vrai nom du client.
+  const [{ data: profile }, access] = await Promise.all([
+    supabase.from("profiles").select("display_name, phone").eq("id", user?.id ?? "").single(),
+    user ? getAccessibleShop(supabase, user.id) : Promise.resolve(null),
+  ]);
 
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Mon compte";
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Mon compte";
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -58,6 +63,22 @@ export default async function ComptePage() {
           <AccountLink href="/compte/profil" label="Notifications" last />
         </div>
       </section>
+
+      {/* ========== ESPACE VENDEUR ==========
+          Ajouté le 21/09/2026 : un compte peut posséder une boutique tout en
+          restant enregistré côté "client" (voir `resolveHomePath`,
+          `auth-constants.ts`) — n'affiché que si c'est réellement le cas ici
+          (`getAccessibleShop`), jamais une invitation à en créer une. */}
+      {access && (
+        <section>
+          <h2 className="mb-2 font-display text-base font-semibold text-encre">
+            Espace vendeur
+          </h2>
+          <div className="overflow-hidden rounded-xl border border-ligne bg-white">
+            <AccountLink href="/dashboard" label="Gérer ma boutique" last />
+          </div>
+        </section>
+      )}
 
       {/* ========== AIDE ========== */}
       <section>

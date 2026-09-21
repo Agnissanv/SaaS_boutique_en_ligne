@@ -46,6 +46,13 @@ const MOBILE_NAV_LINKS = [
  *
  * Affiche aussi la bannière d'abonnement (cf. `src/lib/subscription.ts` et
  * §3.1.A.7 du cahier des charges) sur toutes les pages du dashboard.
+ *
+ * **Lien "Mon espace client" ajouté le 21/09/2026** : un vendeur peut aussi
+ * acheter sur KEVA avec le même compte (voir `resolveHomePath`,
+ * `auth-constants.ts` — l'infrastructure le permettait déjà depuis la
+ * migration 0014, il manquait juste un moyen visible d'y aller). Lien
+ * inconditionnel (pas besoin de vérifier un historique de commandes : /compte
+ * accepte n'importe quel compte connecté, voir son propre layout).
  */
 export default async function DashboardLayout({
   children,
@@ -110,6 +117,12 @@ export default async function DashboardLayout({
               Voir ma boutique ↗
             </a>
           )}
+          <Link
+            href="/compte"
+            className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+          >
+            Mon espace client
+          </Link>
           <form action={signOut}>
             <button
               type="submit"
@@ -133,6 +146,9 @@ export default async function DashboardLayout({
               {link.label}
             </Link>
           ))}
+          <Link href="/compte" className="shrink-0 rounded px-2 py-1 text-ivoire/70 underline hover:text-cuivre-clair">
+            Espace client
+          </Link>
           <form action={signOut} className="ml-auto shrink-0">
             <button type="submit" className="text-ivoire/70 underline">
               Déconnexion

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PASSWORD_MIN_LENGTH as MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
+import { PASSWORD_MIN_LENGTH as MIN_LENGTH, resolveHomePath } from "@/lib/auth-constants";
 
 // Recolorée en charte KEVA le 15/09/2026 (côté client) — pure recolor, même
 // traitement que connexion-form.tsx (mêmes tokens de champ/bouton).
@@ -46,7 +46,7 @@ export function NouveauMotDePasseForm() {
       ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
       : { data: null };
 
-    router.push(roleHomePath(profile?.role));
+    router.push(user ? await resolveHomePath(supabase, user.id, profile?.role) : "/connexion");
     router.refresh();
   }
 

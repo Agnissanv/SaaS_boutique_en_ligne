@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { roleHomePath } from "@/lib/auth-constants";
+import { resolveHomePath } from "@/lib/auth-constants";
 
 /**
  * Connexion vendeur/admin — deux méthodes (13/09/2026, suite à la remarque
@@ -67,16 +67,17 @@ export function ConnexionForm() {
       return;
     }
 
-    // Redirection selon le rôle, comme /auth/callback pour le lien magique —
-    // un portail de connexion unique qui reconnaît qui arrive (vendeur ou
-    // admin), cf. demande d'Isaac du 13/09/2026.
+    // Redirection selon le rôle ET la réalité de ce que le compte possède
+    // (voir resolveHomePath) — pas seulement l'étiquette de rôle figée à
+    // l'inscription, cf. demande d'Isaac du 13/09/2026 ("un portail... qui
+    // reconnaît le rôle de chacun") et le bug signalé le 21/09/2026.
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
       .maybeSingle();
 
-    router.push(roleHomePath(profile?.role));
+    router.push(await resolveHomePath(supabase, data.user.id, profile?.role));
     router.refresh();
   }
 
