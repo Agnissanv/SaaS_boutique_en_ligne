@@ -5,24 +5,7 @@ import { signOut } from "@/app/auth/actions";
 import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
 import { SidebarNav } from "./sidebar-nav";
-
-// `ownerOnly` : masqué pour un collaborateur (plan Pro, ajouté le
-// 16/09/2026) — mêmes pages que celles filtrées dans sidebar-nav.tsx pour
-// la version desktop, voir src/lib/shop-access.ts pour le raisonnement.
-const MOBILE_NAV_LINKS = [
-  { href: "/dashboard", label: "Aperçu", ownerOnly: false },
-  { href: "/dashboard/produits", label: "Produits", ownerOnly: false },
-  { href: "/dashboard/commandes", label: "Commandes", ownerOnly: false },
-  { href: "/dashboard/statistiques", label: "Statistiques", ownerOnly: false },
-  { href: "/dashboard/boutique", label: "Boutique", ownerOnly: true },
-  { href: "/dashboard/avis", label: "Avis", ownerOnly: false },
-  { href: "/dashboard/codes-promo", label: "Codes promo", ownerOnly: true },
-  { href: "/dashboard/collaborateurs", label: "Collaborateurs", ownerOnly: true },
-  { href: "/dashboard/paiements", label: "Paiements", ownerOnly: true },
-  { href: "/dashboard/abonnement", label: "Abonnement", ownerOnly: true },
-  { href: "/dashboard/profil", label: "Profil", ownerOnly: false },
-  { href: "/dashboard/aide", label: "Aide", ownerOnly: false },
-];
+import { MobileNavDrawer } from "./mobile-nav-drawer";
 
 /**
  * Layout du dashboard vendeur — protège toutes les routes /dashboard/*.
@@ -53,6 +36,14 @@ const MOBILE_NAV_LINKS = [
  * migration 0014, il manquait juste un moyen visible d'y aller). Lien
  * inconditionnel (pas besoin de vérifier un historique de commandes : /compte
  * accepte n'importe quel compte connecté, voir son propre layout).
+ *
+ * **Nav mobile refaite en tiroir le 21/09/2026** : l'ancienne barre
+ * horizontale défilante (onze liens à plat, texte tronqué) laisse place à
+ * `<MobileNavDrawer>`, qui réutilise `<SidebarNav>` — voir ce fichier pour
+ * le détail. Le pied du tiroir (boutique en ligne / espace client /
+ * déconnexion) est le même contenu que le pied de la sidebar desktop
+ * ci-dessous, juste dupliqué en JSX (pas en logique) pour être passé en
+ * prop à un Client Component.
  */
 export default async function DashboardLayout({
   children,
@@ -135,26 +126,46 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Équivalent mobile de la sidebar (bande horizontale défilante) */}
-        <nav className="flex items-center gap-1 overflow-x-auto bg-vert-sapin px-3 py-2 text-sm text-ivoire md:hidden">
-          <Link href="/dashboard" className="mr-1 flex shrink-0 items-center">
+        {/* Équivalent mobile de la sidebar : tiroir de navigation, voir
+            mobile-nav-drawer.tsx et la note du 21/09/2026 ci-dessus. */}
+        <div className="flex items-center gap-2 bg-vert-sapin px-3 py-2 text-ivoire md:hidden">
+          <MobileNavDrawer
+            isOwner={isOwner}
+            footer={
+              <>
+                {shop?.slug && (
+                  <a
+                    href={`/${shop.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+                  >
+                    Voir ma boutique ↗
+                  </a>
+                )}
+                <Link
+                  href="/compte"
+                  className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+                >
+                  Mon espace client
+                </Link>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+                  >
+                    Déconnexion
+                  </button>
+                </form>
+              </>
+            }
+          />
+          <Link href="/dashboard" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
-            <img src="/keva-logo.jpg" alt="KEVA" className="h-6 w-6 rounded object-cover" />
+            <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
+            <span className="font-display text-base font-semibold tracking-tight">KEVA</span>
           </Link>
-          {MOBILE_NAV_LINKS.filter((link) => !link.ownerOnly || isOwner).map((link) => (
-            <Link key={link.href} href={link.href} className="shrink-0 rounded px-2 py-1 hover:text-cuivre-clair">
-              {link.label}
-            </Link>
-          ))}
-          <Link href="/compte" className="shrink-0 rounded px-2 py-1 text-ivoire/70 underline hover:text-cuivre-clair">
-            Espace client
-          </Link>
-          <form action={signOut} className="ml-auto shrink-0">
-            <button type="submit" className="text-ivoire/70 underline">
-              Déconnexion
-            </button>
-          </form>
-        </nav>
+        </div>
 
         <header className="flex flex-wrap items-center gap-3 border-b border-ligne bg-white px-4 py-3 sm:gap-4">
           <form

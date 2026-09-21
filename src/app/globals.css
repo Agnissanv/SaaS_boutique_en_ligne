@@ -114,6 +114,13 @@ button:not(:disabled):active,
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+/* Tiroir de navigation mobile (dashboard vendeur, 21/09/2026) — même fond
+   que `sheet-backdrop-in`, glissement horizontal plutôt que vertical
+   puisqu'il s'ouvre depuis le bord gauche de l'écran, pas depuis le bas. */
+@keyframes drawer-slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
 
 /*
  * Transitions d'écran natives (marketplace → boutique → fiche produit) —
