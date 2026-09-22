@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
+import { CURRENT_SELLER_CHARTER_VERSION } from "@/lib/seller-charter";
 import { SidebarNav } from "./sidebar-nav";
 import { MobileNavDrawer } from "./mobile-nav-drawer";
 
@@ -52,6 +53,14 @@ import { MobileNavDrawer } from "./mobile-nav-drawer";
  * un comptage de `notifications.is_read = false`, et le lien pointe
  * désormais vers /dashboard/notifications plutôt que /dashboard/commandes.
  * Voir src/lib/notifications.ts et cette route pour le reste du système.
+ *
+ * **Charte vendeur obligatoire (22/09/2026)** : redirige vers
+ * /charte-vendeur tant que `shop_charter_version` du profil est inférieure à
+ * `CURRENT_SELLER_CHARTER_VERSION` (ou jamais acceptée). S'applique à tout
+ * compte qui atteint le dashboard, propriétaire ou collaborateur — voir
+ * src/lib/seller-charter.ts et supabase/migrations/0040_*.sql. Vérifié ici,
+ * pas dans un middleware : cohérent avec le reste du contrôle d'accès du
+ * dashboard (déjà entièrement fait dans ce layout).
  */
 export default async function DashboardLayout({
   children,
@@ -71,9 +80,20 @@ export default async function DashboardLayout({
   // ajouté le 16/09/2026 — voir src/lib/shop-access.ts pour le raisonnement
   // complet et le périmètre exact des pages accessibles à un collaborateur).
   const [{ data: profile }, access] = await Promise.all([
-    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, shop_charter_accepted_at, shop_charter_version")
+      .eq("id", user.id)
+      .maybeSingle(),
     getAccessibleShop(supabase, user.id),
   ]);
+
+  const charterAccepted =
+    !!profile?.shop_charter_accepted_at &&
+    (profile.shop_charter_version ?? 0) >= CURRENT_SELLER_CHARTER_VERSION;
+  if (!charterAccepted) {
+    redirect("/charte-vendeur");
+  }
 
   // `status` ajouté à la sélection le 22/09/2026 (audit pré-lancement) : ce
   // layout ne vérifiait jamais si la boutique était suspendue — un vendeur
@@ -127,6 +147,12 @@ export default async function DashboardLayout({
           >
             Mon espace client
           </Link>
+          <Link
+            href="/charte-vendeur"
+            className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+          >
+            Charte vendeur
+          </Link>
           <form action={signOut}>
             <button
               type="submit"
@@ -161,6 +187,12 @@ export default async function DashboardLayout({
                   className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
                 >
                   Mon espace client
+                </Link>
+                <Link
+                  href="/charte-vendeur"
+                  className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+                >
+                  Charte vendeur
                 </Link>
                 <form action={signOut}>
                   <button

@@ -61,7 +61,19 @@ export function AdminNav() {
         // `.startsWith` en plus de l'égalité stricte depuis le 22/09/2026 :
         // la fiche détaillée d'un vendeur (/admin/vendeurs/[slug]) doit
         // toujours surligner "Vendeurs", pas rester sans lien actif.
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        //
+        // **Bug corrigé le 22/09/2026** (repéré par Isaac : "deux boutons
+        // comme si les deux avaient la classe active") : cette règle
+        // s'appliquait aussi à "/admin" (Vue d'ensemble) — `.startsWith`
+        // avec un préfixe vide après le premier segment fait que TOUTE
+        // page admin (/admin/commandes, /admin/vendeurs, etc.) commence par
+        // "/admin/", donc "Vue d'ensemble" restait allumée partout en plus
+        // de la page réellement active. Exclu explicitement : "/admin" ne
+        // fait jamais de correspondance par préfixe, seulement l'égalité
+        // stricte (c'est la page d'accueil admin, pas un préfixe de route).
+        const active =
+          pathname === item.href ||
+          (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
         const Icon = item.icon;
         return (
           <Link

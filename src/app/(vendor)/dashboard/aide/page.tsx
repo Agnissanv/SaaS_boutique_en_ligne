@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const FAQ: { question: string; answer: string }[] = [
   {
     question: "Comment ajouter un produit ?",
@@ -49,6 +51,12 @@ const FAQ: { question: string; answer: string }[] = [
  * dans le code et les docs). Isaac pourra fournir un numéro WhatsApp ou un
  * email de support à ajouter ici dans un prochain passage — voir
  * claude/decisions-techniques.md.
+ *
+ * **Lien vers la charte vendeur ajouté le 22/09/2026** : Isaac voulait que
+ * les règles acceptées à l'inscription (voir /charte-vendeur et
+ * src/lib/seller-charter.ts) restent faciles à retrouver plus tard sur le
+ * site, pas seulement lues une fois puis oubliées. Deuxième emplacement : le
+ * pied de la sidebar/du tiroir mobile (dashboard/layout.tsx).
  */
 export default function HelpPage() {
   return (
@@ -57,6 +65,13 @@ export default function HelpPage() {
       <p className="mt-2 text-sm text-encre/70">
         Questions fréquentes sur l&apos;utilisation de ta boutique.
       </p>
+
+      <Link
+        href="/charte-vendeur"
+        className="mt-4 inline-block text-sm text-vert-actif underline"
+      >
+        Relire la charte vendeur
+      </Link>
 
       <div className="mt-6 max-w-2xl divide-y divide-ligne">
         {FAQ.map((item, index) => (

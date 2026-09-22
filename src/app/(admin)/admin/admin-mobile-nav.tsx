@@ -132,7 +132,12 @@ export function AdminMobileNav({ footer }: { footer: React.ReactNode }) {
               {NAV_ITEMS.map((item) => {
                 // Même généralisation que admin-nav.tsx (22/09/2026) : la
                 // fiche détaillée d'un vendeur doit surligner "Vendeurs".
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                // "/admin" exclu du préfixe (même bug/correctif que
+                // admin-nav.tsx, repéré par Isaac) : sinon "Vue d'ensemble"
+                // reste allumée sur absolument toutes les pages admin.
+                const active =
+                  pathname === item.href ||
+                  (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
                 const Icon = item.icon;
                 return (
                   <Link

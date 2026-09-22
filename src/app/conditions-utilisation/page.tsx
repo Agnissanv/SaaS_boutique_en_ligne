@@ -9,7 +9,7 @@ import Link from "next/link";
  * cahier_de_charge.md), pas de clauses génériques inventées.
  *
  * IMPORTANT — à faire relire par un juriste avant publication réelle :
- * - Le nom d'entité (section 1) et le droit applicable (section 10) sont des
+ * - Le nom d'entité (section 1) et le droit applicable (section 11) sont des
  *   placeholders — Isaac n'a pas encore communiqué de raison sociale
  *   officielle ni tranché la juridiction (Côte d'Ivoire par défaut, cohérent
  *   avec le marché ciblé par cahier_de_charge.md, mais à confirmer).
@@ -20,6 +20,21 @@ import Link from "next/link";
  *   un abonnement vendeur, pas une commission sur les ventes — voir
  *   decisions-techniques.md, "Refonte complète du système d'abonnements") :
  *   ne pas en ajouter un ici sans vérifier que ça reste vrai.
+ *
+ * **Section 5 (produits interdits) ajoutée le 22/09/2026** : un futur
+ * vendeur a demandé à Isaac, dans le groupe d'accès anticipé, si tout était
+ * autorisé à la vente. Sa réponse orale ("du moment que ce n'est pas
+ * illégal") était juste dans l'esprit mais rien de concret n'existait nulle
+ * part — l'ancienne section 4 se contentait d'un renvoi vague à "la
+ * réglementation applicable", et la section suspension (désormais 10)
+ * mentionnait des "produits interdits" sans jamais les nommer. Absence de
+ * liste = aucune base à opposer à un vendeur de mauvaise foi, et exposition
+ * plus directe pour Isaac lui-même vu l'absence de société enregistrée
+ * (RCCM) pour KEVA à ce jour (voir decisions-techniques.md, section PawaPay/
+ * KYB) — une structure enregistrée aurait pu limiter sa responsabilité
+ * personnelle, ce n'est pas le cas ici. Liste non exhaustive volontairement
+ * (dernier point générique) : mieux vaut une liste illustrative qu'une
+ * énumération fermée qu'un vendeur pourrait exploiter par un vide juridique.
  */
 export const metadata = {
   title: "Conditions d'utilisation — KEVA",
@@ -99,7 +114,32 @@ export default function ConditionsUtilisationPage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              5. Obligations du client
+              5. Produits et articles interdits
+            </h2>
+            <p className="mt-2">
+              Il est interdit de proposer à la vente sur KEVA, entre autres :
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>Armes à feu, munitions, armes blanches à usage d&apos;agression, explosifs et matières dangereuses.</li>
+              <li>Stupéfiants, drogues et leurs précurseurs, quelle que soit la forme.</li>
+              <li>Médicaments et produits pharmaceutiques, sauf autorisation officielle en tant que pharmacie ou dépôt agréé.</li>
+              <li>Espèces animales ou végétales protégées et leurs dérivés (ivoire, peaux, écailles, etc.).</li>
+              <li>Produits contrefaits ou copies non autorisées d&apos;une marque, d&apos;une œuvre ou d&apos;un brevet.</li>
+              <li>Biens volés, faux documents, fausse monnaie ou données personnelles/bancaires d&apos;autrui.</li>
+              <li>Contenus ou services à caractère pornographique, ou destinés à exploiter des mineurs.</li>
+              <li>Organes, restes humains ou animaux, et services de jeux d&apos;argent non autorisés.</li>
+              <li>Plus largement, tout produit ou service dont la vente est interdite ou réglementée par la loi ivoirienne ou les conventions internationales applicables.</li>
+            </ul>
+            <p className="mt-2">
+              Un produit signalé ou identifié comme relevant de cette liste
+              est retiré, et la Boutique concernée peut être suspendue sans
+              préavis (voir section 10).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-base font-semibold text-encre">
+              6. Obligations du client
             </h2>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Fournir des informations de livraison exactes et être joignable pour la réception de la commande.</li>
@@ -110,7 +150,7 @@ export default function ConditionsUtilisationPage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              6. Abonnement vendeur
+              7. Abonnement vendeur
             </h2>
             <p className="mt-2">
               L&apos;accès aux fonctionnalités vendeur (nombre de produits,
@@ -126,7 +166,7 @@ export default function ConditionsUtilisationPage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              7. Rôle de KEVA
+              8. Rôle de KEVA
             </h2>
             <p className="mt-2">
               KEVA fournit l&apos;outil technique permettant au vendeur de
@@ -140,7 +180,7 @@ export default function ConditionsUtilisationPage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              8. Propriété intellectuelle
+              9. Propriété intellectuelle
             </h2>
             <p className="mt-2">
               Chaque vendeur reste propriétaire des contenus qu&apos;il met en
@@ -153,20 +193,20 @@ export default function ConditionsUtilisationPage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              9. Suspension et résiliation
+              10. Suspension et résiliation
             </h2>
             <p className="mt-2">
               KEVA peut suspendre ou clôturer un compte en cas de non-respect
               des présentes conditions (informations frauduleuses, produits
-              interdits à la vente, abus envers d&apos;autres utilisateurs). Tu
-              peux demander la clôture de ton compte à tout moment en nous
-              écrivant (voir section 11).
+              interdits à la vente — voir section 5, abus envers d&apos;autres
+              utilisateurs). Tu peux demander la clôture de ton compte à tout
+              moment en nous écrivant (voir section 12).
             </p>
           </section>
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              10. Droit applicable
+              11. Droit applicable
             </h2>
             <p className="mt-2">
               Les présentes conditions sont régies par le droit ivoirien
@@ -177,7 +217,7 @@ export default function ConditionsUtilisationPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-base font-semibold text-encre">11. Contact</h2>
+            <h2 className="font-display text-base font-semibold text-encre">12. Contact</h2>
             <p className="mt-2">
               Pour toute question sur ces conditions :{" "}
               <a href="mailto:contactkevashop@gmail.com" className="text-vert-actif underline">
@@ -189,7 +229,7 @@ export default function ConditionsUtilisationPage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              12. Modifications
+              13. Modifications
             </h2>
             <p className="mt-2">
               Ces conditions peuvent évoluer avec la plateforme. La date de
