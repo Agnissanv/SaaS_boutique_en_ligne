@@ -5,16 +5,16 @@ import Image from "next/image";
 import { cache, ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { truncate } from "@/lib/utils/text";
-import { CATEGORIES, categoryLabel } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/categories";
 type CategoryTile = { value: string; label: string };
 import { CartLink } from "./cart-link";
 import { SortSelect } from "@/components/sort-select";
 import { Stars } from "@/components/stars";
 import { getShopRating } from "@/lib/reviews";
-import { WishlistButton } from "@/components/wishlist-button";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
-import { ProductImage } from "@/components/product-image";
 import { getEffectivePrice } from "@/lib/products";
+import { CategoryNav } from "@/components/category-nav";
+import { ProductCard } from "@/components/product-card";
 
 type PublicProduct = {
   id: string;
@@ -281,7 +281,7 @@ export default async function ShopPage({
           l'image la plus lourde de toute la page boutique, la première que
           le navigateur doit charger — voir `product-image.tsx` pour le même
           raisonnement appliqué aux vignettes produit. */}
-      <div className="overflow-hidden rounded-xl">
+      <div className="overflow-hidden rounded-2xl">
         {shop.cover_url ? (
           <div className="relative h-40 w-full sm:h-56">
             <Image
@@ -305,7 +305,7 @@ export default async function ShopPage({
           de boutique en ligne, comme une page vendeur Jumia/Etsy) et
           regroupe logo, note de confiance mise en avant, description,
           contact direct et le bloc de confiance. */}
-      <div className="relative z-10 -mt-8 rounded-xl border border-ligne bg-white p-4 shadow-sm sm:-mt-12 sm:p-6">
+      <div className="relative z-10 -mt-8 rounded-2xl border border-ligne bg-white p-4 shadow-sm sm:-mt-12 sm:p-6">
         <div className="flex flex-wrap items-start gap-4">
           {shop.logo_url ? (
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-4 border-white shadow sm:h-20 sm:w-20">
@@ -373,59 +373,39 @@ export default async function ShopPage({
       </div>
 
       {/* Recherche, catégories et tri — regroupés dans une carte, même
-          traitement que les filtres du dashboard vendeur (15/09/2026). */}
-      <div className="mt-6 rounded-md border border-ligne bg-white p-3">
-        <form method="GET" className="flex flex-wrap gap-2">
+          traitement que les filtres du dashboard vendeur (15/09/2026).
+          Barre de recherche restylée en pilule avec icône le 22/09/2026
+          (refonte boutique vendeur, capture de référence Omarko : champ
+          arrondi + loupe, bouton "Rechercher" texte remplacé par un bouton
+          rond — comportement du formulaire inchangé). */}
+      <div className="mt-6 rounded-2xl border border-ligne bg-white p-3">
+        <form method="GET" className="flex items-center gap-2 rounded-full bg-brume py-1.5 pl-4 pr-1.5">
           {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
           {tri ? <input type="hidden" name="tri" value={tri} /> : null}
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="h-4 w-4 shrink-0 text-encre/40">
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="m16 16-3.2-3.2" />
+          </svg>
           <input
             type="text"
             name="q"
             defaultValue={q ?? ""}
             placeholder="Rechercher un article dans cette boutique..."
-            className="w-full flex-1 rounded-md border border-ligne bg-brume px-3 py-2 text-sm focus:border-vert-actif focus:outline-none sm:w-auto"
+            className="min-w-0 flex-1 bg-transparent text-sm text-encre placeholder:text-encre/40 focus:outline-none"
           />
           <button
             type="submit"
-            className="shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
+            aria-label="Rechercher"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vert-actif text-ivoire transition hover:bg-vert-sapin"
           >
-            Rechercher
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <circle cx="8.5" cy="8.5" r="5.5" />
+              <path d="m16 16-3.2-3.2" />
+            </svg>
           </button>
         </form>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={buildHref(shopSlug, current, { categorie: undefined, page: undefined })}
-              style={!categorie && shop.accent_color ? { backgroundColor: shop.accent_color, borderColor: shop.accent_color } : undefined}
-              className={`rounded-full border px-3 py-1 text-xs ${
-                !categorie
-                  ? shop.accent_color
-                    ? "text-ivoire"
-                    : "border-vert-sapin bg-vert-sapin text-ivoire"
-                  : "border-ligne text-encre hover:border-vert-actif"
-              }`}
-            >
-              Toutes catégories
-            </Link>
-            {availableCategories.map((c) => (
-              <Link
-                key={c.value}
-                href={buildHref(shopSlug, current, { categorie: c.value, page: undefined })}
-                style={categorie === c.value && shop.accent_color ? { backgroundColor: shop.accent_color, borderColor: shop.accent_color } : undefined}
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  categorie === c.value
-                    ? shop.accent_color
-                      ? "text-ivoire"
-                      : "border-vert-sapin bg-vert-sapin text-ivoire"
-                    : "border-ligne text-encre hover:border-vert-actif"
-                }`}
-              >
-                {c.label}
-              </Link>
-            ))}
-          </div>
-
+        <div className="mt-3 flex justify-end">
           <SortSelect
             basePath={`/${shopSlug}`}
             value={sort}
@@ -436,6 +416,29 @@ export default async function ShopPage({
         </div>
       </div>
 
+      {/* Bande de catégories façon Jumia/Omarko ("Shop By Category" sur la
+          référence d'Isaac) — ajoutée le 22/09/2026, refonte de la boutique
+          vendeur ("t'as oublié ça, la boutique des vendeurs"). Remplace les
+          puces texte "Toutes catégories" / étiquettes, qui n'existaient que
+          sur cette page : réutilise `CategoryNav`, déjà en place sur la page
+          d'accueil marketplace depuis le 13/09/2026, généralisé le même jour
+          pour accepter l'URL de n'importe quelle page plutôt que seulement
+          celle de la marketplace globale (voir son commentaire). Note de
+          couleur d'accent perdue au passage sur la tuile active (le
+          composant partagé n'a pas cette option) : acceptable, la tuile
+          verte KEVA reste cohérente avec la nouvelle charte même sur une
+          boutique à couleur personnalisée (plan Pro).
+      */}
+      {availableCategories.length > 0 ? (
+        <div className="mt-4">
+          <CategoryNav
+            active={categorie}
+            availableCategories={availableCategories}
+            buildHref={(overrides) => buildHref(shopSlug, current, overrides)}
+          />
+        </div>
+      ) : null}
+
       {(products ?? []).length === 0 ? (
         <p className="mt-10 text-sm text-encre/70">
           {q || categorie
@@ -443,6 +446,15 @@ export default async function ShopPage({
             : "Aucun produit disponible pour l'instant."}
         </p>
       ) : (
+        // Cartes produit passées au composant partagé `ProductCard` le
+        // 22/09/2026 (refonte de la boutique vendeur) : cette page avait sa
+        // propre carte dupliquée (cadre, badge promo, note...) au lieu de
+        // réutiliser le composant déjà utilisé par la marketplace globale et
+        // la page favoris — deux cartes à maintenir en parallèle, qui
+        // avaient fini par diverger (celle-ci n'avait par ex. jamais reçu le
+        // cadre/ombre ni le badge promo sur la photo de la refonte de la
+        // fiche produit). Un seul composant désormais : la prochaine
+        // évolution de carte s'applique partout à la fois.
         <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {(products as PublicProduct[]).map((product) => {
             const thumbnail = [...(product.product_images ?? [])].sort(
@@ -457,65 +469,24 @@ export default async function ShopPage({
               saleStartsAt: product.sale_starts_at,
               saleEndsAt: product.sale_ends_at,
             });
-            const hasDiscount =
-              effective.compareAtPrice != null && effective.compareAtPrice > effective.price;
             const rating = ratingsByProduct.get(product.id) ?? null;
             return (
-              <div
+              <ProductCard
                 key={product.id}
-                className="relative rounded-md border border-ligne bg-white p-3 transition-shadow hover:shadow-md"
-              >
-                <div className="absolute right-2 top-2 z-10">
-                  <WishlistButton
-                    item={{
-                      productId: product.id,
-                      shopSlug,
-                      productSlug: product.slug,
-                      title: product.title,
-                      price: effective.price,
-                      compareAtPrice: effective.compareAtPrice,
-                      imageUrl: thumbnail,
-                    }}
-                  />
-                </div>
-                <Link href={`/${shopSlug}/${product.slug}`} transitionTypes={["nav-forward"]}>
-                  <ViewTransition name={`product-photo-${product.id}`} share="morph" default="none">
-                    <ProductImage
-                      src={thumbnail}
-                      alt={product.title}
-                      className="mb-2 aspect-square w-full rounded object-cover"
-                    />
-                  </ViewTransition>
-                  <p className="line-clamp-2 text-sm font-medium text-encre">{product.title}</p>
-                  {/* flex-wrap (15/09/2026, chantier responsive) : en grille à 2
-                      colonnes sur mobile, la carte est trop étroite pour tenir
-                      prix + prix barré sur une seule ligne avec des montants à
-                      6 chiffres — le prix barré passe alors proprement à la
-                      ligne au lieu de déborder de la carte. */}
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 font-mono text-sm text-vert-actif">
-                    {effective.price} FCFA
-                    {hasDiscount ? (
-                      <span className="font-mono text-xs text-encre/40 line-through">
-                        {effective.compareAtPrice} FCFA
-                      </span>
-                    ) : null}
-                    {effective.isOnSale ? (
-                      <span className="rounded-full bg-erreur px-1.5 py-0.5 text-[10px] font-semibold text-ivoire">
-                        Promo
-                      </span>
-                    ) : null}
-                  </p>
-                  {rating ? (
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-encre/60">
-                      <Stars rating={rating.average} />
-                      <span>({rating.count})</span>
-                    </p>
-                  ) : null}
-                  {product.category ? (
-                    <p className="text-xs text-encre/50">{categoryLabel(product.category)}</p>
-                  ) : null}
-                </Link>
-              </div>
+                product={{
+                  id: product.id,
+                  slug: product.slug,
+                  title: product.title,
+                  price: effective.price,
+                  compareAtPrice: effective.compareAtPrice,
+                  category: product.category,
+                  thumbnail,
+                  shopSlug,
+                  shopName: shop.name,
+                  rating,
+                  isOnSale: effective.isOnSale,
+                }}
+              />
             );
           })}
         </section>

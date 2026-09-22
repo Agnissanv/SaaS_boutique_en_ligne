@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CategoryIcon } from "@/components/category-icon";
-import { buildMarketplaceHref, type MarketplaceFilters } from "@/lib/marketplace/filters";
 
 /**
  * Bande de catégories façon Jumia (rangée de "tuiles" juste sous l'en-tête,
@@ -46,15 +45,25 @@ import { buildMarketplaceHref, type MarketplaceFilters } from "@/lib/marketplace
  * les produits actifs, lesquelles ont réellement au moins un produit, et ne
  * passe que celles-là. Une catégorie sans aucun produit n'est plus une
  * tuile qui mène à un rayon vide.
+ *
+ * `buildHref` généralisé le 22/09/2026 (refonte de la boutique vendeur,
+ * Isaac : "t'as oublié ça, la boutique des vendeurs" — capture Omarko avec
+ * sa propre bande "Shop By Category") : ce composant appelait directement
+ * `buildMarketplaceHref`, câblé sur les URLs de la marketplace globale
+ * (`/`) — impossible à réutiliser tel quel sur une page boutique
+ * (`/{shopSlug}`), qui a son propre calcul d'URL. Le composant reçoit
+ * désormais cette fonction en prop plutôt que de la choisir lui-même ;
+ * chaque appelant garde son propre calcul d'URL (voir `page.tsx` marketplace
+ * et la page boutique publique).
  */
 export function CategoryNav({
-  current,
   active,
   availableCategories,
+  buildHref,
 }: {
-  current: MarketplaceFilters;
   active?: string;
   availableCategories: { value: string; label: string }[];
+  buildHref: (overrides: { categorie?: string; page?: string }) => string;
 }) {
   const tiles: { value?: string; label: string }[] = [
     { value: undefined, label: "Toutes" },
@@ -71,7 +80,7 @@ export function CategoryNav({
         return (
           <Link
             key={tile.label}
-            href={buildMarketplaceHref(current, { categorie: tile.value, page: undefined })}
+            href={buildHref({ categorie: tile.value, page: undefined })}
             className="group flex w-20 shrink-0 snap-start flex-col items-center gap-2 text-center"
           >
             <span

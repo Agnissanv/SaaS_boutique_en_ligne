@@ -671,7 +671,7 @@ export default async function Home({
                 </Link>
               </div>
               <CategoryNav
-                current={current}
+                buildHref={(overrides) => buildMarketplaceHref(current, overrides)}
                 active={categorie}
                 availableCategories={availableCategories}
               />
