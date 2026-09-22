@@ -6,6 +6,8 @@ import { getAccessibleShop } from "@/lib/shop-access";
 import { ProductList } from "./product-list";
 import { ProductFilters, type ProductFiltersValue } from "./product-filters";
 
+const PAGE_SIZE = 50;
+
 type Product = {
   id: string;
   slug: string;
@@ -41,12 +43,20 @@ const SORTS: Record<string, { column: string; ascending: boolean }> = {
 // le designer UX/UI d'Isaac (filtres, tri, bascule tableau/grille), adaptée
 // aux couleurs/typo KEVA — voir aussi dashboard/layout.tsx et
 // produits/product-list.tsx pour le reste de cette refonte.
+//
+// **Pagination ajoutée le 22/09/2026** (audit "filtres partout" d'Isaac) :
+// les filtres existaient déjà, mais la requête n'était jamais bornée — un
+// catalogue de plusieurs centaines de produits se chargeait entièrement à
+// chaque visite. Même pattern 50/page que les autres pages de ce lot.
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; categorie?: string; statut?: string; tri?: string }>;
+  searchParams: Promise<{ q?: string; categorie?: string; statut?: string; tri?: string; page?: string }>;
 }) {
-  const { q = "", categorie = "", statut = "", tri = "" } = await searchParams;
+  const { q = "", categorie = "", statut = "", tri = "", page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
   const {
@@ -65,7 +75,8 @@ export default async function ProductsPage({
   let query = supabase
     .from("products")
     .select(
-      "id, slug, title, category, price, stock, stock_alert_threshold, is_active, product_images(url, position)"
+      "id, slug, title, category, price, stock, stock_alert_threshold, is_active, product_images(url, position)",
+      { count: "exact" }
     )
     .eq("shop_id", access.shopId)
     .is("deleted_at", null);
@@ -76,9 +87,10 @@ export default async function ProductsPage({
   if (statut === "inactif") query = query.eq("is_active", false);
 
   const sort = SORTS[tri] ?? SORTS[""];
-  query = query.order(sort.column, { ascending: sort.ascending });
+  query = query.order(sort.column, { ascending: sort.ascending }).range(from, to);
 
-  const { data: products } = await query;
+  const { data: products, count } = await query;
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
 
   const currentFilters: ProductFiltersValue = { q, categorie, statut, tri };
 
@@ -105,6 +117,34 @@ export default async function ProductsPage({
       <ProductFilters current={currentFilters} />
 
       <ProductList products={(products as Product[]) ?? []} />
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/dashboard/produits?${new URLSearchParams({ ...(q ? { q } : {}), ...(categorie ? { categorie } : {}), ...(statut ? { statut } : {}), ...(tri ? { tri } : {}), page: String(page - 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/dashboard/produits?${new URLSearchParams({ ...(q ? { q } : {}), ...(categorie ? { categorie } : {}), ...(statut ? { statut } : {}), ...(tri ? { tri } : {}), page: String(page + 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
+        </div>
+      )}
     </div>
     </ViewTransition>
     </ViewTransition>

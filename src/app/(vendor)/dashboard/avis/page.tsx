@@ -5,6 +5,16 @@ import { getAccessibleShop } from "@/lib/shop-access";
 import { Stars } from "@/components/stars";
 import { ReviewReplyForm } from "./reply-form";
 
+const PAGE_SIZE = 50;
+
+type ReplyFilter = "all" | "answered" | "unanswered";
+
+const REPLY_TABS: { value: ReplyFilter; label: string }[] = [
+  { value: "all", label: "Tous" },
+  { value: "unanswered", label: "Sans réponse" },
+  { value: "answered", label: "Répondu" },
+];
+
 type Review = {
   id: string;
   rating: number;
@@ -54,8 +64,27 @@ function VerifiedPurchaseBadge() {
  * une boucle de redirections vers une page qui le renvoie elle-même vers
  * `/dashboard`, sans explication. Voir migration 0034 pour l'extension RLS/
  * RPC correspondante côté base (lecture des avis + réponse).
+ *
+ * **Filtre "sans réponse" + pagination ajoutés le 22/09/2026** (audit
+ * "filtres partout" d'Isaac) : une boutique avec beaucoup d'avis n'avait
+ * aucun moyen de retrouver ceux qui attendent encore une réponse, et la
+ * liste entière se chargeait sans limite. La moyenne/le total affichés en
+ * haut de page restent calculés sur TOUS les avis (requête légère séparée,
+ * juste les notes) — pas seulement la page courante ou le filtre actif,
+ * sinon la moyenne affichée deviendrait trompeuse.
  */
-export default async function ReviewsPage() {
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reponse?: string; page?: string }>;
+}) {
+  const { reponse, page: pageParam } = await searchParams;
+  const replyFilter: ReplyFilter =
+    reponse === "answered" || reponse === "unanswered" ? reponse : "all";
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,17 +97,27 @@ export default async function ReviewsPage() {
   }
   const shop = { id: access.shopId };
 
-  const { data: reviews } = await supabase
+  let query = supabase
     .from("product_reviews")
     .select(
-      "id, rating, comment, customer_name, created_at, order_id, seller_reply, seller_reply_at, products!inner(id, title, slug, shop_id)"
+      "id, rating, comment, customer_name, created_at, order_id, seller_reply, seller_reply_at, products!inner(id, title, slug, shop_id)",
+      { count: "exact" }
     )
-    .eq("products.shop_id", shop.id)
-    .order("created_at", { ascending: false });
+    .eq("products.shop_id", shop.id);
+
+  if (replyFilter === "answered") query = query.not("seller_reply", "is", null);
+  if (replyFilter === "unanswered") query = query.is("seller_reply", null);
+
+  const [{ data: reviews, count }, { data: allRatings }] = await Promise.all([
+    query.order("created_at", { ascending: false }).range(from, to),
+    supabase.from("product_reviews").select("rating, products!inner(shop_id)").eq("products.shop_id", shop.id),
+  ]);
 
   const rows = (reviews ?? []) as unknown as Review[];
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
+  const ratings = (allRatings ?? []) as { rating: number }[];
   const average =
-    rows.length > 0 ? rows.reduce((sum, r) => sum + r.rating, 0) / rows.length : null;
+    ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : null;
 
   return (
     <div>
@@ -86,15 +125,32 @@ export default async function ReviewsPage() {
 
       {average !== null && (
         <p className="mt-2 text-sm text-encre/80">
-          <Stars rating={average} /> {average.toFixed(1)}/5 ({rows.length} avis
+          <Stars rating={average} /> {average.toFixed(1)}/5 ({ratings.length} avis
           au total)
         </p>
       )}
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        {REPLY_TABS.map((tab) => (
+          <Link
+            key={tab.value}
+            href={tab.value === "all" ? "/dashboard/avis" : `/dashboard/avis?reponse=${tab.value}`}
+            className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+              replyFilter === tab.value
+                ? "border-vert-actif bg-vert-actif/10 font-medium text-vert-sapin"
+                : "border-ligne text-encre/70 hover:border-vert-actif"
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </div>
+
       {rows.length === 0 ? (
         <p className="mt-4 text-sm text-encre/70">
-          Aucun avis pour l&apos;instant. Les clients peuvent laisser un avis
-          depuis la page de confirmation de leur commande, une fois livrée.
+          {replyFilter !== "all"
+            ? "Aucun avis ne correspond à ce filtre."
+            : "Aucun avis pour l'instant. Les clients peuvent laisser un avis depuis la page de confirmation de leur commande, une fois livrée."}
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-ligne">
@@ -131,6 +187,34 @@ export default async function ReviewsPage() {
             );
           })}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/dashboard/avis?${new URLSearchParams({ ...(replyFilter !== "all" ? { reponse: replyFilter } : {}), page: String(page - 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/dashboard/avis?${new URLSearchParams({ ...(replyFilter !== "all" ? { reponse: replyFilter } : {}), page: String(page + 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
+        </div>
       )}
     </div>
   );

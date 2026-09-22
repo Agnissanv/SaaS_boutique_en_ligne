@@ -2,10 +2,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+const PAGE_SIZE = 50;
+
 const PAYMENT_LABELS: Record<string, string> = {
   cash_on_delivery: "Paiement à la livraison",
   mobile_money: "Mobile Money",
 };
+
+type StatusFilter = "all" | "received" | "awaiting";
+
+const STATUS_TABS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "Tous" },
+  { value: "received", label: "Encaissé" },
+  { value: "awaiting", label: "À encaisser" },
+];
 
 type Order = {
   id: string;
@@ -36,8 +46,25 @@ type Order = {
  * remplacer par un vrai relevé de transactions CinetPay une fois le
  * paiement en ligne branché — voir claude/decisions-techniques.md pour le
  * détail de ce choix.
+ *
+ * **Filtre + pagination ajoutés le 22/09/2026** (audit "filtres partout"
+ * d'Isaac) : la liste se chargeait entièrement sans limite. Les deux totaux
+ * (Encaissé/À encaisser) restent calculés sur TOUTES les commandes pertinentes
+ * (requête légère séparée, juste statut + montant) — pas seulement la page
+ * ou le filtre courant, sinon ils deviendraient faux.
  */
-export default async function PaymentsPage() {
+export default async function PaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ statut?: string; page?: string }>;
+}) {
+  const { statut: statusParam, page: pageParam } = await searchParams;
+  const status: StatusFilter =
+    statusParam === "received" || statusParam === "awaiting" ? statusParam : "all";
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,19 +80,35 @@ export default async function PaymentsPage() {
     redirect("/dashboard/boutique");
   }
 
-  const { data: orders } = await supabase
+  let query = supabase
     .from("orders")
-    .select("id, customer_name, status, payment_method, total_amount, created_at")
+    .select("id, customer_name, status, payment_method, total_amount, created_at", { count: "exact" })
     .eq("shop_id", shop.id)
     .neq("status", "cancelled")
-    .neq("status", "pending")
-    .order("created_at", { ascending: false });
+    .neq("status", "pending");
+
+  if (status === "received") query = query.eq("status", "delivered");
+  if (status === "awaiting") query = query.neq("status", "delivered");
+
+  const [{ data: orders, count }, { data: allRelevant }] = await Promise.all([
+    query.order("created_at", { ascending: false }).range(from, to),
+    supabase
+      .from("orders")
+      .select("status, total_amount")
+      .eq("shop_id", shop.id)
+      .neq("status", "cancelled")
+      .neq("status", "pending"),
+  ]);
 
   const rows = (orders ?? []) as Order[];
-  const received = rows.filter((o) => o.status === "delivered");
-  const awaiting = rows.filter((o) => o.status !== "delivered");
-  const totalReceived = received.reduce((sum, o) => sum + o.total_amount, 0);
-  const totalAwaiting = awaiting.reduce((sum, o) => sum + o.total_amount, 0);
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
+  const allRows = (allRelevant ?? []) as Pick<Order, "status" | "total_amount">[];
+  const totalReceived = allRows
+    .filter((o) => o.status === "delivered")
+    .reduce((sum, o) => sum + o.total_amount, 0);
+  const totalAwaiting = allRows
+    .filter((o) => o.status !== "delivered")
+    .reduce((sum, o) => sum + o.total_amount, 0);
 
   return (
     <div>
@@ -91,9 +134,27 @@ export default async function PaymentsPage() {
         </div>
       </div>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        {STATUS_TABS.map((tab) => (
+          <Link
+            key={tab.value}
+            href={tab.value === "all" ? "/dashboard/paiements" : `/dashboard/paiements?statut=${tab.value}`}
+            className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+              status === tab.value
+                ? "border-vert-actif bg-vert-actif/10 font-medium text-vert-sapin"
+                : "border-ligne text-encre/70 hover:border-vert-actif"
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </div>
+
       {rows.length === 0 ? (
         <p className="mt-6 text-sm text-encre/70">
-          Aucun paiement pour l&apos;instant.
+          {status !== "all"
+            ? "Aucun paiement ne correspond à ce filtre."
+            : "Aucun paiement pour l'instant."}
         </p>
       ) : (
         <ul className="mt-6 divide-y divide-ligne">
@@ -128,6 +189,34 @@ export default async function PaymentsPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/dashboard/paiements?${new URLSearchParams({ ...(status !== "all" ? { statut: status } : {}), page: String(page - 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/dashboard/paiements?${new URLSearchParams({ ...(status !== "all" ? { statut: status } : {}), page: String(page + 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
+        </div>
       )}
     </div>
   );

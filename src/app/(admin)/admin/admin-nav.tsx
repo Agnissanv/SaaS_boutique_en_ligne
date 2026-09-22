@@ -37,26 +37,26 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 /**
- * Navigation du back-office admin — extraite en Client Component le
- * 15/09/2026 (second passage visuel sur l'admin) uniquement pour lire
- * `usePathname()` et surligner le lien actif, même raison que `SidebarNav`
- * côté dashboard vendeur. Reste une barre horizontale (4 liens seulement,
- * pas besoin d'une sidebar verticale comme le vendeur) mais reprend le même
- * traitement pill/icône + état actif que le reste de la direction
- * artistique KEVA.
+ * Navigation du back-office admin — passée en sidebar verticale le
+ * 22/09/2026, à la demande d'Isaac : "vu qu'on a ajouté beaucoup de choses
+ * sur la nav, il faudrait qu'on change de disposition [...] une sidebar bien
+ * correcte", en écho au dashboard vendeur (`SidebarNav`, 15/09/2026). La
+ * barre horizontale du 15/09 (4 liens à l'origine) est devenue intenable une
+ * fois montée à 8 entrées (Commandes/Paiements/Codes promo/Messages ajoutés
+ * le 22/09) — même symptôme que ce qui avait déjà forcé le passage en tiroir
+ * sur mobile.
  *
- * **Masquée sous `sm` depuis le 21/09/2026** (voir `admin-mobile-nav.tsx`) :
- * avec `flex-wrap`, cette barre mélangeait jusqu'ici logo, les 4 liens et le
- * bouton de déconnexion sur la même ligne, qui retombaient en plusieurs
- * lignes désordonnées dès que ça ne tenait plus ("vraiment dégueulasse" sur
- * mobile, signalé par Isaac) — remplacée en dessous de `sm` par un tiroir,
- * même schéma que le dashboard vendeur.
+ * Reprend le composant tel quel dans `<aside>` (voir layout.tsx) plutôt
+ * qu'un nouveau fichier séparé — `NAV_ITEMS` reste exporté d'ici pour
+ * `admin-mobile-nav.tsx`, qui n'a pas changé (son tiroir affichait déjà
+ * cette liste verticalement, seul le déclencheur change de place — voir
+ * layout.tsx).
  */
 export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <div className="hidden items-center gap-1 sm:flex">
+    <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
       {NAV_ITEMS.map((item) => {
         // `.startsWith` en plus de l'égalité stricte depuis le 22/09/2026 :
         // la fiche détaillée d'un vendeur (/admin/vendeurs/[slug]) doit
@@ -67,7 +67,7 @@ export function AdminNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
+            className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
               active
                 ? "bg-white/10 font-medium text-ivoire"
                 : "text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
@@ -78,6 +78,6 @@ export function AdminNav() {
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }

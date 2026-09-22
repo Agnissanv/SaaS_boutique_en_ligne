@@ -8,6 +8,15 @@ import {
 } from "@/lib/notifications";
 import { MarkNotificationsRead } from "./mark-read";
 
+const PAGE_SIZE = 50;
+
+type ReadFilter = "all" | "unread";
+
+const READ_TABS: { value: ReadFilter; label: string }[] = [
+  { value: "all", label: "Toutes" },
+  { value: "unread", label: "Non lues" },
+];
+
 type NotificationRow = {
   id: string;
   title: string;
@@ -42,8 +51,23 @@ type NotificationRow = {
  * marquer les notifications comme lues, sans que le vendeur n'ouvre jamais
  * la page. `wasUnread` (affichage) reste calculé ici à partir des données
  * lues, avant toute écriture.
+ *
+ * **Filtre "non lues" + pagination ajoutés le 22/09/2026** (audit "filtres
+ * partout" d'Isaac) : le plafond fixe de 50 (`\.limit(50)`) n'offrait aucun
+ * moyen d'aller voir plus loin. Passé en vraie pagination 50/page + un
+ * filtre "non lues" pour retrouver vite ce qui n'a pas encore été vu.
  */
-export default async function NotificationsPage() {
+export default async function NotificationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filtre?: string; page?: string }>;
+}) {
+  const { filtre, page: pageParam } = await searchParams;
+  const readFilter: ReadFilter = filtre === "unread" ? "unread" : "all";
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,14 +75,17 @@ export default async function NotificationsPage() {
 
   if (!user) redirect("/connexion");
 
-  const { data } = await supabase
+  let query = supabase
     .from("notifications")
-    .select("id, title, body, link, kind, is_read, created_at")
-    .eq("profile_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .select("id, title, body, link, kind, is_read, created_at", { count: "exact" })
+    .eq("profile_id", user.id);
+
+  if (readFilter === "unread") query = query.eq("is_read", false);
+
+  const { data, count } = await query.order("created_at", { ascending: false }).range(from, to);
 
   const notifications = (data ?? []) as NotificationRow[];
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
   const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
 
   return (
@@ -69,9 +96,27 @@ export default async function NotificationsPage() {
         Nouvelles commandes, annulations et changements liés à ta boutique.
       </p>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        {READ_TABS.map((tab) => (
+          <Link
+            key={tab.value}
+            href={tab.value === "all" ? "/dashboard/notifications" : `/dashboard/notifications?filtre=${tab.value}`}
+            className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+              readFilter === tab.value
+                ? "border-vert-actif bg-vert-actif/10 font-medium text-vert-sapin"
+                : "border-ligne text-encre/70 hover:border-vert-actif"
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </div>
+
       {notifications.length === 0 ? (
         <p className="mt-6 rounded-lg border border-ligne bg-white p-4 text-sm text-encre/60">
-          Aucune notification pour l&apos;instant.
+          {readFilter === "unread"
+            ? "Aucune notification non lue."
+            : "Aucune notification pour l'instant."}
         </p>
       ) : (
         <ul className="mt-4 overflow-hidden rounded-lg border border-ligne bg-white">
@@ -120,6 +165,34 @@ export default async function NotificationsPage() {
             );
           })}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/dashboard/notifications?${new URLSearchParams({ ...(readFilter === "unread" ? { filtre: "unread" } : {}), page: String(page - 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/dashboard/notifications?${new URLSearchParams({ ...(readFilter === "unread" ? { filtre: "unread" } : {}), page: String(page + 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
+        </div>
       )}
     </div>
   );
