@@ -9,10 +9,15 @@ import Link from "next/link";
  * cahier_de_charge.md), pas de clauses génériques inventées.
  *
  * IMPORTANT — à faire relire par un juriste avant publication réelle :
- * - Le nom d'entité (section 1) et le droit applicable (section 11) sont des
- *   placeholders — Isaac n'a pas encore communiqué de raison sociale
- *   officielle ni tranché la juridiction (Côte d'Ivoire par défaut, cohérent
- *   avec le marché ciblé par cahier_de_charge.md, mais à confirmer).
+ * - Le nom d'entité (section 1 et section propriété intellectuelle) était un
+ *   placeholder ; réglé le 22/09/2026 (Isaac, question posée directement) :
+ *   KEVA n'ayant pas de société enregistrée (RCCM) à ce jour, l'entité citée
+ *   est Isaac lui-même en tant qu'exploitant individuel — à remplacer par la
+ *   raison sociale officielle le jour où une société est immatriculée, pas
+ *   avant. Le droit applicable (section 11, Côte d'Ivoire) n'était lui-même
+ *   qu'annoté "à confirmer" par excès de prudence : c'est déjà le marché
+ *   ciblé par cahier_de_charge.md, donc pas un vrai placeholder — annotation
+ *   retirée, aucun changement de fond.
  * - L'email de contact utilisé est celui fourni par Isaac le 22/09/2026
  *   (contactkevashop@gmail.com) — à corriger si une adresse dédiée
  *   (contact@shopkeva.com) est créée plus tard.
@@ -62,10 +67,11 @@ export default function ConditionsUtilisationPage() {
             <h2 className="font-display text-base font-semibold text-encre">1. Objet</h2>
             <p className="mt-2">
               KEVA (accessible sur shopkeva.com) est une plateforme éditée par
-              [raison sociale à préciser] qui permet à des vendeurs de créer
-              une boutique en ligne (« la Boutique ») et à leurs clients d&apos;y
-              passer commande. En créant un compte ou en passant commande sur
-              KEVA, tu acceptes les présentes conditions.
+              Agnissan Isaac Valen, exploitant individuel (KEVA n&apos;est pas
+              encore immatriculée en tant que société), qui permet à des
+              vendeurs de créer une boutique en ligne (« la Boutique ») et à
+              leurs clients d&apos;y passer commande. En créant un compte ou en
+              passant commande sur KEVA, tu acceptes les présentes conditions.
             </p>
           </section>
 
@@ -186,8 +192,8 @@ export default function ConditionsUtilisationPage() {
               Chaque vendeur reste propriétaire des contenus qu&apos;il met en
               ligne (photos, descriptions, logo de sa Boutique) et garantit
               disposer des droits nécessaires pour les publier. La marque et
-              le logo KEVA restent la propriété de [raison sociale à
-              préciser].
+              le logo KEVA restent la propriété d&apos;Agnissan Isaac Valen (en
+              attendant l&apos;immatriculation de KEVA en tant que société).
             </p>
           </section>
 
@@ -209,10 +215,9 @@ export default function ConditionsUtilisationPage() {
               11. Droit applicable
             </h2>
             <p className="mt-2">
-              Les présentes conditions sont régies par le droit ivoirien
-              [juridiction à confirmer]. Tout litige sera soumis, à défaut de
-              résolution amiable, aux juridictions compétentes de Côte
-              d&apos;Ivoire.
+              Les présentes conditions sont régies par le droit ivoirien.
+              Tout litige sera soumis, à défaut de résolution amiable, aux
+              juridictions compétentes de Côte d&apos;Ivoire.
             </p>
           </section>
 

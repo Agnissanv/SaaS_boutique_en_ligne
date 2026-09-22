@@ -11,8 +11,11 @@ import Link from "next/link";
  * qu'Isaac fournisse un numéro/email dédié).
  *
  * IMPORTANT — à relire avant publication réelle : le nom d'entité ci-dessous
- * est un espace réservé (Isaac n'a pas encore communiqué de raison sociale
- * officielle — auto-entrepreneur, société...). L'email de contact utilisé
+ * était un espace réservé, réglé le 22/09/2026 comme dans
+ * `conditions-utilisation/page.tsx` (même raisonnement, voir ce fichier) :
+ * KEVA n'ayant pas de société enregistrée, l'entité citée est Isaac
+ * lui-même en tant qu'exploitant individuel — à remplacer par la raison
+ * sociale officielle une fois KEVA immatriculée. L'email de contact utilisé
  * par défaut est celui du compte Isaac (valenbouge@gmail.com), en attendant
  * une adresse dédiée (ex. contact@shopkeva.com) — à corriger dès qu'elle
  * existe. Contenu par ailleurs fidèle aux données réellement collectées et
@@ -47,8 +50,10 @@ export default function PolitiqueConfidentialitePage() {
             <p className="mt-2">
               KEVA (accessible sur shopkeva.com) est une plateforme qui permet à
               des vendeurs de créer une boutique en ligne et à leurs clients d&apos;y
-              passer commande. KEVA est éditée par [raison sociale à préciser],
-              joignable à l&apos;adresse indiquée à la section 8 ci-dessous.
+              passer commande. KEVA est éditée par Agnissan Isaac Valen,
+              exploitant individuel (KEVA n&apos;est pas encore immatriculée en
+              tant que société), joignable à l&apos;adresse indiquée à la section
+              8 ci-dessous.
             </p>
           </section>
 
