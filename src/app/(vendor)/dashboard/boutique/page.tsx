@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
 import { ShopForm } from "./shop-form";
+import { ShareShopLinks } from "./share-shop-links";
 import { acceptCollaboratorInvite } from "./actions";
 
 // Réglages boutique : nom, description, catégorie, logo, couverture, lien
@@ -102,6 +103,12 @@ export default async function ShopSettingsPage() {
           : "Crée ta boutique pour commencer à ajouter des produits."}
       </p>
       <ShopForm shop={shop ?? null} canCustomizeBranding={canCustomizeBranding} />
+
+      {shop ? (
+        <ShareShopLinks
+          shopUrl={`${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${shop.slug}`}
+        />
+      ) : null}
     </div>
   );
 }

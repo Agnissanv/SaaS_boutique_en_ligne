@@ -11,6 +11,7 @@ import {
   ComparisonTile,
   StatTile,
   RevenueBars,
+  CountBars,
 } from "./charts";
 import { PeriodSelect } from "./period-select";
 
@@ -38,11 +39,21 @@ type CustomerPeriodStats = {
   new_customers: number;
   returning_customers: number;
 };
+type TrafficSourceRow = { source: string; visits: number };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   mobile_money: "Mobile Money",
   cash_on_delivery: "Paiement à la livraison",
+};
+// Libellés français — voir migration 0043 pour la liste des canaux reconnus
+// côté SQL (`whatsapp`/`instagram`/`facebook`/`tiktok`, sinon "direct").
+const TRAFFIC_SOURCE_LABELS: Record<string, string> = {
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  direct: "Lien direct / autre",
 };
 
 function startOfDay(d: Date): number {
@@ -138,6 +149,7 @@ export default async function StatistiquesPage({
     { data: allActiveProducts },
     { data: shop },
     { data: categoryBreakdownRaw },
+    { data: trafficSourcesRaw },
     rating,
   ] = await Promise.all([
     supabase
@@ -175,6 +187,12 @@ export default async function StatistiquesPage({
       p_shop_id: access.shopId,
       p_since: new Date(currentPeriodStart).toISOString(),
     }),
+    // Trafic par source (22/09/2026, voir migration 0043) — toujours
+    // "depuis toujours" (pas borné à la période choisie) : le volume est
+    // encore faible pour la plupart des boutiques, une fenêtre glissante
+    // n'aurait pour l'instant que peu de valeur ajoutée sur ce chiffre en
+    // particulier.
+    supabase.rpc("get_shop_traffic_sources", { p_shop_id: access.shopId }),
     getShopRating(supabase, access.shopId),
   ]);
 
@@ -199,6 +217,10 @@ export default async function StatistiquesPage({
     view_count: number;
   }[];
   const categoryBreakdown = (categoryBreakdownRaw ?? []) as CategoryRow[];
+  const trafficSourceRows = ((trafficSourcesRaw ?? []) as TrafficSourceRow[]).map((row) => ({
+    label: TRAFFIC_SOURCE_LABELS[row.source] ?? row.source,
+    count: row.visits,
+  }));
 
   const dayBuckets = new Map<number, { revenue: number; orders: number }>();
   for (let i = 0; i < periodDays; i++) {
@@ -434,6 +456,21 @@ export default async function StatistiquesPage({
               emptyLabel="Pas encore de vues enregistrées."
             />
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
+        <h2 className="font-display text-sm font-semibold text-encre">
+          Trafic par source (depuis toujours)
+        </h2>
+        <p className="mt-1 text-xs text-encre/50">
+          Génère des liens à partager par réseau depuis « Ma boutique ».
+        </p>
+        <div className="mt-3">
+          <CountBars
+            rows={trafficSourceRows}
+            emptyLabel="Aucune visite via un lien suivi pour l'instant."
+          />
         </div>
       </div>
 

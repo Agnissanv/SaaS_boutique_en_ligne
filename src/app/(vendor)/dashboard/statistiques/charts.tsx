@@ -199,6 +199,47 @@ export function RevenueBars({
   );
 }
 
+/**
+ * Barres de répartition par COMPTE brut (pas un montant FCFA) — ajouté le
+ * 22/09/2026 pour "Trafic par source" (voir migration 0043). Même dessin que
+ * `RevenueBars` ci-dessus (barre proportionnelle au max + valeur alignée à
+ * droite), mais sans le formatage FCFA : un composant distinct plutôt que de
+ * complexifier `RevenueBars` avec un format conditionnel pour ce seul usage.
+ */
+export function CountBars({
+  rows,
+  emptyLabel,
+}: {
+  rows: { label: string; count: number; sublabel?: string }[];
+  emptyLabel: string;
+}) {
+  const total = rows.reduce((sum, r) => sum + r.count, 0);
+  const max = Math.max(1, ...rows.map((r) => r.count));
+
+  if (rows.length === 0 || total === 0) {
+    return <p className="text-sm text-encre/60">{emptyLabel}</p>;
+  }
+
+  return (
+    <ul className="flex flex-col gap-2">
+      {rows.map((row) => (
+        <li key={row.label} className="flex items-center gap-3 text-sm">
+          <span className="w-28 shrink-0 truncate text-encre/70">{row.label}</span>
+          <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-brume">
+            <span
+              className="block h-full rounded-full bg-vert-actif"
+              style={{ width: `${Math.max(4, (row.count / max) * 100)}%` }}
+            />
+          </span>
+          <span className="w-24 shrink-0 text-right font-mono text-xs text-encre/70">
+            {row.count} ({Math.round((row.count / total) * 100)}%)
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Tuile de comparaison de périodes (Pro) — variation en %, colorée selon le sens. */
 export function ComparisonTile({
   label,

@@ -175,6 +175,12 @@ export default async function ShopPage({
   const pageParam = firstParam(rawParams.page);
   const prixMin = firstParam(rawParams.prix_min);
   const prixMax = firstParam(rawParams.prix_max);
+  // Source de trafic (`?src=`, 22/09/2026, voir migration 0043) — lue ici
+  // uniquement pour être transmise à `increment_shop_view` ci-dessous, la
+  // validation réelle (liste blanche whatsapp/instagram/facebook/tiktok,
+  // sinon "direct") se fait côté SQL dans la fonction elle-même, jamais
+  // stockée telle quelle depuis un paramètre d'URL non fiable.
+  const src = firstParam(rawParams.src);
   // Validées contre les vraies clés d'attribut de la catégorie choisie — voir
   // le même raisonnement dans `src/app/page.tsx` (chantier "filtres" du
   // 22/09/2026).
@@ -198,7 +204,7 @@ export default async function ShopPage({
   // pas de déduplication par visiteur — voir 0005_shop_stats.sql. On ignore
   // volontairement une éventuelle erreur : ça ne doit jamais empêcher
   // l'affichage de la boutique.
-  await supabase.rpc("increment_shop_view", { p_shop_slug: shopSlug });
+  await supabase.rpc("increment_shop_view", { p_shop_slug: shopSlug, p_source: src ?? "direct" });
 
   let query = supabase
     .from("products")
