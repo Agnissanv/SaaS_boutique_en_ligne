@@ -261,16 +261,25 @@ export default async function ShopPage({
           WhatsApp, par ex.) n'avait tout simplement aucun moyen de rejoindre
           les autres boutiques de la plateforme. `transitionTypes={["nav-back"]}`
           : même mouvement que le lien "Accueil" de la barre basse, on
-          remonte dans la hiérarchie plutôt que d'avancer. */}
-      <div className="mb-3 flex items-center justify-between gap-3">
+          remonte dans la hiérarchie plutôt que d'avancer.
+          Restylés en pastilles le 22/09/2026 (retour d'Isaac sur une capture :
+          "il y a encore ce style de bouton... c'est pas bon") : simple texte
+          souligné, un style hérité d'avant la charte KEVA qui détonnait à
+          côté des vrais boutons/puces posés partout ailleurs dans cette
+          refonte. Même traitement que les puces de catégorie juste en
+          dessous plutôt qu'un lien nu. */}
+      <div className="mb-3 flex items-center justify-between gap-2">
         <Link
           href="/"
           transitionTypes={["nav-back"]}
-          className="text-xs font-medium text-vert-actif underline"
+          className="inline-flex items-center gap-1 rounded-full bg-brume px-3 py-1.5 text-xs font-medium text-vert-sapin transition hover:bg-ligne/50"
         >
           ← Toutes les boutiques
         </Link>
-        <Link href="/compte" className="text-xs text-vert-actif underline">
+        <Link
+          href="/compte"
+          className="inline-flex items-center gap-1 rounded-full bg-brume px-3 py-1.5 text-xs font-medium text-vert-sapin transition hover:bg-ligne/50"
+        >
           Mon compte
         </Link>
       </div>
@@ -492,24 +501,37 @@ export default async function ShopPage({
         </section>
       )}
 
+      {/* Pagination restylée en boutons le 22/09/2026, même passage que le
+          lien retour ci-dessus (liens texte soulignés remplacés par des
+          vrais boutons partout sur cette page). */}
       {totalPages > 1 ? (
-        <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+        <div className="mt-8 flex items-center justify-center gap-3 text-sm">
           {page > 1 ? (
-            <Link href={buildHref(shopSlug, current, { page: String(page - 1) })} className="text-vert-actif underline">
-              Page précédente
+            <Link
+              href={buildHref(shopSlug, current, { page: String(page - 1) })}
+              className="rounded-full border border-ligne bg-white px-3.5 py-1.5 text-xs font-medium text-vert-sapin transition hover:border-vert-actif"
+            >
+              ‹ Précédent
             </Link>
           ) : (
-            <span className="text-encre/40">Page précédente</span>
+            <span className="rounded-full border border-ligne px-3.5 py-1.5 text-xs font-medium text-encre/30">
+              ‹ Précédent
+            </span>
           )}
-          <span className="text-encre/70">
-            Page {page} / {totalPages}
+          <span className="font-mono text-xs text-encre/60">
+            {page} / {totalPages}
           </span>
           {page < totalPages ? (
-            <Link href={buildHref(shopSlug, current, { page: String(page + 1) })} className="text-vert-actif underline">
-              Page suivante
+            <Link
+              href={buildHref(shopSlug, current, { page: String(page + 1) })}
+              className="rounded-full border border-ligne bg-white px-3.5 py-1.5 text-xs font-medium text-vert-sapin transition hover:border-vert-actif"
+            >
+              Suivant ›
             </Link>
           ) : (
-            <span className="text-encre/40">Page suivante</span>
+            <span className="rounded-full border border-ligne px-3.5 py-1.5 text-xs font-medium text-encre/30">
+              Suivant ›
+            </span>
           )}
         </div>
       ) : null}
