@@ -5,17 +5,25 @@ import { CURRENT_SELLER_CHARTER_VERSION, SELLER_CHARTER_SECTIONS } from "@/lib/s
 import { acceptSellerCharter } from "./actions";
 
 export const metadata = {
-  title: "Charte vendeur — KEVA",
+  title: "Règles de la plateforme — KEVA",
 };
 
 /**
- * Charte vendeur — créée le 22/09/2026 à la demande d'Isaac, suite à la
- * question d'un futur vendeur sur les produits autorisés/interdits dans le
- * groupe d'accès anticipé. Les règles existaient déjà dans les conditions
+ * Règles de la plateforme (page/route encore nommée "charte-vendeur" en
+ * interne, voir plus bas) — créée le 22/09/2026 à la demande d'Isaac, suite à
+ * la question d'un futur vendeur sur les produits autorisés/interdits dans
+ * le groupe d'accès anticipé. Les règles existaient déjà dans les conditions
  * d'utilisation (section 5, ajoutée le même jour), mais un lien en bas de
  * page n'est pas lu par la plupart des vendeurs — Isaac voulait une étape
  * obligatoire, lue et validée explicitement, avant de pouvoir continuer
  * vers le dashboard/la création de boutique.
+ *
+ * **Libellé "Charte vendeur" renommé "Règles de la plateforme" le
+ * 22/09/2026** : Isaac a jugé "charte" trop compliqué/juridique pour ses
+ * vendeurs. Changement purement d'affichage (titre, lien sidebar/Aide) —
+ * route, noms de fichiers/fonctions et colonnes en base (`shop_charter_*`,
+ * `seller-charter.ts`, `/charte-vendeur`) inchangés pour éviter une
+ * migration/renommage de fichiers sans bénéfice utilisateur.
  *
  * Page volontairement HORS du groupe (vendor)/dashboard : `dashboard/layout.tsx`
  * redirige ici tant que la charte n'est pas acceptée (voir ce fichier) — si
@@ -60,7 +68,7 @@ export default async function SellerCharterPage() {
       </header>
 
       <main className="mx-auto w-full max-w-2xl px-4 py-10">
-        <h1 className="font-display text-2xl font-semibold text-encre">Charte vendeur</h1>
+        <h1 className="font-display text-2xl font-semibold text-encre">Règles de la plateforme</h1>
         <p className="mt-2 text-sm text-encre/70">
           {alreadyAccepted
             ? `Acceptée le ${new Date(profile!.shop_charter_accepted_at!).toLocaleDateString("fr-FR")}. Voici un rappel des règles de la plateforme.`

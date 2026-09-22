@@ -151,7 +151,7 @@ export default async function DashboardLayout({
             href="/charte-vendeur"
             className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
           >
-            Charte vendeur
+            Règles de la plateforme
           </Link>
           <form action={signOut}>
             <button
@@ -192,7 +192,7 @@ export default async function DashboardLayout({
                   href="/charte-vendeur"
                   className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
                 >
-                  Charte vendeur
+                  Règles de la plateforme
                 </Link>
                 <form action={signOut}>
                   <button

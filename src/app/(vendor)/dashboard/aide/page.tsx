@@ -52,11 +52,14 @@ const FAQ: { question: string; answer: string }[] = [
  * email de support à ajouter ici dans un prochain passage — voir
  * claude/decisions-techniques.md.
  *
- * **Lien vers la charte vendeur ajouté le 22/09/2026** : Isaac voulait que
- * les règles acceptées à l'inscription (voir /charte-vendeur et
+ * **Lien vers les règles de la plateforme ajouté le 22/09/2026** : Isaac
+ * voulait que les règles acceptées à l'inscription (voir /charte-vendeur et
  * src/lib/seller-charter.ts) restent faciles à retrouver plus tard sur le
  * site, pas seulement lues une fois puis oubliées. Deuxième emplacement : le
- * pied de la sidebar/du tiroir mobile (dashboard/layout.tsx).
+ * pied de la sidebar/du tiroir mobile (dashboard/layout.tsx). Libellé
+ * "Charte vendeur" renommé "Règles de la plateforme" le même jour (Isaac :
+ * trop compliqué/juridique pour ses vendeurs) — voir la note dans
+ * charte-vendeur/page.tsx pour le détail de ce qui a changé ou non.
  */
 export default function HelpPage() {
   return (
@@ -70,7 +73,7 @@ export default function HelpPage() {
         href="/charte-vendeur"
         className="mt-4 inline-block text-sm text-vert-actif underline"
       >
-        Relire la charte vendeur
+        Relire les règles de la plateforme
       </Link>
 
       <div className="mt-6 max-w-2xl divide-y divide-ligne">
