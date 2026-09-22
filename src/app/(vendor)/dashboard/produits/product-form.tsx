@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { saveProduct, type ProductFormState } from "./actions";
 import {
@@ -121,6 +121,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
   const [urls, setUrls] = useState<string[]>(initialUrls);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -196,38 +197,56 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
       {urls.map((url) => (
         <input key={url} type="hidden" name="imageUrls" value={url} />
       ))}
-      {urls.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {urls.map((url) => (
-            <div key={url} className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element -- images uploadées par l'utilisateur, source dynamique */}
-              <img
-                src={url}
-                alt="Photo produit"
-                className="h-20 w-20 rounded object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemove(url)}
-                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-cuivre-profond text-xs text-ivoire"
-                aria-label="Retirer cette photo"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      {urls.length < MAX_PHOTOS && (
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleChange}
-          disabled={uploading}
-          className="text-sm"
-        />
-      )}
+      {/*
+        Tuile "Ajouter" refondue le 22/09/2026 : Isaac signalait que l'ajout
+        de photo n'était "pas visible à l'œil nu" — c'était un `<input
+        type="file">` natif sans aucun style (juste `text-sm`), qui ne
+        ressemble à un bouton dans aucun navigateur. Remplacé par une vraie
+        tuile cliquable, dans la même rangée que les vignettes existantes
+        (même taille, même repère visuel qu'"ajouter un élément à une
+        liste"), qui déclenche un input file cette fois-ci caché
+        (`fileInputRef`).
+      */}
+      <div className="flex flex-wrap gap-2">
+        {urls.map((url) => (
+          <div key={url} className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element -- images uploadées par l'utilisateur, source dynamique */}
+            <img
+              src={url}
+              alt="Photo produit"
+              className="h-20 w-20 rounded object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => handleRemove(url)}
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-cuivre-profond text-xs text-ivoire"
+              aria-label="Retirer cette photo"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        {urls.length < MAX_PHOTOS && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/50 transition hover:border-cuivre-clair hover:text-cuivre-profond disabled:opacity-50"
+          >
+            <span className="text-xl leading-none">+</span>
+            <span className="text-[10px] font-medium">Ajouter</span>
+          </button>
+        )}
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleChange}
+        disabled={uploading}
+        className="hidden"
+      />
       <p className="text-xs text-encre/50">
         Résolution entre 500×500 et 2000×2000 px, 2 Mo maximum par photo. Fond
         blanc recommandé, sans filigrane.
