@@ -1,11 +1,16 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CheckCircleIcon, PauseCircleIcon, TagIcon, ClipboardIcon } from "@/components/admin/admin-icons";
 import type { ReactNode } from "react";
+
+const PAGE_SIZE = 50;
 
 const ACTION_LABELS: Record<string, string> = {
   shop_suspended: "Boutique suspendue",
   shop_activated: "Boutique réactivée",
   subscription_plan_assigned: "Plan d'abonnement assigné",
+  subscription_payment_success: "Paiement d'abonnement réussi",
+  subscription_payment_failed: "Paiement d'abonnement échoué",
 };
 
 // Icône + teinte par type d'action — même principe que les badges de statut
@@ -16,6 +21,8 @@ const ACTION_ICON: Record<string, { icon: ReactNode; toneClass: string }> = {
   shop_suspended: { icon: <PauseCircleIcon className="h-4 w-4" />, toneClass: "bg-erreur/15 text-erreur" },
   shop_activated: { icon: <CheckCircleIcon className="h-4 w-4" />, toneClass: "bg-succes/15 text-succes" },
   subscription_plan_assigned: { icon: <TagIcon className="h-4 w-4" />, toneClass: "bg-vert-actif/15 text-vert-sapin" },
+  subscription_payment_success: { icon: <CheckCircleIcon className="h-4 w-4" />, toneClass: "bg-succes/15 text-succes" },
+  subscription_payment_failed: { icon: <PauseCircleIcon className="h-4 w-4" />, toneClass: "bg-erreur/15 text-erreur" },
 };
 const DEFAULT_ACTION_ICON = { icon: <TagIcon className="h-4 w-4" />, toneClass: "bg-brume text-vert-actif" };
 
@@ -30,30 +37,76 @@ type LogRow = {
 
 // Logs des transactions (cahier des charges §3.1.C.4) : audit des actions
 // admin sensibles (suspension/réactivation de boutique, changement de plan)
-// — alimenté par les Server Actions de /admin/vendeurs et /admin/abonnements.
-// Les paiements CinetPay viendront aussi ici une fois branchés (table
-// `payments`, pas encore de flux qui l'alimente).
-export default async function AdminTransactionsPage() {
+// et des webhooks de paiement — alimenté par les Server Actions de
+// /admin/vendeurs, /admin/abonnements et /api/cinetpay/webhook.
+//
+// Filtre + pagination ajoutés le 22/09/2026 (reprise de l'audit back-office,
+// point signalé comme le plus urgent après les messages de contact) : cette
+// page plafonnait jusqu'ici à 100 lignes sans aucun moyen d'aller plus loin
+// ni de chercher une action précise — invivable dès que le volume grandit
+// avec 1000-2000 boutiques. Même pattern de pagination que les autres pages
+// admin (`page` + `.range()` + `{count: "exact"}`).
+export default async function AdminTransactionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ action?: string; page?: string }>;
+}) {
+  const { action: actionParam, page: pageParam } = await searchParams;
+  const actionFilter = actionParam && actionParam in ACTION_LABELS ? actionParam : undefined;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
-  const { data: logs, error } = await supabase
+  let query = supabase
     .from("transaction_logs")
-    .select("id, action, metadata, created_at, shop:shops(name, slug), actor:profiles(display_name)")
+    .select("id, action, metadata, created_at, shop:shops(name, slug), actor:profiles(display_name)", {
+      count: "exact",
+    })
     .order("created_at", { ascending: false })
-    .limit(100);
+    .range(from, to);
+
+  if (actionFilter) {
+    query = query.eq("action", actionFilter);
+  }
+
+  const { data: logs, count, error } = await query;
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
 
   return (
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Transactions</h1>
       <p className="mt-1 text-sm text-encre/70">
-        Journal des actions admin (100 dernières). Les paiements Mobile
-        Money s&apos;ajouteront ici une fois CinetPay branché.
+        Journal des actions admin et des paiements d&apos;abonnement.
       </p>
 
-      {/* Vérification d'erreur ajoutée le 22/09/2026 (audit pré-lancement) :
-          seule page admin sur quatre à ne jamais vérifier `error` — une panne
-          de requête retombait silencieusement sur "Aucune action enregistrée"
-          plutôt que de signaler que le journal n'avait pas pu être chargé. */}
+      <form method="GET" className="mt-4 flex flex-wrap items-center gap-2">
+        <select
+          name="action"
+          defaultValue={actionFilter ?? ""}
+          className="rounded-md border border-ligne px-3 py-1.5 text-sm focus:ring-2 focus:ring-vert-actif"
+        >
+          <option value="">Toutes les actions</option>
+          {Object.entries(ACTION_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          className="rounded-md border border-ligne px-3 py-1.5 text-sm text-encre/70 hover:border-vert-actif"
+        >
+          Filtrer
+        </button>
+        {actionFilter && (
+          <Link href="/admin/transactions" className="text-sm text-encre/50 underline hover:text-encre">
+            Réinitialiser
+          </Link>
+        )}
+      </form>
+
       {error && (
         <p className="mt-4 rounded-md border border-erreur/30 bg-erreur/5 px-3 py-2 text-sm text-erreur">
           Impossible de charger le journal pour l&apos;instant. Réessaie dans un instant.
@@ -63,7 +116,7 @@ export default async function AdminTransactionsPage() {
       {!error && (logs ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <ClipboardIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucune action enregistrée pour l&apos;instant.</p>
+          <p className="text-sm text-encre/60">Aucune action enregistrée ici.</p>
         </div>
       ) : error ? null : (
         <ul className="mt-6 divide-y divide-ligne rounded-lg border border-ligne bg-white text-sm">
@@ -90,6 +143,34 @@ export default async function AdminTransactionsPage() {
             );
           })}
         </ul>
+      )}
+
+      {!error && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/admin/transactions?${new URLSearchParams({ ...(actionFilter ? { action: actionFilter } : {}), page: String(page - 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/admin/transactions?${new URLSearchParams({ ...(actionFilter ? { action: actionFilter } : {}), page: String(page + 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
+        </div>
       )}
     </div>
   );

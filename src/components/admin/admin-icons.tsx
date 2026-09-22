@@ -96,6 +96,15 @@ export function SearchIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+export function MailIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <rect x="2.8" y="4.5" width="14.4" height="11" rx="1.4" />
+      <path d="M3.3 5.3 10 11l6.7-5.7" />
+    </svg>
+  );
+}
+
 export function ClipboardIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg {...baseProps} className={className}>

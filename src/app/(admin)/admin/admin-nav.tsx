@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardIcon, GridIcon, StorefrontIcon, TicketIcon } from "@/components/admin/admin-icons";
+import { ClipboardIcon, CoinsIcon, GridIcon, MailIcon, StorefrontIcon, TicketIcon } from "@/components/admin/admin-icons";
 
 type NavItem = {
   href: string;
@@ -20,6 +20,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Vue d'ensemble", icon: GridIcon },
   { href: "/admin/vendeurs", label: "Vendeurs", icon: StorefrontIcon },
   { href: "/admin/abonnements", label: "Abonnements", icon: TicketIcon },
+  { href: "/admin/paiements", label: "Paiements", icon: CoinsIcon },
+  { href: "/admin/messages", label: "Messages", icon: MailIcon },
   { href: "/admin/transactions", label: "Transactions", icon: ClipboardIcon },
 ];
 
