@@ -98,15 +98,24 @@ export default async function ComptePage() {
         </section>
       )}
 
-      {/* ========== AIDE ========== */}
+      {/* ========== AIDE ==========
+          Liens branchés le 22/09/2026 (étaient des stubs "#") : "Centre
+          d'aide" pointe vers la nouvelle FAQ client (voir ./aide/page.tsx),
+          "Nous contacter" et "Donner un avis" utilisent l'email de support
+          fourni par Isaac ce jour-là (contactkevashop@gmail.com), avec un
+          sujet différent pour distinguer les deux dans sa boîte mail. */}
       <section>
         <h2 className="mb-2 font-display text-base font-semibold text-encre">
           Aide & Support
         </h2>
         <div className="overflow-hidden rounded-xl border border-ligne bg-white">
-          <AccountLink href="#" label="Centre d’aide" />
-          <AccountLink href="#" label="Nous contacter" />
-          <AccountLink href="#" label="Donner un avis" last />
+          <AccountLink href="/compte/aide" label="Centre d’aide" />
+          <AccountLink href="mailto:contactkevashop@gmail.com" label="Nous contacter" />
+          <AccountLink
+            href="mailto:contactkevashop@gmail.com?subject=Avis%20sur%20KEVA"
+            label="Donner un avis"
+            last
+          />
         </div>
       </section>
 
@@ -116,7 +125,7 @@ export default async function ComptePage() {
           Légal
         </h2>
         <div className="overflow-hidden rounded-xl border border-ligne bg-white">
-          <AccountLink href="#" label="Conditions d’utilisation" />
+          <AccountLink href="/conditions-utilisation" label="Conditions d’utilisation" />
           <AccountLink href="/politique-confidentialite" label="Politique de confidentialité" last />
         </div>
       </section>
