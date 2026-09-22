@@ -74,14 +74,14 @@ export default async function CommandesPage() {
                       <span
                         className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                           ORDER_STATUS_BADGE_CLASS[order.status] ??
-                          "bg-sable text-encre/60"
+                          "bg-brume text-encre/60"
                         }`}
                       >
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </div>
                     <p className="mt-0.5 text-sm text-encre/60">
-                      <span className="font-mono text-cuivre-profond">
+                      <span className="font-mono text-vert-actif">
                         {order.total_amount.toLocaleString("fr-FR")} FCFA
                       </span>
                       {" — "}

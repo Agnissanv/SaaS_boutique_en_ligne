@@ -84,7 +84,7 @@ export default async function ShopSettingsPage() {
           <input type="hidden" name="shopId" value={pendingInvite.shopId} />
           <button
             type="submit"
-            className="rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
+            className="rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
           >
             Accepter l&apos;invitation
           </button>

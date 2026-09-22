@@ -43,7 +43,10 @@
   --color-erreur: #b3452f;
 
   --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  /* Archivo remplace Fraunces le 22/09/2026 (voir decisions-techniques.md) :
+     grotesque grasse plutôt que serif, pour se rapprocher de la police
+     bâton/majuscules du logo KEVA réel. */
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 

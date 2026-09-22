@@ -182,7 +182,7 @@ export default async function DashboardOverviewPage() {
                       {order.customer_name}
                       <span
                         className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
-                          ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/70"
+                          ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-brume text-encre/70"
                         }`}
                       >
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
@@ -192,7 +192,7 @@ export default async function DashboardOverviewPage() {
                       {new Date(order.created_at).toLocaleDateString("fr-FR")}
                     </p>
                   </div>
-                  <p className="shrink-0 font-mono text-sm text-cuivre-profond">
+                  <p className="shrink-0 font-mono text-sm text-vert-actif">
                     {order.total_amount} FCFA
                   </p>
                 </Link>
@@ -220,7 +220,7 @@ function StatTile({
       <p
         className={
           mono
-            ? "mt-1 font-mono text-lg font-semibold text-cuivre-profond"
+            ? "mt-1 font-mono text-lg font-semibold text-vert-actif"
             : "mt-1 font-display text-lg font-semibold text-encre"
         }
       >

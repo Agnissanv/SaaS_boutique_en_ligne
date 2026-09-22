@@ -11,5 +11,5 @@
  * `loading.tsx`).
  */
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={`animate-kv-pulse rounded-md bg-sable ${className ?? ""}`} />;
+  return <div aria-hidden="true" className={`animate-kv-pulse rounded-md bg-brume ${className ?? ""}`} />;
 }

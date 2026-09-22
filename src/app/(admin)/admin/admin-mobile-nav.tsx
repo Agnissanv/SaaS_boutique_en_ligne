@@ -116,7 +116,7 @@ export function AdminMobileNav({ footer }: { footer: React.ReactNode }) {
               <Link href="/admin" onClick={handleClose} className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
                 <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
-                <span className="font-display text-base font-semibold tracking-tight">KEVA Admin</span>
+                <span className="font-display text-base font-bold tracking-wide">KEVA Admin</span>
               </Link>
               <button
                 type="button"

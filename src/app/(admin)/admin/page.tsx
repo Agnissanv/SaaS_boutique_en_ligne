@@ -14,14 +14,14 @@ function StatTile({
   tone: "neutral" | "succes" | "erreur" | "vert";
 }) {
   const toneClass = {
-    neutral: "bg-sable text-cuivre-profond",
+    neutral: "bg-brume text-vert-actif",
     succes: "bg-succes/15 text-succes",
     erreur: "bg-erreur/15 text-erreur",
     vert: "bg-vert-actif/15 text-vert-sapin",
   }[tone];
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-ligne bg-white p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md">
+    <div className="flex items-center gap-3 rounded-lg border border-ligne bg-white p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-vert-actif hover:shadow-md">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${toneClass}`}>{icon}</div>
       <div className="min-w-0">
         <p className="truncate text-xs text-encre/60">{label}</p>
@@ -110,7 +110,11 @@ export default async function AdminOverviewPage() {
           le chiffre le plus important de tout le back-office, il mérite plus
           de poids visuel que les compteurs ci-dessus. */}
       <div className="mt-4 flex items-center gap-4 rounded-lg border border-vert-sapin/20 bg-vert-profond p-5">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cuivre-clair/20 text-cuivre-clair">
+        {/* Badge recoloré vert le 22/09/2026 (voir decisions-techniques.md) :
+            l'ancien badge cuivre tranchait volontairement sur cette carte déjà
+            verte ; un badge vert sur vert-profond n'a plus assez de contraste
+            (icône text-ivoire conservée pour rester lisible). */}
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-vert-actif/30 text-ivoire">
           <CoinsIcon className="h-6 w-6" />
         </div>
         <div>

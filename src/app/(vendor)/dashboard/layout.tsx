@@ -98,7 +98,7 @@ export default async function DashboardLayout({
         <Link href="/dashboard" className="flex items-center gap-2 px-4 py-4">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
           <img src="/keva-logo.jpg" alt="KEVA" className="h-8 w-8 rounded object-cover" />
-          <span className="font-display text-lg font-semibold tracking-tight">KEVA</span>
+          <span className="font-display text-lg font-bold tracking-wide">KEVA</span>
         </Link>
 
         <SidebarNav isOwner={isOwner} />
@@ -109,21 +109,21 @@ export default async function DashboardLayout({
               href={`/${shop.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+              className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
             >
               Voir ma boutique ↗
             </a>
           )}
           <Link
             href="/compte"
-            className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+            className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
           >
             Mon espace client
           </Link>
           <form action={signOut}>
             <button
               type="submit"
-              className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+              className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
             >
               Déconnexion
             </button>
@@ -144,21 +144,21 @@ export default async function DashboardLayout({
                     href={`/${shop.slug}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+                    className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
                   >
                     Voir ma boutique ↗
                   </a>
                 )}
                 <Link
                   href="/compte"
-                  className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+                  className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
                 >
                   Mon espace client
                 </Link>
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-cuivre-clair"
+                    className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
                   >
                     Déconnexion
                   </button>
@@ -169,7 +169,7 @@ export default async function DashboardLayout({
           <Link href="/dashboard" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
             <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
-            <span className="font-display text-base font-semibold tracking-tight">KEVA</span>
+            <span className="font-display text-base font-bold tracking-wide">KEVA</span>
           </Link>
         </div>
 
@@ -191,7 +191,7 @@ export default async function DashboardLayout({
           <Link
             href="/dashboard/notifications"
             title="Notifications"
-            className="relative ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ligne text-encre/70 hover:border-cuivre-clair hover:text-cuivre-profond"
+            className="relative ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ligne text-encre/70 hover:border-vert-actif hover:text-vert-actif"
           >
             <IconBell className="h-4 w-4" />
             {unreadNotificationsCount > 0 && (
@@ -206,7 +206,7 @@ export default async function DashboardLayout({
               // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur
               <img src={profile.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
             ) : (
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sable text-sm font-medium text-cuivre-profond">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brume text-sm font-medium text-vert-actif">
                 {initial}
               </span>
             )}

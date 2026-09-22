@@ -79,13 +79,13 @@ export default async function PaymentsPage() {
       <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
         <div className="rounded-lg border border-ligne bg-white p-4">
           <p className="text-xs text-encre/60">Encaissé (livrées)</p>
-          <p className="mt-1 font-mono text-lg font-semibold text-cuivre-profond">
+          <p className="mt-1 font-mono text-lg font-semibold text-vert-actif">
             {totalReceived} FCFA
           </p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
           <p className="text-xs text-encre/60">À encaisser à la livraison</p>
-          <p className="mt-1 font-mono text-lg font-semibold text-cuivre-profond">
+          <p className="mt-1 font-mono text-lg font-semibold text-vert-actif">
             {totalAwaiting} FCFA
           </p>
         </div>
@@ -121,7 +121,7 @@ export default async function PaymentsPage() {
                     {new Date(order.created_at).toLocaleDateString("fr-FR")}
                   </p>
                 </div>
-                <p className="shrink-0 font-mono text-sm text-cuivre-profond">
+                <p className="shrink-0 font-mono text-sm text-vert-actif">
                   {order.total_amount} FCFA
                 </p>
               </Link>

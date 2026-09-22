@@ -108,7 +108,7 @@ export function ProductList({ products }: { products: Product[] }) {
               type="button"
               disabled={isPending}
               onClick={() => handleBulk(true)}
-              className="text-cuivre-profond underline disabled:opacity-50"
+              className="text-vert-actif underline disabled:opacity-50"
             >
               Activer
             </button>
@@ -116,7 +116,7 @@ export function ProductList({ products }: { products: Product[] }) {
               type="button"
               disabled={isPending}
               onClick={() => handleBulk(false)}
-              className="text-cuivre-profond underline disabled:opacity-50"
+              className="text-vert-actif underline disabled:opacity-50"
             >
               Désactiver
             </button>
@@ -209,7 +209,7 @@ function ProductTable({ products, selected, onToggleSelected, onToggleActive, pe
                       // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
                       <img src={thumbnail} alt="" className="h-9 w-9 shrink-0 rounded object-cover" />
                     ) : (
-                      <div className="h-9 w-9 shrink-0 rounded bg-sable" />
+                      <div className="h-9 w-9 shrink-0 rounded bg-brume" />
                     )}
                     <span className="truncate font-medium text-encre">{product.title}</span>
                   </div>
@@ -230,10 +230,10 @@ function ProductTable({ products, selected, onToggleSelected, onToggleActive, pe
                 </td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2.5 whitespace-nowrap text-encre/70">
-                    <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
+                    <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
                       Modifier
                     </Link>
-                    <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
+                    <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
                       Dupliquer
                     </Link>
                     <form action={deleteProduct.bind(null, product.id)}>
@@ -275,7 +275,7 @@ function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pen
               // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
               <img src={thumbnail} alt="" className="mt-2 aspect-square w-full rounded object-cover" />
             ) : (
-              <div className="mt-2 aspect-square w-full rounded bg-sable" />
+              <div className="mt-2 aspect-square w-full rounded bg-brume" />
             )}
             <p className="mt-2 truncate text-sm font-medium text-encre">{product.title}</p>
             <p className="text-xs text-encre/60">
@@ -285,10 +285,10 @@ function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pen
               <StockBar stock={product.stock} threshold={product.stock_alert_threshold} />
             </div>
             <div className="mt-3 flex items-center gap-2.5 text-xs text-encre/70">
-              <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
+              <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
                 Modifier
               </Link>
-              <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-cuivre-profond">
+              <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
                 Dupliquer
               </Link>
               <form action={deleteProduct.bind(null, product.id)} className="ml-auto">
@@ -325,7 +325,7 @@ function StockBar({ stock, threshold }: { stock: number; threshold: number | nul
         <span>{STOCK_HEALTH_LABELS[health]}</span>
         <span className="tabular-nums">{stock}</span>
       </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-sable">
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-brume">
         <div
           className={`h-full rounded-full ${STOCK_HEALTH_BAR_CLASS[health]}`}
           style={{ width: `${pct}%` }}

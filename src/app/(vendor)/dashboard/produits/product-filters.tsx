@@ -70,7 +70,7 @@ export function ProductFilters({ current }: { current: ProductFiltersValue }) {
         />
         <button
           type="submit"
-          className="shrink-0 rounded-md border border-ligne px-2.5 py-1.5 text-sm text-encre/70 hover:border-cuivre-clair hover:text-cuivre-profond"
+          className="shrink-0 rounded-md border border-ligne px-2.5 py-1.5 text-sm text-encre/70 hover:border-vert-actif hover:text-vert-actif"
         >
           Rechercher
         </button>

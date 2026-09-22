@@ -59,7 +59,7 @@ export default async function AdminVendorsPage({
         </div>
         <button
           type="submit"
-          className="rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
+          className="rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
         >
           Rechercher
         </button>
@@ -101,7 +101,7 @@ export default async function AdminVendorsPage({
                             className="h-9 w-9 shrink-0 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sable text-sm font-semibold text-cuivre-profond">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-sm font-semibold text-vert-actif">
                             {shop.name.charAt(0).toUpperCase()}
                           </div>
                         )}

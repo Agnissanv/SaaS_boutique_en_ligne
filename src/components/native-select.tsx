@@ -81,7 +81,7 @@ export function NativeSelect({
                 type="button"
                 onClick={() => handleSelect(o.value)}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm ${
-                  o.value === current ? "font-medium text-cuivre-profond" : "text-encre"
+                  o.value === current ? "font-medium text-vert-actif" : "text-encre"
                 }`}
               >
                 {o.label}

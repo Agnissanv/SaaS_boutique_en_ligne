@@ -61,13 +61,13 @@ export default async function AdminLayout({
         <span className="flex shrink-0 items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
           <img src="/keva-logo.jpg" alt="KEVA" className="h-7 w-7 rounded object-cover" />
-          <span className="font-display font-semibold tracking-tight">KEVA Admin</span>
+          <span className="font-display font-bold tracking-wide">KEVA Admin</span>
         </span>
 
         <AdminNav />
 
         <form action={signOut} className="ml-auto hidden sm:block">
-          <button type="submit" className="text-ivoire/70 underline hover:text-cuivre-clair">
+          <button type="submit" className="text-ivoire/70 underline hover:text-ivoire">
             Déconnexion
           </button>
         </form>

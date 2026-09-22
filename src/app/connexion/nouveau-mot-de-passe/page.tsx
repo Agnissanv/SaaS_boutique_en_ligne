@@ -32,7 +32,7 @@ export default async function NouveauMotDePassePage() {
       <Link href="/" className="mx-auto mb-6 flex items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
         <img src="/keva-logo.jpg" alt="KEVA" className="h-10 w-10 rounded-md object-cover" />
-        <span className="font-display text-xl font-semibold tracking-tight text-vert-sapin">KEVA</span>
+        <span className="font-display text-xl font-bold tracking-wide text-vert-sapin">KEVA</span>
       </Link>
       <div className="rounded-xl border border-ligne bg-white p-6 shadow-sm">
         <h1 className="font-display text-xl font-semibold text-encre">

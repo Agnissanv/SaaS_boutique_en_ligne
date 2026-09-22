@@ -116,7 +116,7 @@ export function InscriptionForm() {
       <Link href="/" className="mx-auto mb-6 flex items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
         <img src="/keva-logo.jpg" alt="KEVA" className="h-10 w-10 rounded-md object-cover" />
-        <span className="font-display text-xl font-semibold tracking-tight text-vert-sapin">KEVA</span>
+        <span className="font-display text-xl font-bold tracking-wide text-vert-sapin">KEVA</span>
       </Link>
       <div className="rounded-xl border border-ligne bg-white p-6 shadow-sm">
         {/* Accroche de marque intégrée visuellement ici le 17/09/2026 —
@@ -204,7 +204,7 @@ export function InscriptionForm() {
               <button
                 type="submit"
                 disabled={pending}
-                className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
+                className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
               >
                 {pending ? "Création..." : "Créer mon compte"}
               </button>

@@ -59,11 +59,11 @@ export function RevenueTrendChart({
   return (
     <div>
       <p className="text-xs text-encre/60">
-        {totalLabel} : <span className="font-mono font-medium text-cuivre-profond">{format(total)}</span>
+        {totalLabel} : <span className="font-mono font-medium text-vert-actif">{format(total)}</span>
       </p>
       <svg viewBox={`0 0 ${width} ${height}`} className="mt-2 w-full" preserveAspectRatio="none" role="img" aria-label={ariaLabel}>
-        {areaPath && <path d={areaPath} fill="var(--color-cuivre-profond, #8b4f2e)" fillOpacity={0.12} stroke="none" />}
-        {linePath && <path d={linePath} fill="none" stroke="var(--color-cuivre-profond, #8b4f2e)" strokeWidth={2} />}
+        {areaPath && <path d={areaPath} fill="var(--color-vert-actif, #1c6b4a)" fillOpacity={0.12} stroke="none" />}
+        {linePath && <path d={linePath} fill="none" stroke="var(--color-vert-actif, #1c6b4a)" strokeWidth={2} />}
       </svg>
       <div className="mt-1 flex justify-between text-[11px] text-encre/50">
         <span>{points[0]?.label}</span>
@@ -122,7 +122,7 @@ export function RankedList({
       {items.map((item, i) => (
         <li key={i} className="flex items-center justify-between gap-3 text-sm">
           <span className="flex min-w-0 items-center gap-2 text-encre">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sable text-[11px] font-medium text-cuivre-profond">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brume text-[11px] font-medium text-vert-actif">
               {i + 1}
             </span>
             <span className="truncate">{item.label}</span>
@@ -162,7 +162,7 @@ export function StatTile({
  * catégorie ou par moyen de paiement (enrichissement du 16/09/2026, plan
  * Business). Même construction visuelle que `StatusBreakdown`, généralisée
  * pour un montant en FCFA plutôt qu'un simple compte, avec une couleur fixe
- * (cuivre, cohérent avec la courbe de CA) puisqu'il n'y a pas de statut
+ * (vert-actif, cohérent avec la courbe de CA) puisqu'il n'y a pas de statut
  * sémantique à distinguer ici.
  */
 export function RevenueBars({
@@ -185,7 +185,7 @@ export function RevenueBars({
           <span className="w-28 shrink-0 truncate text-encre/70">{row.label}</span>
           <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-brume">
             <span
-              className="block h-full rounded-full bg-cuivre-profond"
+              className="block h-full rounded-full bg-vert-actif"
               style={{ width: `${Math.max(4, (row.revenue / max) * 100)}%` }}
             />
           </span>

@@ -87,14 +87,14 @@ export default async function OrdersPage() {
                     {order.customer_name}
                     <span
                       className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
-                        ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/70"
+                        ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-brume text-encre/70"
                       }`}
                     >
                       {ORDER_STATUS_LABELS[order.status] ?? order.status}
                     </span>
                   </p>
                   <p className="text-sm text-encre/70">
-                    <span className="font-mono text-cuivre-profond">
+                    <span className="font-mono text-vert-actif">
                       {order.total_amount} FCFA
                     </span>{" "}
                     — {new Date(order.created_at).toLocaleDateString("fr-FR")}

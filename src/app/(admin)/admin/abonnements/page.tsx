@@ -34,7 +34,7 @@ type ShopRow = {
 const PLAN_ICON_CLASS: Record<string, string> = {
   starter: "text-encre/40",
   business: "text-vert-actif",
-  pro: "text-cuivre-profond",
+  pro: "text-vert-actif",
 };
 
 // Gestion des abonnements (cahier des charges §3.1.C.3). Le paiement réel
@@ -97,7 +97,7 @@ export default async function AdminSubscriptionsPage() {
                     {plan ? (
                       <span className="flex items-center gap-1.5">
                         <TagIcon className={`h-4 w-4 shrink-0 ${PLAN_ICON_CLASS[plan.code] ?? "text-encre/40"}`} />
-                        {plan.name} <span className="font-mono text-cuivre-profond">({plan.price} FCFA)</span>
+                        {plan.name} <span className="font-mono text-vert-actif">({plan.price} FCFA)</span>
                         {sub?.is_trial && (
                           <span
                             className="rounded bg-vert-sapin/15 px-1.5 py-0.5 text-xs font-medium text-vert-sapin"

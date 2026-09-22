@@ -17,7 +17,7 @@ const ACTION_ICON: Record<string, { icon: ReactNode; toneClass: string }> = {
   shop_activated: { icon: <CheckCircleIcon className="h-4 w-4" />, toneClass: "bg-succes/15 text-succes" },
   subscription_plan_assigned: { icon: <TagIcon className="h-4 w-4" />, toneClass: "bg-vert-actif/15 text-vert-sapin" },
 };
-const DEFAULT_ACTION_ICON = { icon: <TagIcon className="h-4 w-4" />, toneClass: "bg-sable text-cuivre-profond" };
+const DEFAULT_ACTION_ICON = { icon: <TagIcon className="h-4 w-4" />, toneClass: "bg-brume text-vert-actif" };
 
 type LogRow = {
   id: string;

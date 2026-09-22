@@ -61,7 +61,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="mt-2 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
+      className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
     >
       {pending ? "Enregistrement..." : isEdit ? "Enregistrer" : "Ajouter le produit"}
     </button>
@@ -219,7 +219,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
             <button
               type="button"
               onClick={() => handleRemove(url)}
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-cuivre-profond text-xs text-ivoire"
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-vert-actif text-xs text-ivoire"
               aria-label="Retirer cette photo"
             >
               ×
@@ -231,7 +231,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/50 transition hover:border-cuivre-clair hover:text-cuivre-profond disabled:opacity-50"
+            className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/50 transition hover:border-vert-actif hover:text-vert-actif disabled:opacity-50"
           >
             <span className="text-xl leading-none">+</span>
             <span className="text-[10px] font-medium">Ajouter</span>

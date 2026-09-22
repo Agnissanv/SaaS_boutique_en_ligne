@@ -1,18 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Work_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Archivo, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
 import { BottomNav } from "@/components/bottom-nav";
 import "./globals.css";
 
-// Typographie KEVA (14/09/2026, voir decisions-techniques.md et la charte
-// graphique publiée) : Fraunces en display (titres), Work Sans en interface
-// (corps de texte, formulaires), IBM Plex Mono pour les données chiffrées
-// (prix, codes de commande). Chargées via next/font/google — auto-hébergées
-// par Next.js au build, donc aucune dépendance réseau à l'exécution ni de
-// clé à gérer. Exposées en variables CSS, reprises dans globals.css (@theme).
-const fraunces = Fraunces({
+// Typographie KEVA — révisée le 22/09/2026 (voir decisions-techniques.md,
+// section "Refonte visuelle" : Isaac a signalé que Fraunces, une serif, ne
+// correspondait pas à la police bâton/grasse du logo réel). Fraunces
+// remplacée par Archivo (grotesque, va jusqu'au poids 900) en display
+// (titres, logo texte), Work Sans conservée en interface (corps de texte,
+// formulaires), IBM Plex Mono pour les données chiffrées (prix, codes de
+// commande). Chargées via next/font/google — auto-hébergées par Next.js au
+// build, donc aucune dépendance réseau à l'exécution ni de clé à gérer.
+// Exposées en variables CSS, reprises dans globals.css (@theme).
+const archivo = Archivo({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  weight: ["500", "600", "700", "800", "900"],
+  variable: "--font-archivo",
   display: "swap",
 });
 const workSans = Work_Sans({
@@ -106,7 +110,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`h-full antialiased ${fraunces.variable} ${workSans.variable} ${plexMono.variable}`}
+      className={`h-full antialiased ${archivo.variable} ${workSans.variable} ${plexMono.variable}`}
     >
       <body className="min-h-full flex flex-col font-sans">
         {children}

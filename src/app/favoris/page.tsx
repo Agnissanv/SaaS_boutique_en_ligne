@@ -50,10 +50,10 @@ export default function FavorisPage() {
                       className="mb-2 aspect-square w-full rounded object-cover"
                     />
                   ) : (
-                    <div className="mb-2 aspect-square w-full rounded bg-sable" />
+                    <div className="mb-2 aspect-square w-full rounded bg-brume" />
                   )}
                   <p className="text-sm font-medium text-encre">{item.title}</p>
-                  <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-cuivre-profond">
+                  <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-vert-actif">
                     {item.price} FCFA
                     {hasDiscount ? (
                       <span className="font-mono text-xs text-encre/40 line-through">

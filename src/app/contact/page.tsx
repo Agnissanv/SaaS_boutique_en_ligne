@@ -60,7 +60,7 @@ export default async function ContactPage({
         <Link href="/" className="mx-auto flex w-full max-w-2xl items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
           <img src="/keva-logo.jpg" alt="KEVA" className="h-8 w-8 rounded-md object-cover" />
-          <span className="font-display text-lg font-semibold tracking-tight text-vert-sapin">KEVA</span>
+          <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">KEVA</span>
         </Link>
       </header>
 

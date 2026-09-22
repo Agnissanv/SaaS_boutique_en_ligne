@@ -111,17 +111,17 @@ export default async function CategoriesPage() {
               <Link
                 key={cat.value}
                 href={`${buildMarketplaceHref({}, { categorie: cat.value })}#catalogue`}
-                className="group flex flex-col overflow-hidden rounded-lg border border-ligne bg-white transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md"
+                className="group flex flex-col overflow-hidden rounded-lg border border-ligne bg-white transition-all duration-150 hover:-translate-y-0.5 hover:border-vert-actif hover:shadow-md"
               >
                 <div className="relative aspect-square w-full bg-brume">
                   {thumbnail ? (
                     <ProductImage src={thumbnail} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-cuivre-profond">
+                    <div className="flex h-full w-full items-center justify-center text-vert-actif">
                       <CategoryIcon value={cat.value} className="h-8 w-8" />
                     </div>
                   )}
-                  <span className="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-cuivre-profond shadow-sm">
+                  <span className="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-vert-actif shadow-sm">
                     <CategoryIcon value={cat.value} className="h-4 w-4" />
                   </span>
                 </div>

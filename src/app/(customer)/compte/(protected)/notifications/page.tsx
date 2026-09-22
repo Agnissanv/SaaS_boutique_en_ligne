@@ -85,7 +85,7 @@ export default async function CustomerNotificationsPage() {
               >
                 <span
                   className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ${
-                    NOTIFICATION_KIND_BADGE_CLASS[kind] ?? "bg-sable text-encre/60"
+                    NOTIFICATION_KIND_BADGE_CLASS[kind] ?? "bg-brume text-encre/60"
                   }`}
                 >
                   {NOTIFICATION_KIND_LABEL[kind] ?? "Info"}
@@ -102,7 +102,7 @@ export default async function CustomerNotificationsPage() {
                     })}
                   </p>
                 </div>
-                {wasUnread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cuivre-profond" />}
+                {wasUnread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-vert-actif" />}
               </div>
             );
 

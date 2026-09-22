@@ -10,7 +10,7 @@ function SubmitButton({ planName }: { planName: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="mt-3 w-full rounded-md bg-cuivre-profond px-3 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
+      className="mt-3 w-full rounded-md bg-vert-actif px-3 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
     >
       {pending ? "Redirection vers le paiement..." : `Passer au plan ${planName}`}
     </button>

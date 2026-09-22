@@ -571,7 +571,7 @@ export default async function StatistiquesPage({
               </p>
             ) : (
               <>
-                <p className="mt-1 font-mono text-lg font-semibold text-cuivre-profond">
+                <p className="mt-1 font-mono text-lg font-semibold text-vert-actif">
                   {conversionRate.toFixed(1)}%
                 </p>
                 <p className="mt-1 text-xs text-encre/50">

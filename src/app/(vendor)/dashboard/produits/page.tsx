@@ -95,7 +95,7 @@ export default async function ProductsPage({
         <Link
           href="/dashboard/produits/nouveau"
           transitionTypes={["nav-forward"]}
-          className="flex items-center gap-1.5 rounded-md bg-cuivre-profond px-3 py-1.5 text-sm font-medium text-white hover:bg-cuivre-profond/90"
+          className="flex items-center gap-1.5 rounded-md bg-vert-actif px-3 py-1.5 text-sm font-medium text-white hover:bg-vert-actif/90"
         >
           <IconPlus className="h-4 w-4" />
           Ajouter un produit

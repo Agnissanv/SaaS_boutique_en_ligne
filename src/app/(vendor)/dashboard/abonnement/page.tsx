@@ -200,7 +200,7 @@ export default async function SubscriptionPage() {
           confirmation du paiement.
         </p>
       ) : (
-        <p className="mt-1 rounded-md bg-sable px-2 py-1.5 text-xs text-encre/70">
+        <p className="mt-1 rounded-md bg-brume px-2 py-1.5 text-xs text-encre/70">
           Le paiement en ligne est temporairement indisponible.{" "}
           <Link href="/dashboard/aide" className="underline">
             Contacte-nous
@@ -222,14 +222,14 @@ export default async function SubscriptionPage() {
             <p className="text-sm font-semibold text-encre">
               {plan.name}
               {plan.code === subscription.planCode && (
-                <span className="ml-2 rounded bg-sable px-1.5 py-0.5 text-xs font-normal text-encre/70">
+                <span className="ml-2 rounded bg-brume px-1.5 py-0.5 text-xs font-normal text-encre/70">
                   plan actuel
                 </span>
               )}
             </p>
             <p className="mt-1 text-sm text-encre/70">
               {plan.price > 0 ? (
-                <span className="font-mono text-cuivre-profond">
+                <span className="font-mono text-vert-actif">
                   {plan.price} FCFA
                 </span>
               ) : (

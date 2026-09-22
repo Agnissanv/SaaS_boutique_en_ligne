@@ -128,7 +128,7 @@ export default async function OrderDetailPage({
                 {" × "}
                 {item.quantity}
               </span>
-              <span className="font-mono text-cuivre-profond">
+              <span className="font-mono text-vert-actif">
                 {item.unit_price * item.quantity} FCFA
               </span>
             </li>
@@ -139,17 +139,17 @@ export default async function OrderDetailPage({
       <dl className="mt-4 divide-y divide-ligne text-sm">
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Sous-total produits</dt>
-          <dd className="font-mono text-cuivre-profond">
+          <dd className="font-mono text-vert-actif">
             {order.total_amount - order.delivery_fee} FCFA
           </dd>
         </div>
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Frais de livraison</dt>
-          <dd className="font-mono text-cuivre-profond">{order.delivery_fee} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{order.delivery_fee} FCFA</dd>
         </div>
         <div className="flex justify-between py-1 text-base font-semibold text-encre">
           <dt>Total</dt>
-          <dd className="font-mono text-cuivre-profond">{order.total_amount} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{order.total_amount} FCFA</dd>
         </div>
       </dl>
 

@@ -509,7 +509,7 @@ export default async function Home({
                   alt="KEVA"
                   className="h-9 w-9 rounded-md object-cover"
                 />
-                <span className="font-display text-lg font-semibold tracking-tight text-vert-sapin">
+                <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">
                   KEVA
                 </span>
               </Link>
@@ -528,98 +528,105 @@ export default async function Home({
           </header>
 
           {/* ========== HERO (full width) ==========
-              Même passage en fond blanc — voir le commentaire du header
-              ci-dessus. Le titre passe en deux tons (première ligne en
-              encre, seconde en vert actif) plutôt qu'une seule couleur
-              plate, pour porter l'accent de marque sans revenir à un bandeau
-              vert plein. */}
-          <section className="w-full bg-white px-4 py-14 sm:py-20">
-            <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-xl text-center lg:text-left">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-vert-actif">
-                  Vendez · Encaissez · Grandissez
-                </p>
+              Retravaillé le 22/09/2026 (v2, voir decisions-techniques.md et
+              le mockup Design "Nouvelle direction visuelle KEVA" validé par
+              Isaac) : le hero est maintenant une vraie carte encadrée (coins
+              arrondis, fond légèrement teinté de vert) plutôt qu'un bloc
+              blanc à plat contre le header — reprend la "carte" de la
+              référence sans réintroduire une couleur hors charte (juste une
+              nuance très pâle du vert de marque). Le dégradé est en valeurs
+              arbitraires (pas de token dédié) : usage ponctuel, propre au
+              cadre du hero, pas une nouvelle surface réutilisée ailleurs. */}
+          <section className="w-full bg-white px-3 pb-6 pt-2 sm:px-6 sm:pb-10">
+            <div className="mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-gradient-to-br from-[#f2f8f4] to-[#e8f2ec] px-5 py-12 sm:px-10 sm:py-16">
+              <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
+                <div className="max-w-xl text-center lg:text-left">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-vert-actif">
+                    Vendez · Encaissez · Grandissez
+                  </p>
 
-                <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
-                  <span className="text-encre">Toutes les boutiques</span>
-                  <br className="hidden sm:block" />
-                  <span className="text-vert-actif">en un seul endroit</span>
-                </h1>
+                  <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+                    <span className="text-encre">Toutes les boutiques</span>
+                    <br className="hidden sm:block" />
+                    <span className="text-vert-actif">en un seul endroit</span>
+                  </h1>
 
-                <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
-                  Des vendeurs indépendants partout en Côte d’Ivoire.
-                  Commande sans compte, paie à la livraison.
-                </p>
+                  <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
+                    Des vendeurs indépendants partout en Côte d’Ivoire.
+                    Commande sans compte, paie à la livraison.
+                  </p>
 
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-                  <a
-                    href="#catalogue"
-                    className="rounded-md bg-vert-actif px-6 py-3 text-sm font-semibold text-white transition hover:bg-vert-sapin"
-                  >
-                    Voir le catalogue
-                  </a>
-                  <Link
-                    href="/inscription"
-                    className="rounded-md border border-vert-sapin/25 px-6 py-3 text-sm font-medium text-vert-sapin transition hover:border-vert-actif hover:text-vert-actif"
-                  >
-                    Ouvrir ma boutique
-                  </Link>
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                    <a
+                      href="#catalogue"
+                      className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(28,107,74,0.28)] transition hover:bg-vert-sapin"
+                    >
+                      Voir le catalogue
+                      <span aria-hidden="true">→</span>
+                    </a>
+                    <Link
+                      href="/inscription"
+                      className="rounded-lg border border-vert-sapin/25 bg-white/50 px-6 py-3 text-sm font-medium text-vert-sapin transition hover:border-vert-actif hover:text-vert-actif"
+                    >
+                      Ouvrir ma boutique
+                    </Link>
+                  </div>
+
+                  {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
+                    <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
+                      <div>
+                        <p className="font-mono text-xl font-semibold text-encre">
+                          {shopsCount ?? 0}
+                        </p>
+                        <p className="mt-0.5 text-xs text-encre/50">boutiques</p>
+                      </div>
+                      <div className="h-8 w-px bg-ligne" />
+                      <div>
+                        <p className="font-mono text-xl font-semibold text-encre">
+                          {productsCount ?? 0}
+                        </p>
+                        <p className="mt-0.5 text-xs text-encre/50">produits</p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <HeroMobileSlideshow products={heroSlideshowProducts} />
                 </div>
 
-                {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
-                  <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
-                    <div>
-                      <p className="font-mono text-xl font-semibold text-encre">
-                        {shopsCount ?? 0}
-                      </p>
-                      <p className="mt-0.5 text-xs text-encre/50">boutiques</p>
-                    </div>
-                    <div className="h-8 w-px bg-ligne" />
-                    <div>
-                      <p className="font-mono text-xl font-semibold text-encre">
-                        {productsCount ?? 0}
-                      </p>
-                      <p className="mt-0.5 text-xs text-encre/50">produits</p>
+                {heroThumbnails.length > 0 ? (
+                  <div
+                    className="relative hidden h-56 w-56 shrink-0 sm:block"
+                    aria-hidden="true"
+                  >
+                    {heroThumbnails.slice(0, 2).map((url, index) => (
+                      <div
+                        key={url}
+                        className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}
+                      >
+                        <ProductImage
+                          src={url}
+                          alt=""
+                          className="h-full w-full rounded-lg object-cover"
+                        />
+                      </div>
+                    ))}
+                    {/* Case avant du collage : carrousel de vraies meilleures
+                        ventes plutôt qu'une 3e vignette statique — voir
+                        hero-featured-slideshow.tsx. `aria-hidden` retiré sur
+                        cette seule case : contrairement aux deux autres, elle
+                        est cliquable (lien vers le produit). */}
+                    <div
+                      className={HERO_COLLAGE_POSITIONS[2].replace("rounded-xl", "")}
+                      aria-hidden={false}
+                    >
+                      <HeroFeaturedSlideshow
+                        products={heroSlideshowProducts}
+                        className="h-full w-full"
+                      />
                     </div>
                   </div>
                 ) : null}
-
-                <HeroMobileSlideshow products={heroSlideshowProducts} />
               </div>
-
-              {heroThumbnails.length > 0 ? (
-                <div
-                  className="relative hidden h-56 w-56 shrink-0 sm:block"
-                  aria-hidden="true"
-                >
-                  {heroThumbnails.slice(0, 2).map((url, index) => (
-                    <div
-                      key={url}
-                      className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}
-                    >
-                      <ProductImage
-                        src={url}
-                        alt=""
-                        className="h-full w-full rounded-lg object-cover"
-                      />
-                    </div>
-                  ))}
-                  {/* Case avant du collage : carrousel de vraies meilleures
-                      ventes plutôt qu'une 3e vignette statique — voir
-                      hero-featured-slideshow.tsx. `aria-hidden` retiré sur
-                      cette seule case : contrairement aux deux autres, elle
-                      est cliquable (lien vers le produit). */}
-                  <div
-                    className={HERO_COLLAGE_POSITIONS[2].replace("rounded-xl", "")}
-                    aria-hidden={false}
-                  >
-                    <HeroFeaturedSlideshow
-                      products={heroSlideshowProducts}
-                      className="h-full w-full"
-                    />
-                  </div>
-                </div>
-              ) : null}
             </div>
           </section>
 
