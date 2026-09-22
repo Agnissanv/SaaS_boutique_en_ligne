@@ -89,10 +89,17 @@ export type ShopFeatureFlags = {
 };
 
 /**
- * Flags les plus restrictifs (équivalents Starter) — appliqués par défaut
- * quand une boutique n'a aucun abonnement (`state === "none"`, cas qui ne
- * devrait plus arriver depuis `start_free_subscription`, mais mieux vaut
- * fermer par défaut que d'ouvrir par erreur une fonctionnalité payante).
+ * Flags les plus restrictifs — appliqués par défaut quand une boutique n'a
+ * aucun abonnement (`state === "none"`, cas qui ne devrait plus arriver
+ * depuis `start_free_subscription`, mais mieux vaut fermer par défaut que
+ * d'ouvrir par erreur une fonctionnalité payante).
+ *
+ * N'est PLUS un miroir exact du plan Starter réel depuis le 22/09/2026 :
+ * Starter autorise désormais le logo (`can_customize_branding: "basic"`,
+ * voir migration 0041) mais ce filet de sécurité reste volontairement à
+ * "none" — une boutique sans abonnement du tout est un cas anormal (échec
+ * de `start_free_subscription`), pas un vrai plan Starter, donc autant
+ * rester sur le réglage le plus fermé plutôt que de supposer.
  */
 export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
   maxProducts: 2,
@@ -165,8 +172,8 @@ type SubscriptionRow = {
   expires_at: string;
   is_trial: boolean;
   plan:
-    | { code: string; name: string; features: unknown }
-    | { code: string; name: string; features: unknown }[]
+    | { code: string; name: string; price: number; features: unknown }
+    | { code: string; name: string; price: number; features: unknown }[]
     | null;
 };
 
@@ -182,7 +189,7 @@ export async function getShopSubscription(
 ): Promise<ShopSubscriptionInfo> {
   const { data } = await supabase
     .from("subscriptions")
-    .select("expires_at, is_trial, plan:subscription_plans(code, name, features)")
+    .select("expires_at, is_trial, plan:subscription_plans(code, name, price, features)")
     .eq("shop_id", shopId)
     .order("started_at", { ascending: false })
     .limit(1)
@@ -208,8 +215,20 @@ export async function getShopSubscription(
     expiryMs + SUBSCRIPTION_GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000
   ).toISOString();
 
+  // Un plan GRATUIT (price = 0, aujourd'hui uniquement Starter) ne bloque
+  // jamais, quelle que soit `expires_at` — ajouté le 22/09/2026 avec le
+  // système de rétrogradation automatique (voir subscription-lifecycle.ts).
+  // Sans ça, une boutique Starter finirait, ~30 jours après y être passée,
+  // par se voir bloquer l'ajout de produits comme un plan payé non
+  // renouvelé — ce qui n'a aucun sens pour un plan gratuit et dépendrait
+  // en plus d'une tâche planifiée pour "renouveler" Starter indéfiniment
+  // (ce projet n'en a volontairement aucune, voir plus haut). `expiresAt`/
+  // `graceEndsAt` restent les vraies dates calculées (affichage), seul
+  // `state` est forcé à "active" pour ne jamais déclencher de blocage.
+  const state = plan?.price === 0 ? "active" : computeSubscriptionState(row.expires_at);
+
   return {
-    state: computeSubscriptionState(row.expires_at),
+    state,
     planName: plan?.name ?? null,
     planCode: plan?.code ?? null,
     expiresAt: row.expires_at,

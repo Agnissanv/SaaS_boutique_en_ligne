@@ -119,7 +119,11 @@ export default async function AdminSubscriptionsPage({
                 : [];
               const sub = subs[0];
               const plan = sub ? (Array.isArray(sub.plan) ? sub.plan[0] : sub.plan) : null;
-              const state = sub ? computeSubscriptionState(sub.expires_at) : null;
+              // Un plan gratuit (price = 0) ne "expire" jamais côté blocage —
+              // même règle que `getShopSubscription` (src/lib/subscription.ts,
+              // 22/09/2026) : sans ça, Starter afficherait "Expiré" ici après
+              // ~30 jours alors que le vendeur n'est jamais réellement bloqué.
+              const state = sub ? (plan?.price === 0 ? "active" : computeSubscriptionState(sub.expires_at)) : null;
 
               return (
                 <tr key={shop.id} className="transition-colors hover:bg-brume/60">
