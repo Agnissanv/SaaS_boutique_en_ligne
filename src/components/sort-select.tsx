@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomSheet } from "@/components/bottom-sheet";
+import { buildFilterHref, type MarketplaceFilters } from "@/lib/marketplace/filters";
 
 /**
  * Contrôle de tri (marketplace + catalogue boutique) — reconstruit le
@@ -14,22 +15,23 @@ import { BottomSheet } from "@/components/bottom-sheet";
  * feuille d'action (`BottomSheet`) listant les choix, comme le ferait un
  * vrai sélecteur de tri d'appli mobile.
  *
- * API strictement inchangée (`basePath`/`value`/`options`/`q`/`categorie`) :
- * les deux pages qui l'utilisent (page d'accueil marketplace, catalogue
- * boutique) n'ont rien à changer.
+ * API changée le 22/09/2026 (chantier "filtres") : `q`/`categorie` en props
+ * séparées remplacées par `current: MarketplaceFilters`, délégué à
+ * `buildFilterHref` — l'ancienne version reconstruisait l'URL à la main à
+ * partir de seulement `q`/`categorie`/`tri`, donc changer le tri effaçait
+ * silencieusement tout filtre de prix/attribut déjà actif. Les deux pages
+ * qui l'utilisent passent maintenant leur objet `current` complet.
  */
 export function SortSelect({
   basePath,
   value,
   options,
-  q,
-  categorie,
+  current,
 }: {
   basePath: string;
   value: string;
   options: { value: string; label: string }[];
-  q?: string;
-  categorie?: string;
+  current: MarketplaceFilters;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -37,12 +39,12 @@ export function SortSelect({
   function handleSelect(nextSort: string) {
     setOpen(false);
     if (nextSort === value) return;
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (categorie) params.set("categorie", categorie);
-    if (nextSort !== "recent") params.set("tri", nextSort);
-    const qs = params.toString();
-    router.push(qs ? `${basePath}?${qs}` : basePath);
+    router.push(
+      buildFilterHref(basePath, current, {
+        tri: nextSort === "recent" ? undefined : nextSort,
+        page: undefined,
+      })
+    );
   }
 
   const currentLabel = options.find((o) => o.value === value)?.label ?? options[0]?.label;

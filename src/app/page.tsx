@@ -12,7 +12,15 @@ import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
 import { HeroFeaturedSlideshow } from "@/components/hero-featured-slideshow";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
-import { buildMarketplaceHref } from "@/lib/marketplace/filters";
+import {
+  buildMarketplaceHref,
+  parseAttrsFromSearchParams,
+  firstParam,
+  type MarketplaceFilters,
+} from "@/lib/marketplace/filters";
+import { computeAttributeFacets } from "@/lib/marketplace/attribute-facets";
+import { getCategoryAttributeFields } from "@/lib/category-attributes";
+import { ProductFilterPanel } from "@/components/product-filter-panel";
 import { getShopRating } from "@/lib/reviews";
 import { getEffectivePrice } from "@/lib/products";
 
@@ -54,6 +62,12 @@ const CATEGORY_ROW_SIZE = 12;
 // et via la recherche — seule la bande d'aperçu peut le manquer.
 const CATEGORY_FEED_LIMIT = 400;
 const HERO_COLLAGE_SIZE = 3;
+// Échantillon borné pour le calcul des facettes de filtre (valeurs
+// d'attribut réellement présentes + bornes de prix) — même pragmatisme et
+// même ordre de grandeur que `CATEGORY_FEED_LIMIT` ci-dessus : un compromis
+// documenté plutôt qu'une agrégation SQL dédiée, à revoir si le catalogue
+// grossit significativement (voir `computeAttributeFacets`).
+const FACET_SAMPLE_LIMIT = 400;
 
 const SORTS = [
   { value: "recent", label: "Plus récent" },
@@ -212,22 +226,39 @@ const PRODUCT_CARD_COLUMNS =
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; categorie?: string; tri?: string; page?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { q, categorie, tri, page: pageParam } = await searchParams;
+  const rawParams = await searchParams;
+  const q = firstParam(rawParams.q);
+  const categorie = firstParam(rawParams.categorie);
+  const tri = firstParam(rawParams.tri);
+  const pageParam = firstParam(rawParams.page);
+  const prixMin = firstParam(rawParams.prix_min);
+  const prixMax = firstParam(rawParams.prix_max);
+  // Filtres de spécifications par catégorie (chantier "filtres" du
+  // 22/09/2026, construit sur `src/lib/category-attributes.ts`) — validés
+  // contre les vraies clés de la catégorie choisie : une URL modifiée à la
+  // main (ou une catégorie changée sans que les `attr_*` de l'ancienne aient
+  // été nettoyés) ne doit jamais tenter de filtrer sur une clé qui n'existe
+  // pas pour cette catégorie, juste l'ignorer silencieusement plutôt que de
+  // laisser une requête Supabase échouer sur une colonne JSON inventée.
+  const validAttrKeys = new Set(getCategoryAttributeFields(categorie).map((f) => f.key));
+  const attrs = Object.fromEntries(
+    Object.entries(parseAttrsFromSearchParams(rawParams)).filter(([key]) => validAttrKeys.has(key))
+  );
   const sort: SortValue = SORTS.some((s) => s.value === tri) ? (tri as SortValue) : "recent";
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
-  const current = { q, categorie, tri, page: pageParam };
+  const current: MarketplaceFilters = { q, categorie, tri, page: pageParam, prixMin, prixMax, attrs };
 
-  // Mode "filtré" (recherche texte et/ou catégorie choisie explicitement) :
-  // grille classique triable/paginée, comme avant. Mode par défaut (aucun
-  // filtre) : disposition par bandes façon Jumia/Amazon — voir le
-  // changement structurel expliqué en tête de fichier. Les deux modes sont
-  // mutuellement exclusifs : jamais de grille de "tout le catalogue" affichée
-  // d'un coup.
-  const hasFilter = Boolean(q || categorie);
+  // Mode "filtré" (recherche texte, catégorie, prix ou attribut choisis
+  // explicitement) : grille classique triable/paginée, comme avant. Mode par
+  // défaut (aucun filtre) : disposition par bandes façon Jumia/Amazon — voir
+  // le changement structurel expliqué en tête de fichier. Les deux modes
+  // sont mutuellement exclusifs : jamais de grille de "tout le catalogue"
+  // affichée d'un coup.
+  const hasFilter = Boolean(q || categorie || prixMin || prixMax || Object.keys(attrs).length > 0);
 
   const supabase = await createClient();
 
@@ -272,18 +303,18 @@ export default async function Home({
   // Catégories réellement disponibles sur la marketplace (16/09/2026, retour
   // d'Isaac : la bande de catégories affichait les 24 valeurs possibles, y
   // compris celles sans aucun produit actif — un visiteur tombait sur un
-  // rayon vide). Une seule colonne utile (`category`), sur tous les produits
-  // actifs plutôt qu'un flux borné comme `categoryFeedQuery` plus bas : au vu
-  // du volume actuel de la plateforme le coût reste négligeable ; à revoir
-  // avec une RPC dédiée (distinct + count) si le catalogue grossit
-  // significativement.
-  const availableCategoriesQuery = supabase
-    .from("products")
-    .select("category, shop:shops!inner(status)")
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .eq("shop.status", "active")
-    .not("category", "is", null);
+  // rayon vide). Calculée à l'origine en relisant la catégorie de TOUS les
+  // produits actifs de la plateforme et en dédupliquant en JS — annoncé
+  // "acceptable au volume actuel, à revoir avec une RPC dédiée si le
+  // catalogue grossit significativement". Remplacé le 22/09/2026 (Isaac vise
+  // 1000-2000 vendeurs) par la RPC `get_available_categories`
+  // (migration 0033) : le DISTINCT se fait directement en base, Postgres ne
+  // renvoie qu'une poignée de lignes (une par catégorie réellement utilisée)
+  // au lieu d'une par produit — ce point précis grossissait directement avec
+  // le nombre de vendeurs, contrairement aux autres flux de cette page
+  // (bandes par catégorie, meilleures ventes...) déjà volontairement
+  // plafonnés.
+  const availableCategoriesQuery = supabase.rpc("get_available_categories");
 
   // Grille filtrée (recherche/catégorie), seulement construite en mode
   // filtré — inutile de payer une requête paginée de tout le catalogue
@@ -297,9 +328,40 @@ export default async function Home({
     .range(from, to);
   if (q) catalogueQuery = catalogueQuery.ilike("title", `%${q}%`);
   if (categorie) catalogueQuery = catalogueQuery.eq("category", categorie);
+  // Filtre de prix — sur la colonne `price` brute, pas le prix effectif
+  // (soldé) calculé par `getEffectivePrice` : même approximation déjà
+  // assumée par le tri prix croissant/décroissant juste en dessous, pour
+  // rester cohérent entre tri et filtre plutôt que d'introduire une
+  // incohérence entre les deux.
+  if (prixMin) catalogueQuery = catalogueQuery.gte("price", Number(prixMin));
+  if (prixMax) catalogueQuery = catalogueQuery.lte("price", Number(prixMax));
+  // Filtres de spécifications (`attributes->>clé`, syntaxe JSON PostgREST
+  // standard sur la colonne jsonb posée en migration 0032) — seulement
+  // pertinents une fois une catégorie choisie, les clés étant propres à
+  // chaque catégorie.
+  if (categorie) {
+    for (const [key, values] of Object.entries(attrs)) {
+      catalogueQuery = catalogueQuery.in(`attributes->>${key}`, values);
+    }
+  }
   if (sort === "prix_asc") catalogueQuery = catalogueQuery.order("price", { ascending: true });
   else if (sort === "prix_desc") catalogueQuery = catalogueQuery.order("price", { ascending: false });
   else catalogueQuery = catalogueQuery.order("created_at", { ascending: false });
+
+  // Échantillon borné pour les facettes de filtre (valeurs d'attribut
+  // dispo + bornes de prix) — même périmètre recherche/catégorie que la
+  // grille, mais JAMAIS recroisé avec les filtres de prix/attribut déjà
+  // sélectionnés (voir `computeAttributeFacets`) : sinon cocher une valeur
+  // ferait immédiatement disparaître les autres options de la même liste.
+  let facetRowsQuery = supabase
+    .from("products")
+    .select("price, attributes, shop:shops!inner(status)")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .eq("shop.status", "active")
+    .limit(FACET_SAMPLE_LIMIT);
+  if (q) facetRowsQuery = facetRowsQuery.ilike("title", `%${q}%`);
+  if (categorie) facetRowsQuery = facetRowsQuery.eq("category", categorie);
 
   // Flux borné de produits récents, regroupé en JS par catégorie plus bas —
   // une seule requête plutôt que jusqu'à 24 (une par catégorie). Seulement
@@ -322,6 +384,7 @@ export default async function Home({
     { data: availableCategoriesRaw },
     catalogueResult,
     categoryFeedResult,
+    facetRowsResult,
   ] = await Promise.all([
     newArrivalsQuery,
     featuredShopsQuery,
@@ -330,7 +393,15 @@ export default async function Home({
     availableCategoriesQuery,
     hasFilter ? catalogueQuery : Promise.resolve({ data: [] as RawMarketplaceProduct[], count: 0 }),
     hasFilter ? Promise.resolve({ data: [] as RawMarketplaceProduct[] }) : categoryFeedQuery,
+    hasFilter
+      ? facetRowsQuery
+      : Promise.resolve({ data: [] as { price: number; attributes: Record<string, string> | null }[] }),
   ]);
+
+  const { facets, priceBounds } = computeAttributeFacets(
+    categorie,
+    (facetRowsResult.data ?? []) as { price: number; attributes: Record<string, string> | null }[]
+  );
 
   const availableCategoryValues = new Set(
     ((availableCategoriesRaw ?? []) as { category: string | null }[])
@@ -520,7 +591,13 @@ export default async function Home({
                 </span>
               </Link>
 
-              <MarketplaceSearch defaultValue={q ?? ""} categorie={categorie} />
+              <MarketplaceSearch
+                defaultValue={q ?? ""}
+                categorie={categorie}
+                prixMin={prixMin}
+                prixMax={prixMax}
+                attrs={attrs}
+              />
 
               <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
                 <Link href="/favoris" className="hover:text-vert-actif">
@@ -677,7 +754,9 @@ export default async function Home({
                 </Link>
               </div>
               <CategoryNav
-                buildHref={(overrides) => buildMarketplaceHref(current, overrides)}
+                buildHref={(overrides) =>
+                  buildMarketplaceHref({ ...current, attrs: {} }, overrides)
+                }
                 active={categorie}
                 availableCategories={availableCategories}
               />
@@ -716,8 +795,7 @@ export default async function Home({
                         options={
                           SORTS as unknown as { value: string; label: string }[]
                         }
-                        q={q}
-                        categorie={categorie}
+                        current={current}
                       />
                     </div>
                     <p className="mt-1 text-xs text-encre/60">
@@ -727,6 +805,9 @@ export default async function Home({
                         href={buildMarketplaceHref(current, {
                           q: undefined,
                           categorie: undefined,
+                          prixMin: undefined,
+                          prixMax: undefined,
+                          attrs: {},
                           page: undefined,
                         })}
                         className="text-vert-actif underline"
@@ -734,6 +815,14 @@ export default async function Home({
                         réinitialiser les filtres
                       </Link>
                     </p>
+                    <div className="mt-3">
+                      <ProductFilterPanel
+                        basePath="/"
+                        current={current}
+                        facets={facets}
+                        priceBounds={priceBounds}
+                      />
+                    </div>
                   </div>
 
                   {catalogueProducts.length === 0 ? (

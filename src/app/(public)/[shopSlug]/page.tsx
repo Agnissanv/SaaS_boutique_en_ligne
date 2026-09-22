@@ -15,6 +15,15 @@ import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 import { getEffectivePrice } from "@/lib/products";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard } from "@/components/product-card";
+import { ProductFilterPanel } from "@/components/product-filter-panel";
+import {
+  buildFilterHref,
+  parseAttrsFromSearchParams,
+  firstParam,
+  type MarketplaceFilters,
+} from "@/lib/marketplace/filters";
+import { computeAttributeFacets } from "@/lib/marketplace/attribute-facets";
+import { getCategoryAttributeFields } from "@/lib/category-attributes";
 
 type PublicProduct = {
   id: string;
@@ -40,19 +49,17 @@ const SORTS = [
 ] as const;
 type SortValue = (typeof SORTS)[number]["value"];
 
+// `buildHref` locale supprimée le 22/09/2026 (chantier "filtres") : forme et
+// logique strictement identiques à `buildMarketplaceHref` de la marketplace
+// globale — remplacée par un simple appel à la fonction désormais partagée
+// `buildFilterHref("/${shopSlug}", ...)` (src/lib/marketplace/filters.ts),
+// étendue au passage pour porter prix/attributs sans dupliquer le calcul ici.
 function buildHref(
   shopSlug: string,
-  current: { q?: string; categorie?: string; tri?: string; page?: string },
-  overrides: { q?: string; categorie?: string; tri?: string; page?: string }
+  current: MarketplaceFilters,
+  overrides: MarketplaceFilters
 ) {
-  const params = new URLSearchParams();
-  const merged = { ...current, ...overrides };
-  if (merged.q) params.set("q", merged.q);
-  if (merged.categorie) params.set("categorie", merged.categorie);
-  if (merged.tri && merged.tri !== "recent") params.set("tri", merged.tri);
-  if (merged.page && merged.page !== "1") params.set("page", merged.page);
-  const qs = params.toString();
-  return qs ? `/${shopSlug}?${qs}` : `/${shopSlug}`;
+  return buildFilterHref(`/${shopSlug}`, current, overrides);
 }
 
 /** Libellé du bloc "Livraison" — jamais un chiffre inventé : soit le vrai
@@ -157,10 +164,23 @@ export default async function ShopPage({
   searchParams,
 }: {
   params: Promise<{ shopSlug: string }>;
-  searchParams: Promise<{ q?: string; categorie?: string; tri?: string; page?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { shopSlug } = await params;
-  const { q, categorie, tri, page: pageParam } = await searchParams;
+  const rawParams = await searchParams;
+  const q = firstParam(rawParams.q);
+  const categorie = firstParam(rawParams.categorie);
+  const tri = firstParam(rawParams.tri);
+  const pageParam = firstParam(rawParams.page);
+  const prixMin = firstParam(rawParams.prix_min);
+  const prixMax = firstParam(rawParams.prix_max);
+  // Validées contre les vraies clés d'attribut de la catégorie choisie — voir
+  // le même raisonnement dans `src/app/page.tsx` (chantier "filtres" du
+  // 22/09/2026).
+  const validAttrKeys = new Set(getCategoryAttributeFields(categorie).map((f) => f.key));
+  const attrs = Object.fromEntries(
+    Object.entries(parseAttrsFromSearchParams(rawParams)).filter(([key]) => validAttrKeys.has(key))
+  );
   const sort: SortValue = SORTS.some((s) => s.value === tri) ? (tri as SortValue) : "recent";
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
@@ -192,27 +212,55 @@ export default async function ShopPage({
 
   if (q) query = query.ilike("title", `%${q}%`);
   if (categorie) query = query.eq("category", categorie);
+  // Prix + attributs — mêmes règles que la marketplace globale (voir
+  // `src/app/page.tsx` et decisions-techniques.md, chantier "filtres" du
+  // 22/09/2026) : prix filtré sur la colonne brute (cohérent avec le tri
+  // prix ci-dessous), attributs seulement pertinents une fois une catégorie
+  // choisie.
+  if (prixMin) query = query.gte("price", Number(prixMin));
+  if (prixMax) query = query.lte("price", Number(prixMax));
+  if (categorie) {
+    for (const [key, values] of Object.entries(attrs)) {
+      query = query.in(`attributes->>${key}`, values);
+    }
+  }
   if (sort === "prix_asc") query = query.order("price", { ascending: true });
   else if (sort === "prix_desc") query = query.order("price", { ascending: false });
   else query = query.order("created_at", { ascending: false });
 
   const { data: products, count } = await query;
 
-  // Catégories réellement disponibles dans cette boutique (16/09/2026,
-  // retour d'Isaac : "les catégories de filtre présentes sur les boutiques
-  // ne doivent pas s'afficher toutes, seulement celles qui sont dispo sur
-  // la boutique du vendeur") — même raisonnement et même requête minimale
-  // (une seule colonne) que pour la marketplace globale (`src/app/page.tsx`).
-  // Calculée sur TOUS les produits actifs de la boutique, pas seulement la
-  // page courante de résultats — sinon les chips changeraient selon la page
-  // affichée, ce qui serait déroutant.
-  const { data: shopCategoriesRaw } = await supabase
+  // Échantillon borné pour les facettes de filtre — même principe et même
+  // périmètre (recherche + catégorie, jamais recroisé avec prix/attributs
+  // déjà sélectionnés) que la marketplace globale, scopé à cette boutique.
+  let facetRowsQuery = supabase
     .from("products")
-    .select("category")
+    .select("price, attributes")
     .eq("shop_id", shop.id)
     .eq("is_active", true)
     .is("deleted_at", null)
-    .not("category", "is", null);
+    .limit(400);
+  if (q) facetRowsQuery = facetRowsQuery.ilike("title", `%${q}%`);
+  if (categorie) facetRowsQuery = facetRowsQuery.eq("category", categorie);
+  const { data: facetRows } = await facetRowsQuery;
+  const { facets, priceBounds } = computeAttributeFacets(
+    categorie,
+    (facetRows ?? []) as { price: number; attributes: Record<string, string> | null }[]
+  );
+
+  // Catégories réellement disponibles dans cette boutique (16/09/2026,
+  // retour d'Isaac : "les catégories de filtre présentes sur les boutiques
+  // ne doivent pas s'afficher toutes, seulement celles qui sont dispo sur
+  // la boutique du vendeur") — calculée sur TOUS les produits actifs de la
+  // boutique, pas seulement la page courante de résultats — sinon les chips
+  // changeraient selon la page affichée, ce qui serait déroutant. Passée le
+  // 22/09/2026 (chantier scalabilité, migration 0033) à la RPC
+  // `get_shop_available_categories`, qui fait le DISTINCT directement en
+  // base au lieu de relire une ligne par produit puis dédupliquer en JS —
+  // même correction que la marketplace globale (`src/app/page.tsx`).
+  const { data: shopCategoriesRaw } = await supabase.rpc("get_shop_available_categories", {
+    p_shop_id: shop.id,
+  });
   const shopCategoryValues = new Set(
     ((shopCategoriesRaw ?? []) as { category: string | null }[])
       .map((p) => p.category)
@@ -242,7 +290,7 @@ export default async function ShopPage({
   }
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
-  const current = { q, categorie, tri, page: pageParam };
+  const current: MarketplaceFilters = { q, categorie, tri, page: pageParam, prixMin, prixMax, attrs };
 
   return (
     <ViewTransition
@@ -391,6 +439,13 @@ export default async function ShopPage({
         <form method="GET" className="flex items-center gap-2 rounded-full bg-brume py-1.5 pl-4 pr-1.5">
           {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
           {tri ? <input type="hidden" name="tri" value={tri} /> : null}
+          {prixMin ? <input type="hidden" name="prix_min" value={prixMin} /> : null}
+          {prixMax ? <input type="hidden" name="prix_max" value={prixMax} /> : null}
+          {Object.entries(attrs).flatMap(([key, values]) =>
+            values.map((value) => (
+              <input key={`${key}:${value}`} type="hidden" name={`attr_${key}`} value={value} />
+            ))
+          )}
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="h-4 w-4 shrink-0 text-encre/40">
             <circle cx="8.5" cy="8.5" r="5.5" />
             <path d="m16 16-3.2-3.2" />
@@ -414,13 +469,18 @@ export default async function ShopPage({
           </button>
         </form>
 
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <ProductFilterPanel
+            basePath={`/${shopSlug}`}
+            current={current}
+            facets={facets}
+            priceBounds={priceBounds}
+          />
           <SortSelect
             basePath={`/${shopSlug}`}
             value={sort}
             options={SORTS as unknown as { value: string; label: string }[]}
-            q={q}
-            categorie={categorie}
+            current={current}
           />
         </div>
       </div>
@@ -443,14 +503,16 @@ export default async function ShopPage({
           <CategoryNav
             active={categorie}
             availableCategories={availableCategories}
-            buildHref={(overrides) => buildHref(shopSlug, current, overrides)}
+            buildHref={(overrides) =>
+              buildHref(shopSlug, { ...current, attrs: {} }, overrides)
+            }
           />
         </div>
       ) : null}
 
       {(products ?? []).length === 0 ? (
         <p className="mt-10 text-sm text-encre/70">
-          {q || categorie
+          {q || categorie || prixMin || prixMax || Object.keys(attrs).length > 0
             ? "Aucun article ne correspond à ta recherche."
             : "Aucun produit disponible pour l'instant."}
         </p>

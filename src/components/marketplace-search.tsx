@@ -29,13 +29,24 @@ type ShopSuggestion = { slug: string; name: string };
  * Une suggestion boutique renvoie directement vers la boutique, une
  * suggestion produit directement vers la fiche produit — l'autocomplete
  * saute l'étape "page de résultats" quand l'intention est déjà claire.
+ *
+ * `prixMin`/`prixMax`/`attrs` ajoutés en champs cachés le 22/09/2026
+ * (chantier "filtres") : sans ça, lancer une nouvelle recherche texte
+ * effaçait silencieusement tout filtre de prix/attribut déjà actif — même
+ * principe que les champs cachés `categorie` existants.
  */
 export function MarketplaceSearch({
   defaultValue,
   categorie,
+  prixMin,
+  prixMax,
+  attrs,
 }: {
   defaultValue: string;
   categorie?: string;
+  prixMin?: string;
+  prixMax?: string;
+  attrs?: Record<string, string[]>;
 }) {
   const [value, setValue] = useState(defaultValue);
   const [products, setProducts] = useState<ProductSuggestion[]>([]);
@@ -103,6 +114,15 @@ export function MarketplaceSearch({
         onSubmit={() => setOpen(false)}
       >
         {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
+        {prixMin ? <input type="hidden" name="prix_min" value={prixMin} /> : null}
+        {prixMax ? <input type="hidden" name="prix_max" value={prixMax} /> : null}
+        {attrs
+          ? Object.entries(attrs).flatMap(([key, values]) =>
+              values.map((value) => (
+                <input key={`${key}:${value}`} type="hidden" name={`attr_${key}`} value={value} />
+              ))
+            )
+          : null}
         <input
           type="text"
           name="q"
