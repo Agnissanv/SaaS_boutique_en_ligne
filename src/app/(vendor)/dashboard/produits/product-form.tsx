@@ -10,6 +10,12 @@ import {
 } from "@/lib/supabase/storage";
 import { CATEGORIES } from "@/lib/categories";
 import { NativeSelect } from "@/components/native-select";
+import {
+  getCategoryAttributeFields,
+  getCategoryTitlePlaceholder,
+  getCategoryDescriptionPlaceholder,
+  type CategoryAttributeField,
+} from "@/lib/category-attributes";
 
 type Variant = { name: string; value: string; sku?: string | null; barcode?: string | null };
 type VariantValueRow = { value: string; sku: string; barcode: string };
@@ -37,6 +43,10 @@ type Product = {
   sale_price?: number | null;
   sale_starts_at?: string | null;
   sale_ends_at?: string | null;
+  // Spécifications par catégorie — ajouté le 22/09/2026 (voir
+  // category-attributes.ts pour le contexte complet et la liste des champs
+  // par catégorie). Clé/valeur texte, jamais requis.
+  attributes?: Record<string, string> | null;
 };
 
 const MAX_PHOTOS = 6;
@@ -321,6 +331,70 @@ function HighlightsField({ initial }: { initial: string[] }) {
 }
 
 /**
+ * Champs de spécifications propres à la catégorie choisie (ex : RAM/stockage
+ * pour Informatique, poids net pour Alimentation...) — ajouté le 22/09/2026,
+ * en réponse au constat d'Isaac que le formulaire produit affichait
+ * exactement les mêmes champs pour toutes les catégories. Voir
+ * category-attributes.ts pour l'architecture complète (4 familles de
+ * catégories pour cette première passe, les autres catégories n'affichent
+ * rien de plus ici).
+ *
+ * Volontairement DISTINCT de `VariantGroups` ci-dessous : une variante est un
+ * choix du client (taille, couleur), un attribut ici est une information
+ * descriptive du produit — jamais un choix qui affecte le panier.
+ *
+ * `key={category}` sur le conteneur : force un remontage complet quand la
+ * catégorie change, pour que chaque champ non contrôlé (texte ou
+ * `NativeSelect`) reparte de sa vraie valeur initiale (celle du produit pour
+ * cette catégorie précise) plutôt que de garder la saisie de la catégorie
+ * précédente si jamais deux catégories partagent une même clé (ex :
+ * "marque" pour Informatique ET Électroménager).
+ */
+function CategoryAttributesFields({
+  category,
+  initial,
+}: {
+  category: string;
+  initial: Record<string, string>;
+}) {
+  const fields = getCategoryAttributeFields(category);
+  if (fields.length === 0) return null;
+
+  return (
+    <fieldset key={category} className="flex flex-col gap-3 rounded-md border border-ligne p-3">
+      <legend className="px-1 text-xs font-medium text-encre/60">
+        Spécifications {(CATEGORIES.find((c) => c.value === category)?.label ?? "").toLowerCase()}
+      </legend>
+      {fields.map((field: CategoryAttributeField) => (
+        <div key={field.key} className="flex flex-col gap-1">
+          <label htmlFor={`attr_${field.key}`} className="text-sm font-medium text-encre">
+            {field.label} <span className="text-encre/50">(optionnel)</span>
+          </label>
+          {field.type === "select" ? (
+            <NativeSelect
+              id={`attr_${field.key}`}
+              name={`attr_${field.key}`}
+              label={field.label}
+              defaultValue={initial[field.key] ?? ""}
+              options={[{ value: "", label: "Non renseigné" }, ...(field.options ?? [])]}
+            />
+          ) : (
+            <input
+              id={`attr_${field.key}`}
+              name={`attr_${field.key}`}
+              defaultValue={initial[field.key] ?? ""}
+              placeholder={field.placeholder}
+              maxLength={120}
+              className="rounded-md border border-ligne px-3 py-2 text-sm"
+            />
+          )}
+        </div>
+      ))}
+    </fieldset>
+  );
+}
+
+/**
  * Groupes de variantes à nom libre (ex : "Taille", "Couleur", "Matière"...).
  *
  * Refondu le 22/09/2026 : chaque valeur d'un groupe était jusqu'ici un simple
@@ -533,6 +607,12 @@ export function ProductForm({
 }) {
   const initialState: ProductFormState = {};
   const [state, formAction] = useActionState(saveProduct, initialState);
+  // Suit la catégorie choisie pour adapter en direct les placeholders
+  // titre/description et les champs de spécifications ci-dessous — ajouté le
+  // 22/09/2026 (voir category-attributes.ts). Le `<select>` catégorie reste
+  // par ailleurs non contrôlé (`defaultValue`) comme avant, `onChange` sert
+  // uniquement à ce suivi local.
+  const [category, setCategory] = useState(product?.category ?? "");
 
   return (
     <form action={formAction} className="mt-6 flex max-w-md flex-col gap-4">
@@ -549,7 +629,7 @@ export function ProductForm({
           minLength={2}
           maxLength={120}
           defaultValue={product?.title ?? ""}
-          placeholder="Ex : Robe wax bleue"
+          placeholder={getCategoryTitlePlaceholder(category)}
           className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
       </div>
@@ -563,7 +643,7 @@ export function ProductForm({
           name="description"
           rows={3}
           defaultValue={product?.description ?? ""}
-          placeholder="Matière, coupe, entretien..."
+          placeholder={getCategoryDescriptionPlaceholder(category)}
           className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
       </div>
@@ -579,12 +659,15 @@ export function ProductForm({
           name="category"
           label="Catégorie"
           defaultValue={product?.category ?? ""}
+          onChange={setCategory}
           options={[
             { value: "", label: "Non catégorisé" },
             ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
           ]}
         />
       </div>
+
+      <CategoryAttributesFields category={category} initial={product?.attributes ?? {}} />
 
       <div className="flex flex-col gap-1">
         <label htmlFor="tags" className="text-sm font-medium text-encre">

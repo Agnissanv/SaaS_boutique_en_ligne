@@ -50,6 +50,7 @@ export default async function NewProductPage({
     tags: string[] | null;
     stock_alert_threshold: number | null;
     highlights: string[] | null;
+    attributes: Record<string, string> | null;
     sale_price: number | null;
     sale_starts_at: string | null;
     sale_ends_at: string | null;
@@ -60,7 +61,7 @@ export default async function NewProductPage({
     const { data: source } = await supabase
       .from("products")
       .select(
-        "title, description, category, price, compare_at_price, stock, tags, stock_alert_threshold, highlights, sale_price, sale_starts_at, sale_ends_at"
+        "title, description, category, price, compare_at_price, stock, tags, stock_alert_threshold, highlights, attributes, sale_price, sale_starts_at, sale_ends_at"
       )
       .eq("id", depuis)
       .eq("shop_id", shop.id)

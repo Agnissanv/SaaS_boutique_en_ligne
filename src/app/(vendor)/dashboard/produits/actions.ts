@@ -165,6 +165,21 @@ export async function saveProduct(
     .getAll("variantRowBarcode")
     .map((v) => String(v).trim())
     .slice(0, MAX_VARIANT_ROWS);
+  // Spécifications par catégorie (ex: "attr_ram", "attr_matiere"...) —
+  // ajouté le 22/09/2026 (voir category-attributes.ts). Le formulaire
+  // n'affiche/n'envoie que les champs de la catégorie actuellement
+  // sélectionnée (préfixe "attr_" choisi pour ne jamais entrer en collision
+  // avec un nom de champ existant), donc lire tout ce qui commence par ce
+  // préfixe suffit — pas besoin de connaître la liste des clés possibles ici.
+  // Valeurs vides omises plutôt que stockées à blanc, comme les autres
+  // champs optionnels du formulaire.
+  const attributes: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("attr_")) continue;
+    const trimmed = String(value).trim();
+    if (trimmed) attributes[key.slice("attr_".length)] = trimmed;
+  }
+
   const sku = String(formData.get("sku") ?? "").trim() || null;
   const barcode = String(formData.get("barcode") ?? "").trim() || null;
   const salePriceRaw = String(formData.get("salePrice") ?? "").trim();
@@ -277,6 +292,7 @@ export async function saveProduct(
         stock_alert_threshold: stockAlertThreshold,
         tags,
         highlights,
+        attributes,
         sku,
         barcode,
         sale_price: salePrice,
@@ -316,6 +332,7 @@ export async function saveProduct(
       stock_alert_threshold: stockAlertThreshold,
       tags,
       highlights,
+      attributes,
       sku,
       barcode,
       sale_price: salePrice,

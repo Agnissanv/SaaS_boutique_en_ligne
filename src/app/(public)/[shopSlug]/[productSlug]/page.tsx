@@ -16,6 +16,7 @@ import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 import { LOW_STOCK_THRESHOLD, getEffectivePrice } from "@/lib/products";
 import { RecordProductView } from "@/components/record-product-view";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
+import { getCategoryAttributeFields, getAttributeValueLabel } from "@/lib/category-attributes";
 
 const RELATED_LIMIT = 4;
 
@@ -224,6 +225,17 @@ export default async function ProductPage({
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
   const tags: string[] = product.tags ?? [];
   const highlights: string[] = product.highlights ?? [];
+  // Spécifications par catégorie — ajouté le 22/09/2026 (voir
+  // category-attributes.ts). Seuls les champs prévus pour la catégorie DE CE
+  // PRODUIT et effectivement renseignés par le vendeur sont affichés — l'ordre
+  // suit celui du formulaire vendeur, pas l'ordre d'insertion dans le JSON.
+  const productAttributes: Record<string, string> = product.attributes ?? {};
+  const specs = getCategoryAttributeFields(product.category)
+    .filter((field) => Boolean(productAttributes[field.key]))
+    .map((field) => ({
+      label: field.label,
+      value: getAttributeValueLabel(product.category, field.key, productAttributes[field.key]),
+    }));
   // Prix effectif (soldé si une promo datée est active maintenant, sinon le
   // prix normal) — voir migration 0031 pour le contexte complet. C'est aussi
   // ce prix qui doit être transmis à `AddToCartForm`/`StickyAddToCartBar` :
@@ -418,6 +430,28 @@ export default async function ProductPage({
         stock={product.stock}
         accentColor={shop.accent_color}
       />
+
+      {/* Tableau "Spécifications" — ajouté le 22/09/2026, en même temps que
+          les champs dynamiques par catégorie du formulaire vendeur (voir
+          category-attributes.ts). N'apparaît que si le produit a une
+          catégorie couverte par ce système ET qu'au moins un champ a été
+          renseigné — jamais de section vide. */}
+      {specs.length > 0 && (
+        <section className="mt-10 border-t border-ligne pt-8">
+          <h2 className="font-display text-lg font-semibold text-encre">Spécifications</h2>
+          <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+            {specs.map((spec) => (
+              <div
+                key={spec.label}
+                className="flex items-baseline justify-between gap-3 border-b border-ligne/60 py-2 text-sm sm:justify-start"
+              >
+                <dt className="text-encre/60">{spec.label}</dt>
+                <dd className="text-right font-medium text-encre sm:ml-auto">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
 
       <section className="mt-12 border-t border-ligne pt-8">
         <h2 className="font-display text-lg font-semibold text-encre">Avis clients</h2>
