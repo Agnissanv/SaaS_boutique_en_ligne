@@ -15,8 +15,10 @@
  * (300 emails/jour) déjà utilisé pour les emails Supabase Auth — mais une
  * clé DIFFÉRENTE est nécessaire (Brevo distingue "clés SMTP" et "clés API"
  * dans Réglages > SMTP & API). Isaac doit générer une clé API Brevo et la
- * renseigner dans `BREVO_API_KEY` (.env.local + Vercel), et choisir un
- * expéditeur sur un domaine déjà authentifié (`BREVO_SENDER_EMAIL`,
+ * renseigner dans `KEVA_API_KEY` (.env.local + Vercel — nommée `KEVA_*` et
+ * pas `BREVO_*`, à la demande d'Isaac le 22/09/2026, un autre projet de son
+ * compte Vercel utilisant déjà `BREVO_API_KEY` pour un usage différent), et
+ * choisir un expéditeur sur un domaine déjà authentifié (`BREVO_SENDER_EMAIL`,
  * ex: commandes@agnissanisaac.com — n'importe quelle adresse sur
  * agnissanisaac.com fonctionne, le domaine entier est authentifié SPF/DKIM).
  *
@@ -45,14 +47,14 @@ export async function sendTransactionalEmail({
   // de lui-même (l'expéditeur reste toujours BREVO_SENDER_EMAIL).
   replyTo?: { email: string; name?: string };
 }): Promise<{ ok: boolean; error?: string }> {
-  const apiKey = process.env.BREVO_API_KEY;
+  const apiKey = process.env.KEVA_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
 
   if (!apiKey || !senderEmail) {
     // Pas configuré (dev local sans clé, ou avant qu'Isaac ne l'ajoute en
     // prod) : on n'envoie rien, mais on ne fait jamais échouer l'appelant.
     console.error(
-      "sendTransactionalEmail: BREVO_API_KEY ou BREVO_SENDER_EMAIL manquant, email non envoyé."
+      "sendTransactionalEmail: KEVA_API_KEY ou BREVO_SENDER_EMAIL manquant, email non envoyé."
     );
     return { ok: false, error: "not_configured" };
   }
