@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardIcon, CoinsIcon, GridIcon, MailIcon, StorefrontIcon, TicketIcon } from "@/components/admin/admin-icons";
+import {
+  ClipboardIcon,
+  CoinsIcon,
+  GridIcon,
+  MailIcon,
+  PackageIcon,
+  StorefrontIcon,
+  TagIcon,
+  TicketIcon,
+} from "@/components/admin/admin-icons";
 
 type NavItem = {
   href: string;
@@ -19,8 +28,10 @@ type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Vue d'ensemble", icon: GridIcon },
   { href: "/admin/vendeurs", label: "Vendeurs", icon: StorefrontIcon },
+  { href: "/admin/commandes", label: "Commandes", icon: PackageIcon },
   { href: "/admin/abonnements", label: "Abonnements", icon: TicketIcon },
   { href: "/admin/paiements", label: "Paiements", icon: CoinsIcon },
+  { href: "/admin/codes-promo", label: "Codes promo", icon: TagIcon },
   { href: "/admin/messages", label: "Messages", icon: MailIcon },
   { href: "/admin/transactions", label: "Transactions", icon: ClipboardIcon },
 ];
@@ -47,7 +58,10 @@ export function AdminNav() {
   return (
     <div className="hidden items-center gap-1 sm:flex">
       {NAV_ITEMS.map((item) => {
-        const active = pathname === item.href;
+        // `.startsWith` en plus de l'égalité stricte depuis le 22/09/2026 :
+        // la fiche détaillée d'un vendeur (/admin/vendeurs/[slug]) doit
+        // toujours surligner "Vendeurs", pas rester sans lien actif.
+        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
         return (
           <Link

@@ -105,6 +105,16 @@ export function MailIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+export function PackageIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M10 3 3 6.5v7L10 17l7-3.5v-7Z" />
+      <path d="M3 6.5 10 10l7-3.5" />
+      <path d="M10 10v7" />
+    </svg>
+  );
+}
+
 export function ClipboardIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg {...baseProps} className={className}>
