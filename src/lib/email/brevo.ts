@@ -33,11 +33,17 @@ export async function sendTransactionalEmail({
   toName,
   subject,
   html,
+  replyTo,
 }: {
   to: string;
   toName?: string;
   subject: string;
   html: string;
+  // Ajouté le 22/09/2026 pour le formulaire "Nous contacter" (voir
+  // contact-message.ts) : permet à Isaac de répondre directement au client
+  // depuis son client mail habituel, sans que l'email arrive comme venant
+  // de lui-même (l'expéditeur reste toujours BREVO_SENDER_EMAIL).
+  replyTo?: { email: string; name?: string };
 }): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
@@ -64,6 +70,7 @@ export async function sendTransactionalEmail({
         to: [{ email: to, name: toName }],
         subject,
         htmlContent: html,
+        ...(replyTo ? { replyTo } : {}),
       }),
     });
 
