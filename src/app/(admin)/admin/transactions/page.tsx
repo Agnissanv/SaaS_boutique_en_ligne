@@ -36,7 +36,7 @@ type LogRow = {
 export default async function AdminTransactionsPage() {
   const supabase = await createClient();
 
-  const { data: logs } = await supabase
+  const { data: logs, error } = await supabase
     .from("transaction_logs")
     .select("id, action, metadata, created_at, shop:shops(name, slug), actor:profiles(display_name)")
     .order("created_at", { ascending: false })
@@ -50,12 +50,22 @@ export default async function AdminTransactionsPage() {
         Money s&apos;ajouteront ici une fois CinetPay branché.
       </p>
 
-      {(logs ?? []).length === 0 ? (
+      {/* Vérification d'erreur ajoutée le 22/09/2026 (audit pré-lancement) :
+          seule page admin sur quatre à ne jamais vérifier `error` — une panne
+          de requête retombait silencieusement sur "Aucune action enregistrée"
+          plutôt que de signaler que le journal n'avait pas pu être chargé. */}
+      {error && (
+        <p className="mt-4 rounded-md border border-erreur/30 bg-erreur/5 px-3 py-2 text-sm text-erreur">
+          Impossible de charger le journal pour l&apos;instant. Réessaie dans un instant.
+        </p>
+      )}
+
+      {!error && (logs ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <ClipboardIcon className="h-8 w-8 text-encre/30" />
           <p className="text-sm text-encre/60">Aucune action enregistrée pour l&apos;instant.</p>
         </div>
-      ) : (
+      ) : error ? null : (
         <ul className="mt-6 divide-y divide-ligne rounded-lg border border-ligne bg-white text-sm">
           {(logs as LogRow[]).map((log) => {
             const shop = Array.isArray(log.shop) ? log.shop[0] : log.shop;

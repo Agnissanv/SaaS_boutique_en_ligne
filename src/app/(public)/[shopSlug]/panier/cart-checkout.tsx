@@ -115,8 +115,23 @@ export function CartCheckout({
     setPending(false);
 
     if (error || !orderId) {
+      // Corrigé le 22/09/2026 (audit pré-lancement) : `create_order` (RPC
+      // plpgsql) lève volontairement des messages déjà clairs et en français
+      // pour CHAQUE cas prévu (stock insuffisant, produit/variante retiré du
+      // catalogue depuis l'ajout au panier, boutique désactivée entre-temps,
+      // code promo invalide, etc. — voir 0031_product_universal_features.sql).
+      // Un `raise exception` plpgsql sans SQLSTATE explicite remonte toujours
+      // avec le code Postgres "P0001" (même convention déjà utilisée ailleurs
+      // dans le projet pour "23505", cf. collaborateurs/profil actions) : on
+      // s'en sert pour distinguer "erreur métier prévue, sûre à afficher
+      // telle quelle" d'une vraie erreur inattendue (réseau, contrainte DB
+      // non gérée) où le message brut ne serait pas approprié pour le client.
+      // Avant ce correctif, seuls "Stock insuffisant" et "Code promo" étaient
+      // reconnus par un `includes()` ad hoc : un panier avec un produit
+      // supprimé/désactivé depuis son ajout (le panier vit en localStorage,
+      // donc peut être ancien) affichait un message générique inutile.
       setError(
-        error?.message?.includes("Stock insuffisant") || error?.message?.includes("Code promo")
+        error?.code === "P0001" && error.message
           ? error.message
           : "Impossible de finaliser la commande. Réessaie."
       );

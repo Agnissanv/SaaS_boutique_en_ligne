@@ -11,19 +11,30 @@ import { createClient } from "@/lib/supabase/client";
  *
  * Recolorée en charte KEVA le 15/09/2026 (côté client) — pure recolor. Les
  * étoiles utilisent le vert-actif plutôt qu'un jaune générique.
+ *
+ * `initialRating`/`initialComment` ajoutés le 22/09/2026 (audit pré-lancement) :
+ * `submit_product_review` accepte déjà un ré-envoi (upsert, voir migration
+ * 0011) mais le formulaire repartait toujours vierge, donnant l'impression
+ * qu'aucun avis n'existait — un client revenant modifier son avis risquait
+ * de l'effacer par erreur en renvoyant un formulaire vide.
  */
 export function ReviewForm({
   orderId,
   productId,
   productTitle,
+  initialRating = null,
+  initialComment = null,
 }: {
   orderId: string;
   productId: string;
   productTitle: string;
+  initialRating?: number | null;
+  initialComment?: string | null;
 }) {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(initialRating ?? 0);
+  const [comment, setComment] = useState(initialComment ?? "");
   const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
+  const isEditing = initialRating != null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,7 +66,14 @@ export function ReviewForm({
       onSubmit={handleSubmit}
       className="flex flex-col gap-2 rounded-md border border-ligne bg-white p-3"
     >
-      <p className="text-sm font-medium text-encre">{productTitle}</p>
+      <p className="text-sm font-medium text-encre">
+        {productTitle}
+        {isEditing && (
+          <span className="ml-2 text-xs font-normal text-encre/40">
+            (avis déjà envoyé — modifiable)
+          </span>
+        )}
+      </p>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -87,7 +105,7 @@ export function ReviewForm({
         disabled={status === "pending"}
         className="w-fit rounded-md bg-vert-actif px-3 py-1.5 text-xs font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
       >
-        {status === "pending" ? "Envoi..." : "Envoyer mon avis"}
+        {status === "pending" ? "Envoi..." : isEditing ? "Mettre à jour mon avis" : "Envoyer mon avis"}
       </button>
     </form>
   );

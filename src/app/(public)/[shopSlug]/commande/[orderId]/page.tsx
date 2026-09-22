@@ -57,6 +57,23 @@ export default async function OrderConfirmationPage({
     p_order_id: orderId,
   });
 
+  // Avis déjà laissés pour cette commande — ajouté le 22/09/2026 (audit
+  // pré-lancement) : `submit_product_review` fait un upsert exprès ("le
+  // client peut revenir corriger son avis", migration 0011), mais le
+  // formulaire repartait toujours vierge, sans indiquer qu'un avis existait
+  // déjà. Un client revenant sur cette page après avoir déjà noté un produit
+  // pouvait donc écraser sans le savoir sa note/commentaire par du vide.
+  // Lecture via la policy publique `product_reviews_public_read` (aucun
+  // compte requis ici) ; si le produit a été désactivé depuis, la requête ne
+  // renverra rien et le formulaire s'affiche simplement vierge comme avant.
+  const { data: existingReviews } = await supabase
+    .from("product_reviews")
+    .select("product_id, rating, comment")
+    .eq("order_id", orderId);
+  const reviewsByProduct = new Map(
+    (existingReviews ?? []).map((r) => [r.product_id, r])
+  );
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -184,14 +201,19 @@ export default async function OrderConfirmationPage({
                     items as { product_id: string; product_title: string }[]
                   ).map((item) => [item.product_id, item])
                 ).values()
-              ).map((item) => (
-                <ReviewForm
-                  key={item.product_id}
-                  orderId={order.id}
-                  productId={item.product_id}
-                  productTitle={item.product_title}
-                />
-              ))}
+              ).map((item) => {
+                const existing = reviewsByProduct.get(item.product_id);
+                return (
+                  <ReviewForm
+                    key={item.product_id}
+                    orderId={order.id}
+                    productId={item.product_id}
+                    productTitle={item.product_title}
+                    initialRating={existing?.rating ?? null}
+                    initialComment={existing?.comment ?? null}
+                  />
+                );
+              })}
             </div>
           ) : (
             <p className="mt-1 text-xs text-encre/40">

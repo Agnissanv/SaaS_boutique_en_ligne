@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessibleShop } from "@/lib/shop-access";
 import { Stars } from "@/components/stars";
 import { ReviewReplyForm } from "./reply-form";
 
@@ -45,6 +46,14 @@ function VerifiedPurchaseBadge() {
  * depuis le 21/09/2026 y répondre publiquement (voir migration 0028,
  * `reply-form.tsx`) : une réponse vendeur, séparée de l'avis, qui s'affiche
  * aussi sur la fiche produit publique.
+ *
+ * Lookup passé à `getAccessibleShop` le 22/09/2026 (audit pré-lancement) :
+ * cette page est visible dans la barre latérale par un collaborateur (pas
+ * marquée `ownerOnly`, cohérent avec "Statistiques"), mais utilisait jusqu'ici
+ * un lookup `owner_id` strict — un collaborateur cliquant "Avis" tombait dans
+ * une boucle de redirections vers une page qui le renvoie elle-même vers
+ * `/dashboard`, sans explication. Voir migration 0034 pour l'extension RLS/
+ * RPC correspondante côté base (lecture des avis + réponse).
  */
 export default async function ReviewsPage() {
   const supabase = await createClient();
@@ -52,15 +61,12 @@ export default async function ReviewsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id")
-    .eq("owner_id", user?.id ?? "")
-    .maybeSingle();
+  const access = user ? await getAccessibleShop(supabase, user.id) : null;
 
-  if (!shop) {
+  if (!access) {
     redirect("/dashboard/boutique");
   }
+  const shop = { id: access.shopId };
 
   const { data: reviews } = await supabase
     .from("product_reviews")

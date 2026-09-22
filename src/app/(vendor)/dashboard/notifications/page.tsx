@@ -6,6 +6,7 @@ import {
   NOTIFICATION_KIND_LABEL,
   type NotificationKind,
 } from "@/lib/notifications";
+import { MarkNotificationsRead } from "./mark-read";
 
 type NotificationRow = {
   id: string;
@@ -32,6 +33,15 @@ type NotificationRow = {
  * — mais on calcule d'abord `wasUnread` à partir des lignes lues AVANT la
  * mise à jour, pour que la page affiche encore l'état "non lu" au moment où
  * le vendeur les découvre, pas déjà "lu" avant même qu'il les ait vues.
+ *
+ * Écriture déplacée dans `mark-read.tsx` (Client Component) le 22/09/2026
+ * (audit pré-lancement) : elle se faisait jusqu'ici directement dans ce rendu
+ * serveur, or le lien de la cloche vers cette page est présent dans le
+ * header de TOUT le dashboard (`layout.tsx`) — le prefetch automatique des
+ * liens visibles de Next.js suffisait à exécuter ce rendu, et donc à
+ * marquer les notifications comme lues, sans que le vendeur n'ouvre jamais
+ * la page. `wasUnread` (affichage) reste calculé ici à partir des données
+ * lues, avant toute écriture.
  */
 export default async function NotificationsPage() {
   const supabase = await createClient();
@@ -51,12 +61,9 @@ export default async function NotificationsPage() {
   const notifications = (data ?? []) as NotificationRow[];
   const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
 
-  if (unreadIds.length > 0) {
-    await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
-  }
-
   return (
     <div>
+      <MarkNotificationsRead ids={unreadIds} />
       <h1 className="font-display text-lg font-semibold text-encre">Notifications</h1>
       <p className="mt-1 text-sm text-encre/70">
         Nouvelles commandes, annulations et changements liés à ta boutique.

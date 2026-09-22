@@ -75,8 +75,15 @@ export default async function DashboardLayout({
     getAccessibleShop(supabase, user.id),
   ]);
 
+  // `status` ajouté à la sélection le 22/09/2026 (audit pré-lancement) : ce
+  // layout ne vérifiait jamais si la boutique était suspendue — un vendeur
+  // suspendu par l'admin n'avait donc aucun signal dans son propre dashboard
+  // (voir la bannière ci-dessous). La suspension bloque déjà la boutique
+  // publique et les nouvelles commandes ; la question de bloquer aussi les
+  // actions du dashboard lui-même reste un choix produit à trancher avec
+  // Isaac, pas encore fait ici.
   const { data: shop } = access
-    ? await supabase.from("shops").select("id, slug, name").eq("id", access.shopId).maybeSingle()
+    ? await supabase.from("shops").select("id, slug, name, status").eq("id", access.shopId).maybeSingle()
     : { data: null };
   const isOwner = access?.isOwner ?? true;
 
@@ -219,6 +226,17 @@ export default async function DashboardLayout({
           </Link>
         </header>
 
+        {/* Bannière ajoutée le 22/09/2026 (audit pré-lancement) : cf. note sur
+            `shop.status` ci-dessus — un vendeur suspendu n'avait jusqu'ici
+            aucun indice dans son propre dashboard. */}
+        {shop?.status === "suspended" && (
+          <div className="border-b border-erreur/30 bg-erreur/10 px-4 py-2 text-sm text-erreur">
+            Ta boutique a été suspendue par l&apos;équipe KEVA : elle
+            n&apos;est plus visible sur la marketplace et ne peut plus
+            recevoir de nouvelles commandes. Contacte-nous pour en savoir
+            plus.
+          </div>
+        )}
         {subscription?.state === "grace_period" && (
           <div className="border-b border-attention/30 bg-attention/10 px-4 py-2 text-sm text-attention">
             Ton abonnement{" "}

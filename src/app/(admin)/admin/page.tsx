@@ -47,7 +47,7 @@ export default async function AdminOverviewPage() {
     { count: shopsTotal },
     { count: shopsActive },
     { count: shopsSuspended },
-    { data: orders },
+    { data: platformRevenueRaw, error: revenueError },
     { count: subscriptionsActive },
   ] = await Promise.all([
     supabase.from("shops").select("id", { count: "exact", head: true }),
@@ -59,7 +59,14 @@ export default async function AdminOverviewPage() {
       .from("shops")
       .select("id", { count: "exact", head: true })
       .eq("status", "suspended"),
-    supabase.from("orders").select("total_amount").neq("status", "cancelled"),
+    // Somme calculée en base (`get_platform_revenue`, migration 0036) plutôt
+    // que de rapatrier toutes les commandes non annulées de la plateforme
+    // pour les additionner en JS — corrigé le 22/09/2026 (audit pré-lancement
+    // du back-office) : même classe de requête non plafonnée déjà identifiée
+    // et corrigée le matin même pour les catégories marketplace
+    // (0033_marketplace_filters_performance.sql), avec le même risque à
+    // l'échelle de 1000-2000 boutiques validée par Isaac.
+    supabase.rpc("get_platform_revenue"),
     // "Actif" au sens réel (pas encore expiré), pas la colonne `status` —
     // voir src/lib/subscription.ts : cette colonne n'est jamais mise à jour
     // après coup sans job planifié, donc filtrer dessus compterait aussi les
@@ -70,7 +77,7 @@ export default async function AdminOverviewPage() {
       .gt("expires_at", new Date().toISOString()),
   ]);
 
-  const platformRevenue = (orders ?? []).reduce((sum, o) => sum + o.total_amount, 0);
+  const platformRevenue = revenueError ? null : Number(platformRevenueRaw ?? 0);
 
   return (
     <div>
@@ -119,7 +126,9 @@ export default async function AdminOverviewPage() {
         </div>
         <div>
           <p className="text-xs uppercase tracking-wide text-ivoire/60">CA plateforme (commandes non annulées)</p>
-          <p className="mt-0.5 font-mono text-2xl font-semibold text-ivoire">{platformRevenue} FCFA</p>
+          <p className="mt-0.5 font-mono text-2xl font-semibold text-ivoire">
+            {platformRevenue === null ? "Indisponible pour l'instant" : `${platformRevenue} FCFA`}
+          </p>
         </div>
       </div>
     </div>

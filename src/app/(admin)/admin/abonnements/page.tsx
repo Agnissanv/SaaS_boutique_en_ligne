@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   computeSubscriptionState,
@@ -6,6 +7,8 @@ import {
 } from "@/lib/subscription";
 import { TagIcon } from "@/components/admin/admin-icons";
 import { PlanSelect } from "./plan-select";
+
+const PAGE_SIZE = 50;
 
 type SubscriptionRow = {
   id: string;
@@ -46,15 +49,39 @@ const PLAN_ICON_CLASS: Record<string, string> = {
 // colonne n'est écrite qu'à la création/au renouvellement et resterait
 // "Actif" indéfiniment sans job planifié pour la faire expirer — ce qui
 // aurait rendu ce tableau trompeur une fois le blocage vendeur en place.
-export default async function AdminSubscriptionsPage() {
+export default async function AdminSubscriptionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
-  const { data: shops } = await supabase
+  const { data: shops, count, error } = await supabase
     .from("shops")
     .select(
-      "id, name, slug, subscriptions(id, expires_at, is_trial, plan:subscription_plans(code, name, price))"
+      "id, name, slug, subscriptions(id, expires_at, is_trial, plan:subscription_plans(code, name, price))",
+      { count: "exact" }
     )
-    .order("name");
+    // Ordonné explicitement le 22/09/2026 (audit pré-lancement) : sans ça,
+    // rien ne garantissait que `subs[0]` (plus bas) corresponde bien à
+    // l'abonnement le plus récent d'une boutique plutôt qu'à un ordre de
+    // retour arbitraire — même critère que `getShopSubscription`
+    // (src/lib/subscription.ts), pour ne jamais afficher ici un plan
+    // différent de celui vu ailleurs dans l'app pour la même boutique. La
+    // nouvelle contrainte `subscriptions_shop_id_key` (migration 0036)
+    // garantit maintenant une seule ligne par boutique de toute façon, mais
+    // autant rester explicite plutôt que de compter uniquement sur elle.
+    .order("expires_at", { referencedTable: "subscriptions", ascending: false })
+    .limit(1, { referencedTable: "subscriptions" })
+    .order("name")
+    .range(from, to);
+
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
 
   return (
     <div>
@@ -65,6 +92,13 @@ export default async function AdminSubscriptionsPage() {
         manuellement ci-dessous.
       </p>
 
+      {error && (
+        <p className="mt-4 rounded-md border border-erreur/30 bg-erreur/5 px-3 py-2 text-sm text-erreur">
+          Impossible de charger les abonnements pour l&apos;instant. Réessaie dans un instant.
+        </p>
+      )}
+
+      {!error && (
       <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
@@ -132,6 +166,38 @@ export default async function AdminSubscriptionsPage() {
           </tbody>
         </table>
       </div>
+      )}
+
+      {/* Pagination ajoutée le 22/09/2026 (audit pré-lancement) — même
+          raisonnement que /admin/vendeurs : cette page chargeait toute la
+          table `shops` sans limite. */}
+      {!error && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/admin/abonnements?page=${page - 1}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/admin/abonnements?page=${page + 1}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

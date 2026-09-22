@@ -1,7 +1,20 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { categoryLabel } from "@/lib/categories";
 import { SearchIcon, StorefrontIcon } from "@/components/admin/admin-icons";
 import { VendorRowActions } from "./vendor-row-actions";
+
+const PAGE_SIZE = 50;
+
+const SHOP_SELECT =
+  "id, name, slug, logo_url, category, status, created_at, owner:profiles(display_name, phone), shop_admin_notes(note)";
+
+// Échappe les caractères spéciaux ILIKE (% et _) pour qu'une recherche
+// contenant l'un d'eux (ex: un nom de boutique avec un underscore) soit
+// traitée littéralement plutôt que comme un joker.
+function escapeIlike(value: string): string {
+  return value.replace(/[%_]/g, (match) => `\\${match}`);
+}
 
 type ShopRow = {
   id: string;
@@ -26,21 +39,77 @@ type ShopRow = {
 export default async function AdminVendorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
+  const trimmedQuery = q?.trim() || undefined;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
-  let query = supabase
-    .from("shops")
-    .select(
-      "id, name, slug, logo_url, category, status, created_at, owner:profiles(display_name, phone), shop_admin_notes(note)"
-    )
-    .order("created_at", { ascending: false });
+  // Recherche corrigée le 22/09/2026 (audit pré-lancement) : la version
+  // précédente interpolait `q` tel quel dans une chaîne de filtre
+  // `.or("name.ilike.%…%,slug.ilike.%…%")` — PostgREST y traite la virgule
+  // et les parenthèses comme des séparateurs de syntaxe, donc une recherche
+  // contenant une virgule (ex: un nom de boutique suivi d'une ville) cassait
+  // la requête. L'erreur PostgREST n'était jamais vérifiée (`shops` retombait
+  // silencieusement à `null`/`undefined`), donc l'admin voyait juste "Aucune
+  // boutique trouvée" sans savoir que la recherche avait échoué plutôt que de
+  // vraiment ne rien trouver. Deux requêtes `.ilike()` séparées (méthode
+  // paramétrée, jamais de construction de chaîne à la main) fusionnées par id
+  // plutôt qu'un `.or()` à réparer — évite complètement la classe de
+  // problème plutôt que de rajouter un échappement de virgule/parenthèse en
+  // plus de celui déjà nécessaire pour `%`/`_`.
+  let shops: ShopRow[] | null = null;
+  let shopsCount: number | null = null;
+  let fetchError: string | null = null;
 
-  if (q) query = query.or(`name.ilike.%${q}%,slug.ilike.%${q}%`);
+  if (trimmedQuery) {
+    const escaped = escapeIlike(trimmedQuery);
+    const [byName, bySlug] = await Promise.all([
+      supabase
+        .from("shops")
+        .select(SHOP_SELECT, { count: "exact" })
+        .ilike("name", `%${escaped}%`)
+        .order("created_at", { ascending: false })
+        .range(from, to),
+      supabase
+        .from("shops")
+        .select(SHOP_SELECT, { count: "exact" })
+        .ilike("slug", `%${escaped}%`)
+        .order("created_at", { ascending: false })
+        .range(from, to),
+    ]);
 
-  const { data: shops } = await query;
+    if (byName.error || bySlug.error) {
+      fetchError = byName.error?.message ?? bySlug.error?.message ?? "Erreur inconnue";
+    } else {
+      const merged = new Map<string, ShopRow>();
+      for (const row of [...(byName.data ?? []), ...(bySlug.data ?? [])] as ShopRow[]) {
+        merged.set(row.id, row);
+      }
+      shops = [...merged.values()].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      // Approximation : la vraie borne "total de résultats distincts" exigerait
+      // une requête dédiée (UNION côté base) — le plus grand des deux comptes
+      // suffit à afficher une pagination raisonnable pour ce volume admin.
+      shopsCount = Math.max(byName.count ?? 0, bySlug.count ?? 0);
+    }
+  } else {
+    const { data, count, error } = await supabase
+      .from("shops")
+      .select(SHOP_SELECT, { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+    shops = data as ShopRow[] | null;
+    shopsCount = count;
+    fetchError = error?.message ?? null;
+  }
+
+  const totalPages = shopsCount ? Math.ceil(shopsCount / PAGE_SIZE) : 1;
 
   return (
     <div>
@@ -65,12 +134,18 @@ export default async function AdminVendorsPage({
         </button>
       </form>
 
-      {(shops ?? []).length === 0 ? (
+      {fetchError && (
+        <p className="mt-4 rounded-md border border-erreur/30 bg-erreur/5 px-3 py-2 text-sm text-erreur">
+          Impossible de charger les boutiques pour l&apos;instant. Réessaie dans un instant.
+        </p>
+      )}
+
+      {!fetchError && (shops ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <StorefrontIcon className="h-8 w-8 text-encre/30" />
           <p className="text-sm text-encre/60">Aucune boutique trouvée.</p>
         </div>
-      ) : (
+      ) : fetchError ? null : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
@@ -142,6 +217,41 @@ export default async function AdminVendorsPage({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination ajoutée le 22/09/2026 (audit pré-lancement) : cette page
+          chargeait jusqu'ici la table `shops` entière, sans limite — même
+          classe de problème identifiée le matin même pour les requêtes
+          marketplace non plafonnées, ici plus critique encore puisque le
+          nombre de boutiques croît directement avec le nombre de vendeurs
+          (1000-2000 visés par Isaac). Même style que la pagination
+          marketplace (`src/app/page.tsx`). */}
+      {!fetchError && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm">
+          {page > 1 ? (
+            <Link
+              href={`/admin/vendeurs?${new URLSearchParams({ ...(trimmedQuery ? { q: trimmedQuery } : {}), page: String(page - 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              ‹ Précédent
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">‹ Précédent</span>
+          )}
+          <span className="px-2 font-mono text-encre/70">
+            {page} / {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link
+              href={`/admin/vendeurs?${new URLSearchParams({ ...(trimmedQuery ? { q: trimmedQuery } : {}), page: String(page + 1) })}`}
+              className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
+            >
+              Suivant ›
+            </Link>
+          ) : (
+            <span className="rounded-md border border-ligne px-3 py-1.5 text-encre/30">Suivant ›</span>
+          )}
         </div>
       )}
     </div>

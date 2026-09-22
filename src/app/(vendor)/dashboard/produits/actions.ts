@@ -456,16 +456,52 @@ export async function saveProduct(
   redirect("/dashboard/produits");
 }
 
-/** Active/désactive un produit (retiré de la boutique publique sans le supprimer). */
-export async function toggleProductActive(productId: string, nextActive: boolean) {
+export type ToggleActiveState = { error?: string };
+
+/**
+ * Active/désactive un produit (retiré de la boutique publique sans le
+ * supprimer).
+ *
+ * Vérification de la limite de produits ajoutée le 22/09/2026 (audit
+ * pré-lancement) : `saveProduct` bloque déjà la CRÉATION une fois la limite
+ * du plan atteinte (§107-126 plus haut), mais rien n'empêchait de
+ * contourner un abonnement dégradé en réactivant simplement un produit
+ * "gelé" par `applyPlanToShop` lors d'un downgrade (voir src/lib/subscription.ts,
+ * qui désactive les produits en trop sans les supprimer) — un vendeur pouvait
+ * ainsi se retrouver avec plus de produits actifs que son plan n'en autorise
+ * rien qu'en cliquant l'interrupteur. Seule la RÉACTIVATION est concernée :
+ * désactiver reste toujours possible, quel que soit le plan.
+ */
+export async function toggleProductActive(
+  productId: string,
+  nextActive: boolean
+): Promise<ToggleActiveState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Session expirée, reconnecte-toi." };
 
   const shopId = await getOwnedShopId(supabase, user.id);
-  if (!shopId) return;
+  if (!shopId) return { error: "Boutique introuvable." };
+
+  if (nextActive) {
+    const subscription = await getShopSubscription(supabase, shopId);
+    const maxProducts = subscription.features.maxProducts;
+    if (maxProducts !== null) {
+      const { count: activeCount } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("shop_id", shopId)
+        .eq("is_active", true)
+        .is("deleted_at", null);
+      if ((activeCount ?? 0) >= maxProducts) {
+        return {
+          error: `Limite de ${maxProducts} produits actifs atteinte pour ton plan ${subscription.planName ?? "actuel"}. Désactive un autre produit ou passe à un plan supérieur.`,
+        };
+      }
+    }
+  }
 
   await supabase
     .from("products")
@@ -474,6 +510,7 @@ export async function toggleProductActive(productId: string, nextActive: boolean
     .eq("shop_id", shopId);
 
   revalidatePath("/dashboard/produits");
+  return {};
 }
 
 /**
@@ -486,15 +523,48 @@ export async function toggleProductActive(productId: string, nextActive: boolean
  * client (un id qui n'appartient pas à ce vendeur est simplement ignoré,
  * pas d'erreur).
  */
-export async function bulkToggleActive(productIds: string[], nextActive: boolean) {
+export async function bulkToggleActive(
+  productIds: string[],
+  nextActive: boolean
+): Promise<ToggleActiveState> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Session expirée, reconnecte-toi." };
 
   const shopId = await getOwnedShopId(supabase, user.id);
-  if (!shopId || productIds.length === 0) return;
+  if (!shopId || productIds.length === 0) return {};
+
+  // Même garde-fou que `toggleProductActive` (voir son commentaire) — la
+  // sélection est rejetée EN BLOC si elle dépasse la capacité restante du
+  // plan, plutôt que d'activer partiellement une partie de la sélection
+  // sans que le vendeur sache laquelle.
+  if (nextActive) {
+    const subscription = await getShopSubscription(supabase, shopId);
+    const maxProducts = subscription.features.maxProducts;
+    if (maxProducts !== null) {
+      const { count: activeCount } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("shop_id", shopId)
+        .eq("is_active", true)
+        .is("deleted_at", null);
+      const { count: alreadyActiveInSelection } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("shop_id", shopId)
+        .in("id", productIds)
+        .eq("is_active", true)
+        .is("deleted_at", null);
+      const newlyActivated = productIds.length - (alreadyActiveInSelection ?? 0);
+      if ((activeCount ?? 0) + newlyActivated > maxProducts) {
+        return {
+          error: `Limite de ${maxProducts} produits actifs atteinte pour ton plan ${subscription.planName ?? "actuel"}. Réduis ta sélection ou passe à un plan supérieur.`,
+        };
+      }
+    }
+  }
 
   await supabase
     .from("products")
@@ -503,6 +573,7 @@ export async function bulkToggleActive(productIds: string[], nextActive: boolean
     .eq("shop_id", shopId);
 
   revalidatePath("/dashboard/produits");
+  return {};
 }
 
 /**

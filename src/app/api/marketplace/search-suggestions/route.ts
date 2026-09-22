@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getEffectivePrice } from "@/lib/products";
 
 /**
  * Suggestions de recherche marketplace (autocomplete) — ajouté le 21/09/2026,
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from("products")
       .select(
-        "id, slug, title, price, product_images(url, position), shop:shops!inner(slug, status)"
+        "id, slug, title, price, sale_price, sale_starts_at, sale_ends_at, product_images(url, position), shop:shops!inner(slug, status)"
       )
       .eq("is_active", true)
       .is("deleted_at", null)
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
     slug: string;
     title: string;
     price: number;
+    sale_price: number | null;
+    sale_starts_at: string | null;
+    sale_ends_at: string | null;
     product_images: { url: string; position: number }[];
     shop: { slug: string; status: string } | { slug: string; status: string }[] | null;
   };
@@ -67,12 +71,24 @@ export async function GET(request: NextRequest) {
       const thumbnail = [...(product.product_images ?? [])].sort(
         (a, b) => a.position - b.position
       )[0]?.url;
+      // Prix effectif (soldé si une promo datée est active maintenant) —
+      // corrigé le 22/09/2026 (audit pré-lancement) : cette route affichait
+      // encore le prix plein pendant qu'une promo était active, alors que
+      // toutes les autres surfaces (accueil, boutique, fiche produit)
+      // utilisent déjà `getEffectivePrice` depuis la migration 0031.
+      const effective = getEffectivePrice({
+        price: product.price,
+        compareAtPrice: null,
+        salePrice: product.sale_price,
+        saleStartsAt: product.sale_starts_at,
+        saleEndsAt: product.sale_ends_at,
+      });
       return {
         id: product.id,
         slug: product.slug,
         shopSlug: shop.slug,
         title: product.title,
-        price: product.price,
+        price: effective.price,
         thumbnail,
       };
     })

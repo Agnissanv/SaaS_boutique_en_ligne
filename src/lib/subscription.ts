@@ -260,37 +260,33 @@ export async function applyPlanToShop(
 
   if (!plan) return null;
 
-  const { data: existing } = await supabase
-    .from("subscriptions")
-    .select("id")
-    .eq("shop_id", shopId)
-    .maybeSingle();
-
   const expiresAt = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString();
 
-  if (existing) {
-    await supabase
-      .from("subscriptions")
-      .update({
-        plan_id: plan.id,
-        status: "active",
-        started_at: new Date().toISOString(),
-        expires_at: expiresAt,
-        // Toute assignation réelle de plan (admin ou paiement CinetPay
-        // confirmé) efface le statut d'essai — voir migration 0029.
-        is_trial: false,
-      })
-      .eq("id", existing.id);
-  } else {
-    await supabase.from("subscriptions").insert({
+  // Upsert atomique plutôt qu'un "vérifier puis écrire" — corrigé le
+  // 22/09/2026 (audit pré-lancement du back-office) : cette fonction est
+  // appelée à la fois par l'assignation manuelle admin et par le webhook
+  // CinetPay (voir doc ci-dessus), qui peuvent donc courir en concurrence
+  // l'un de l'autre (ou un simple double clic admin) ; l'ancienne version
+  // "SELECT puis UPDATE/INSERT" pouvait, dans cette fenêtre, créer deux
+  // lignes `subscriptions` pour la même boutique — repéré parce que ça
+  // faussait le compteur "Abonnements actifs" de `/admin` et pouvait faire
+  // afficher au vendeur et à l'admin deux plans différents pour la même
+  // boutique. `on conflict` s'appuie sur la nouvelle contrainte
+  // `subscriptions_shop_id_key` (migration 0036) qui garantit une seule
+  // ligne par boutique.
+  await supabase.from("subscriptions").upsert(
+    {
       shop_id: shopId,
       plan_id: plan.id,
       status: "active",
       started_at: new Date().toISOString(),
       expires_at: expiresAt,
+      // Toute assignation réelle de plan (admin ou paiement CinetPay
+      // confirmé) efface le statut d'essai — voir migration 0029.
       is_trial: false,
-    });
-  }
+    },
+    { onConflict: "shop_id" }
+  );
 
   // Downgrade avec dépassement de la nouvelle limite de produits : les plus
   // anciens (premiers ajoutés) restent actifs, les plus récents en excédent

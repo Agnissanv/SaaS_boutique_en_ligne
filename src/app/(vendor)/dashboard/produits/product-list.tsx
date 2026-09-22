@@ -48,6 +48,11 @@ export function ProductList({ products }: { products: Product[] }) {
   const [view, setView] = useState<ViewMode>("table");
   const [isPending, startTransition] = useTransition();
   const [pendingToggleId, setPendingToggleId] = useState<string | null>(null);
+  // Erreur de réactivation (limite de produits actifs du plan atteinte) —
+  // ajouté le 22/09/2026 (audit pré-lancement) : `toggleProductActive`/
+  // `bulkToggleActive` peuvent maintenant refuser une réactivation, ce qui
+  // doit être visible pour le vendeur plutôt qu'un échec silencieux.
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   function toggleSelected(id: string) {
     setSelected((prev) => {
@@ -67,16 +72,20 @@ export function ProductList({ products }: { products: Product[] }) {
   function handleBulk(nextActive: boolean) {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
+    setToggleError(null);
     startTransition(async () => {
-      await bulkToggleActive(ids, nextActive);
-      setSelected(new Set());
+      const result = await bulkToggleActive(ids, nextActive);
+      if (result.error) setToggleError(result.error);
+      else setSelected(new Set());
     });
   }
 
   function handleToggleActive(product: Product) {
     setPendingToggleId(product.id);
+    setToggleError(null);
     startTransition(async () => {
-      await toggleProductActive(product.id, !product.is_active);
+      const result = await toggleProductActive(product.id, !product.is_active);
+      if (result.error) setToggleError(result.error);
       setPendingToggleId(null);
     });
   }
@@ -142,6 +151,12 @@ export function ProductList({ products }: { products: Product[] }) {
           </button>
         </div>
       </div>
+
+      {toggleError ? (
+        <p className="mt-2 rounded-md border border-erreur/30 bg-erreur/10 p-2 text-xs text-erreur">
+          {toggleError}
+        </p>
+      ) : null}
 
       {view === "table" ? (
         <ProductTable
