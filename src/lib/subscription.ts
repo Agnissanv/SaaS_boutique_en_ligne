@@ -86,6 +86,14 @@ export type ShopFeatureFlags = {
    */
   hasAdvancedStats: boolean;
   hasFullStats: boolean;
+  /**
+   * Badge "Boutique vérifiée" (Business+/Pro) — ajouté le 22/09/2026, audit
+   * croissance. Voir migration 0042 : la même clé jsonb pilote aussi
+   * `shops.is_verified` (dénormalisé, tenu à jour par trigger), affiché sur
+   * la marketplace publique — ce flag-ci ne sert qu'à l'afficher sur
+   * `/dashboard/abonnement` comme avantage du plan.
+   */
+  hasVerifiedBadge: boolean;
 };
 
 /**
@@ -114,6 +122,7 @@ export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
   hasAdvancedStockAlerts: false,
   hasAdvancedStats: false,
   hasFullStats: false,
+  hasVerifiedBadge: false,
 };
 
 /**
@@ -147,6 +156,7 @@ function parseFeatureFlags(features: unknown): ShopFeatureFlags {
     hasAdvancedStockAlerts: Boolean(f.has_advanced_stock_alerts),
     hasAdvancedStats: Boolean(f.has_advanced_stats),
     hasFullStats: Boolean(f.has_full_stats),
+    hasVerifiedBadge: Boolean(f.has_verified_badge),
   };
 }
 

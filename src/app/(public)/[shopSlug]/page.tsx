@@ -15,6 +15,7 @@ import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 import { getEffectivePrice } from "@/lib/products";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard } from "@/components/product-card";
+import { VerifiedBadge } from "@/components/verified-badge";
 import { ProductFilterPanel } from "@/components/product-filter-panel";
 import {
   buildFilterHref,
@@ -84,7 +85,7 @@ const getShopForPublicPage = cache(async (shopSlug: string) => {
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee, accent_color"
+      "id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee, accent_color, is_verified"
     )
     .eq("slug", shopSlug)
     .eq("status", "active")
@@ -375,8 +376,9 @@ export default async function ShopPage({
           )}
 
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-xl font-semibold text-encre sm:text-2xl">
-              {shop.name}
+            <h1 className="flex items-center gap-1.5 font-display text-xl font-semibold text-encre sm:text-2xl">
+              <span>{shop.name}</span>
+              {shop.is_verified ? <VerifiedBadge className="h-4 w-4 sm:h-[18px] sm:w-[18px]" /> : null}
             </h1>
             {rating ? (
               <p className="mt-1 flex items-center gap-1.5 text-sm text-encre/70">
@@ -556,6 +558,7 @@ export default async function ShopPage({
                   shopName: shop.name,
                   rating,
                   isOnSale: effective.isOnSale,
+                  isVerified: shop.is_verified,
                 }}
               />
             );

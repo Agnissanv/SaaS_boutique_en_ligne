@@ -23,6 +23,7 @@ import { getCategoryAttributeFields } from "@/lib/category-attributes";
 import { ProductFilterPanel } from "@/components/product-filter-panel";
 import { getShopRating } from "@/lib/reviews";
 import { getEffectivePrice } from "@/lib/products";
+import { boostByPlanWithinDay } from "@/lib/marketplace/ranking";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -153,6 +154,16 @@ const TRUST_ITEMS = [
   },
 ];
 
+type RawMarketplaceShopEmbed = {
+  slug: string;
+  name: string;
+  // `plan_rank`/`is_verified` — ajoutés le 22/09/2026 (migration 0042, boost
+  // marketplace par palier d'abonnement + badge "Boutique vérifiée"). Voir
+  // `boostByPlanWithinDay` (src/lib/marketplace/ranking.ts).
+  plan_rank: number;
+  is_verified: boolean;
+};
+
 type RawMarketplaceProduct = {
   id: string;
   slug: string;
@@ -160,14 +171,26 @@ type RawMarketplaceProduct = {
   price: number;
   compare_at_price: number | null;
   category: string | null;
+  // Nécessaire au tri "jour d'abord, palier ensuite" du boost marketplace
+  // (voir ranking.ts) — pas seulement à l'affichage.
+  created_at: string;
   product_images: { url: string; position: number }[];
-  shop: { slug: string; name: string } | { slug: string; name: string }[] | null;
+  shop: RawMarketplaceShopEmbed | RawMarketplaceShopEmbed[] | null;
   // Prix soldé daté — ajouté le 22/09/2026 (migration 0031). Voir
   // `getEffectivePrice` (src/lib/products.ts) pour le calcul.
   sale_price: number | null;
   sale_starts_at: string | null;
   sale_ends_at: string | null;
 };
+
+// Rang de palier d'une ligne produit brute — normalise la forme `shop`
+// (objet ou tableau selon le contexte de requête, même remarque que
+// `toCardProduct` ci-dessous) et retombe sur le rang Starter (le plus bas)
+// si jamais absent, plutôt que de planter le tri.
+function planRankOf(product: RawMarketplaceProduct): number {
+  const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
+  return shop?.plan_rank ?? 3;
+}
 
 // Normalise la forme `shop` renvoyée par Supabase (objet ou tableau selon le
 // contexte de la requête) et calcule la vignette — utilisé par toutes les
@@ -201,6 +224,7 @@ function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct |
     thumbnail,
     shopSlug: shop.slug,
     shopName: shop.name,
+    isVerified: shop.is_verified,
   };
 }
 
@@ -221,7 +245,7 @@ function shuffle<T>(items: T[]): T[] {
 const HERO_SLIDESHOW_SIZE = 6;
 
 const PRODUCT_CARD_COLUMNS =
-  "id, slug, title, price, compare_at_price, category, product_images(url, position), shop:shops!inner(slug, name, status), sale_price, sale_starts_at, sale_ends_at";
+  "id, slug, title, price, compare_at_price, category, created_at, product_images(url, position), shop:shops!inner(slug, name, status, plan_rank, is_verified), sale_price, sale_starts_at, sale_ends_at";
 
 export default async function Home({
   searchParams,
@@ -280,7 +304,7 @@ export default async function Home({
   // recherche), contrairement aux bandes de catalogue ci-dessous.
   const featuredShopsQuery = supabase
     .from("shops")
-    .select("id, slug, name, logo_url, category")
+    .select("id, slug, name, logo_url, category, is_verified")
     .eq("status", "active")
     .order("view_count", { ascending: false })
     .limit(FEATURED_SHOPS_SIZE);
@@ -412,7 +436,18 @@ export default async function Home({
 
   const { data: products, count } = catalogueResult;
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
-  const catalogueProducts = ((products ?? []) as RawMarketplaceProduct[])
+  // Boost par palier d'abonnement (voir ranking.ts) — seulement en tri
+  // "Plus récent" (le défaut) : un tri prix explicite reflète une intention
+  // claire du visiteur, qu'un boost par palier n'a pas à contredire.
+  // Volontairement PAGE-SCOPÉ : ne réordonne que les lignes déjà remontées
+  // par `.range(...)` ci-dessus, ne change jamais quels articles atterrissent
+  // sur quelle page.
+  const rawCatalogueProducts = (products ?? []) as RawMarketplaceProduct[];
+  const orderedCatalogueProducts =
+    sort === "recent"
+      ? boostByPlanWithinDay(rawCatalogueProducts, (p) => p.created_at, planRankOf)
+      : rawCatalogueProducts;
+  const catalogueProducts = orderedCatalogueProducts
     .map(toCardProduct)
     .filter((p): p is MarketplaceCardProduct => p !== null);
   const newArrivalsProducts = ((newArrivals ?? []) as RawMarketplaceProduct[])
@@ -465,7 +500,18 @@ export default async function Home({
   // principe que les autres bandes de découverte, jamais de bande vide.
   const categoryRows: { value: string; label: string; products: MarketplaceCardProduct[] }[] = [];
   if (!hasFilter) {
-    const feedProducts = ((categoryFeedResult.data ?? []) as RawMarketplaceProduct[])
+    // Boost par palier d'abonnement (ranking.ts) appliqué AVANT le
+    // regroupement par catégorie ci-dessous, pour que le tri boosté soit
+    // respecté à l'intérieur de chaque bande — même compromis "page-scopé"
+    // que le catalogue filtré (voir plus haut) : `CATEGORY_FEED_LIMIT` fixe
+    // déjà la fenêtre de produits considérée, le boost ne fait que réordonner
+    // à l'intérieur de cette fenêtre.
+    const boostedFeed = boostByPlanWithinDay(
+      (categoryFeedResult.data ?? []) as RawMarketplaceProduct[],
+      (p) => p.created_at,
+      planRankOf
+    );
+    const feedProducts = boostedFeed
       .map(toCardProduct)
       .filter((p): p is MarketplaceCardProduct => p !== null);
     const byCategory = new Map<string, MarketplaceCardProduct[]>();
@@ -547,6 +593,7 @@ export default async function Home({
       name: shop.name as string,
       logoUrl: shop.logo_url as string | null,
       category: shop.category as string | null,
+      isVerified: shop.is_verified as boolean,
       rating: await getShopRating(supabase, shop.id as string),
     }))
   );

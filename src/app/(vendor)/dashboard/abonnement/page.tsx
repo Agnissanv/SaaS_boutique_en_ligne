@@ -33,6 +33,9 @@ const FEATURE_LABELS: Record<string, string> = {
   has_advanced_stock_alerts: "Alertes de stock avancées",
   has_advanced_stats: "Statistiques avec graphiques",
   has_full_stats: "Statistiques complètes (conversion, comparaisons)",
+  // Badge affiché sur la marketplace publique (carte produit, carte
+  // boutique, fiche boutique) — voir migration 0042 et VerifiedBadge.
+  has_verified_badge: "Badge « Boutique vérifiée » sur la marketplace",
   // Pas de "can_remove_branding" ici : retiré du modèle le 16/09/2026, le
   // badge KEVA reste visible sur toutes les boutiques quel que soit le plan
   // (voir supabase/migrations/0019_drop_can_remove_branding.sql).

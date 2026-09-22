@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Stars } from "@/components/stars";
 import { categoryLabel } from "@/lib/categories";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 export type MarketplaceShop = {
   slug: string;
@@ -8,6 +9,8 @@ export type MarketplaceShop = {
   logoUrl: string | null;
   category: string | null;
   rating: { average: number; count: number } | null;
+  /** Badge "Boutique vérifiée" (22/09/2026, voir migration 0042). */
+  isVerified?: boolean;
 };
 
 /**
@@ -52,7 +55,10 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
           {shop.name.charAt(0).toUpperCase()}
         </div>
       )}
-      <p className="w-full truncate text-sm font-medium text-encre">{shop.name}</p>
+      <p className="flex w-full items-center justify-center gap-1 text-sm font-medium text-encre">
+        <span className="min-w-0 truncate">{shop.name}</span>
+        {shop.isVerified ? <VerifiedBadge /> : null}
+      </p>
       {shop.category ? (
         <p className="text-xs text-encre/60">{categoryLabel(shop.category)}</p>
       ) : null}

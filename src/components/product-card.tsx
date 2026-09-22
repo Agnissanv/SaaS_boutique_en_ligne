@@ -4,6 +4,7 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
 import { Stars } from "@/components/stars";
 import { categoryLabel } from "@/lib/categories";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 export type MarketplaceCardProduct = {
   id: string;
@@ -23,6 +24,13 @@ export type MarketplaceCardProduct = {
    * distinguer une promo datée active d'un simple prix barré permanent.
    */
   isOnSale?: boolean;
+  /**
+   * Badge "Boutique vérifiée" (22/09/2026, voir migration 0042 et
+   * VerifiedBadge) — optionnel car toutes les sources de cartes produit ne
+   * portent pas cette info (ex : `RecentlyViewedRow`, lue depuis
+   * l'historique client en localStorage, sans requête boutique).
+   */
+  isVerified?: boolean;
 };
 
 export function ProductCard({
@@ -109,9 +117,10 @@ export function ProductCard({
       <Link
         href={`/${product.shopSlug}`}
         transitionTypes={["nav-forward"]}
-        className="mt-1.5 block truncate text-xs text-encre/50 transition hover:text-vert-actif"
+        className="mt-1.5 flex items-center gap-1 text-xs text-encre/50 transition hover:text-vert-actif"
       >
-        {product.shopName}
+        <span className="min-w-0 truncate">{product.shopName}</span>
+        {product.isVerified ? <VerifiedBadge /> : null}
       </Link>
 
       {product.category ? (
