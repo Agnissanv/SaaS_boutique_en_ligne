@@ -16,6 +16,13 @@ export type MarketplaceCardProduct = {
   shopSlug: string;
   shopName: string;
   rating?: { average: number; count: number } | null;
+  /**
+   * true si `price` ci-dessus est déjà le prix soldé effectif (calculé par
+   * l'appelant via `getEffectivePrice`, src/lib/products.ts) — ajouté le
+   * 22/09/2026. Affiche un badge "Promo" en plus du prix barré, pour
+   * distinguer une promo datée active d'un simple prix barré permanent.
+   */
+  isOnSale?: boolean;
 };
 
 export function ProductCard({
@@ -75,6 +82,11 @@ export function ProductCard({
             {hasDiscount ? (
               <span className="font-mono text-xs text-encre/40 line-through">
                 {product.compareAtPrice?.toLocaleString("fr-FR")} FCFA
+              </span>
+            ) : null}
+            {product.isOnSale ? (
+              <span className="rounded-full bg-erreur px-1.5 py-0.5 text-[10px] font-semibold text-ivoire">
+                Promo
               </span>
             ) : null}
           </div>

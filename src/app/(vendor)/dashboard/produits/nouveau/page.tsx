@@ -31,11 +31,15 @@ export default async function NewProductPage({
   // 14/09/2026 : au lieu de repartir d'un formulaire vide pour un produit très
   // proche d'un autre déjà en ligne, le formulaire est pré-rempli avec les
   // infos de la source (titre, description, catégorie, prix, stock, tags,
-  // variantes). Volontairement PAS les photos : le vendeur doit toujours en
-  // ajouter des nouvelles pour le nouveau produit — dupliquer les mêmes
-  // photos donnerait deux fiches produit strictement identiques visuellement.
-  // `.eq("shop_id", shop.id)` empêche de dupliquer le produit d'un autre
-  // vendeur en devinant/modifiant l'id dans l'URL.
+  // variantes, points forts, prix soldé). Volontairement PAS les photos : le
+  // vendeur doit toujours en ajouter des nouvelles pour le nouveau produit —
+  // dupliquer les mêmes photos donnerait deux fiches produit strictement
+  // identiques visuellement. Même raisonnement pour le SKU/code-barres
+  // (produit et variantes) — ajouté le 22/09/2026 (migration 0031) — ce sont
+  // des identifiants censés être propres à CE produit, jamais recopiés
+  // silencieusement sur un doublon. `.eq("shop_id", shop.id)` empêche de
+  // dupliquer le produit d'un autre vendeur en devinant/modifiant l'id dans
+  // l'URL.
   let duplicateFrom: {
     title: string;
     description: string | null;
@@ -45,6 +49,10 @@ export default async function NewProductPage({
     stock: number;
     tags: string[] | null;
     stock_alert_threshold: number | null;
+    highlights: string[] | null;
+    sale_price: number | null;
+    sale_starts_at: string | null;
+    sale_ends_at: string | null;
   } | null = null;
   let duplicateVariants: { name: string; value: string }[] = [];
 
@@ -52,7 +60,7 @@ export default async function NewProductPage({
     const { data: source } = await supabase
       .from("products")
       .select(
-        "title, description, category, price, compare_at_price, stock, tags, stock_alert_threshold"
+        "title, description, category, price, compare_at_price, stock, tags, stock_alert_threshold, highlights, sale_price, sale_starts_at, sale_ends_at"
       )
       .eq("id", depuis)
       .eq("shop_id", shop.id)

@@ -13,6 +13,7 @@ import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { buildMarketplaceHref } from "@/lib/marketplace/filters";
 import { getShopRating } from "@/lib/reviews";
+import { getEffectivePrice } from "@/lib/products";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -131,25 +132,41 @@ type RawMarketplaceProduct = {
   category: string | null;
   product_images: { url: string; position: number }[];
   shop: { slug: string; name: string } | { slug: string; name: string }[] | null;
+  // Prix soldé daté — ajouté le 22/09/2026 (migration 0031). Voir
+  // `getEffectivePrice` (src/lib/products.ts) pour le calcul.
+  sale_price: number | null;
+  sale_starts_at: string | null;
+  sale_ends_at: string | null;
 };
 
 // Normalise la forme `shop` renvoyée par Supabase (objet ou tableau selon le
 // contexte de la requête) et calcule la vignette — utilisé par toutes les
 // requêtes produit de cette page (nouveautés, meilleures ventes, bandes par
 // catégorie, catalogue filtré), d'où l'extraction ici plutôt qu'une logique
-// dupliquée dans chaque `.map()`.
+// dupliquée dans chaque `.map()`. Calcule aussi le prix EFFECTIF (soldé si
+// une promo datée est active maintenant, sinon le prix normal) via
+// `getEffectivePrice`, plutôt que d'afficher `price`/`compare_at_price`
+// bruts — même helper que le reste du site (fiche boutique, fiche produit).
 function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct | null {
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
   if (!shop) return null;
   const thumbnail = [...(product.product_images ?? [])].sort(
     (a, b) => a.position - b.position
   )[0]?.url;
+  const effective = getEffectivePrice({
+    price: product.price,
+    compareAtPrice: product.compare_at_price,
+    salePrice: product.sale_price,
+    saleStartsAt: product.sale_starts_at,
+    saleEndsAt: product.sale_ends_at,
+  });
   return {
     id: product.id,
     slug: product.slug,
     title: product.title,
-    price: product.price,
-    compareAtPrice: product.compare_at_price,
+    price: effective.price,
+    compareAtPrice: effective.compareAtPrice,
+    isOnSale: effective.isOnSale,
     category: product.category,
     thumbnail,
     shopSlug: shop.slug,
@@ -174,7 +191,7 @@ function shuffle<T>(items: T[]): T[] {
 const HERO_SLIDESHOW_SIZE = 6;
 
 const PRODUCT_CARD_COLUMNS =
-  "id, slug, title, price, compare_at_price, category, product_images(url, position), shop:shops!inner(slug, name, status)";
+  "id, slug, title, price, compare_at_price, category, product_images(url, position), shop:shops!inner(slug, name, status), sale_price, sale_starts_at, sale_ends_at";
 
 export default async function Home({
   searchParams,

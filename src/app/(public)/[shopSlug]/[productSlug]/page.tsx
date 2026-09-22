@@ -13,7 +13,7 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
-import { LOW_STOCK_THRESHOLD } from "@/lib/products";
+import { LOW_STOCK_THRESHOLD, getEffectivePrice } from "@/lib/products";
 import { RecordProductView } from "@/components/record-product-view";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 
@@ -223,10 +223,24 @@ export default async function ProductPage({
 
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
   const tags: string[] = product.tags ?? [];
+  const highlights: string[] = product.highlights ?? [];
+  // Prix effectif (soldé si une promo datée est active maintenant, sinon le
+  // prix normal) — voir migration 0031 pour le contexte complet. C'est aussi
+  // ce prix qui doit être transmis à `AddToCartForm`/`StickyAddToCartBar` :
+  // le montant réellement facturé est de toute façon recalculé côté serveur
+  // par `create_order` (jamais celui envoyé par le client), mais le panier
+  // doit refléter la même promo que ce que le client vient de voir.
+  const effectivePrice = getEffectivePrice({
+    price: product.price,
+    compareAtPrice: product.compare_at_price,
+    salePrice: product.sale_price,
+    saleStartsAt: product.sale_starts_at,
+    saleEndsAt: product.sale_ends_at,
+  });
   const hasDiscount =
-    product.compare_at_price != null && product.compare_at_price > product.price;
+    effectivePrice.compareAtPrice != null && effectivePrice.compareAtPrice > effectivePrice.price;
   const discountPercent = hasDiscount
-    ? Math.round((1 - product.price / product.compare_at_price) * 100)
+    ? Math.round((1 - effectivePrice.price / (effectivePrice.compareAtPrice as number)) * 100)
     : null;
 
   return (
@@ -244,8 +258,8 @@ export default async function ProductPage({
           shopName: shop.name,
           productSlug: product.slug,
           title: product.title,
-          price: product.price,
-          compareAtPrice: product.compare_at_price,
+          price: effectivePrice.price,
+          compareAtPrice: effectivePrice.compareAtPrice,
           imageUrl: images[0]?.url,
         }}
       />
@@ -266,8 +280,8 @@ export default async function ProductPage({
                 shopSlug,
                 productSlug: product.slug,
                 title: product.title,
-                price: product.price,
-                compareAtPrice: product.compare_at_price,
+                price: effectivePrice.price,
+                compareAtPrice: effectivePrice.compareAtPrice,
                 imageUrl: images[0]?.url,
               }}
             />
@@ -315,19 +329,38 @@ export default async function ProductPage({
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-encre/70">{product.description}</p>
 
+          {/* "Points forts" — ajouté le 22/09/2026 (migration 0031), demandé
+              par Isaac sur inspiration Jumia : quelques atouts courts mis en
+              avant, distincts de la description longue ci-dessus. */}
+          {highlights.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-1">
+              {highlights.map((point, index) => (
+                <li key={index} className="flex items-start gap-1.5 text-sm text-encre/80">
+                  <span aria-hidden="true" className="mt-0.5 text-vert-actif">✓</span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+          )}
+
           <div className="mt-5 flex flex-wrap items-baseline gap-2.5">
             <p className="font-mono text-2xl font-semibold text-cuivre-profond">
-              {product.price} FCFA
+              {effectivePrice.price} FCFA
             </p>
             {hasDiscount && (
               <>
                 <p className="font-mono text-sm text-encre/40 line-through">
-                  {product.compare_at_price} FCFA
+                  {effectivePrice.compareAtPrice} FCFA
                 </p>
                 <span className="rounded-full bg-erreur px-2 py-0.5 text-xs font-semibold text-ivoire">
                   -{discountPercent}%
                 </span>
               </>
+            )}
+            {effectivePrice.isOnSale && (
+              <span className="rounded-full bg-erreur/15 px-2 py-0.5 text-xs font-semibold text-erreur">
+                Promo en cours
+              </span>
             )}
           </div>
 
@@ -358,7 +391,7 @@ export default async function ProductPage({
               productId={product.id}
               productSlug={product.slug}
               title={product.title}
-              price={product.price}
+              price={effectivePrice.price}
               imageUrl={images[0]?.url}
               variants={product.product_variants ?? []}
               stock={product.stock}
@@ -369,7 +402,7 @@ export default async function ProductPage({
       </div>
 
       <StickyAddToCartBar
-        price={product.price}
+        price={effectivePrice.price}
         stock={product.stock}
         accentColor={shop.accent_color}
       />

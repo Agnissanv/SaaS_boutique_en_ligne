@@ -39,7 +39,23 @@ function parseCommaList(raw: FormDataEntryValue | string | null): string[] {
 }
 
 const MAX_VARIANT_GROUPS = 6;
+const MAX_VARIANT_VALUES_PER_GROUP = 20;
+const MAX_VARIANT_ROWS = MAX_VARIANT_GROUPS * MAX_VARIANT_VALUES_PER_GROUP;
 const MAX_TAGS = 10;
+const MAX_HIGHLIGHTS = 10;
+
+/**
+ * "2026-09-22T14:30" (valeur brute d'un <input type="datetime-local">) ->
+ * ISO 8601, ou `{valid: false}` si le texte n'est pas une date exploitable.
+ * Champ vide -> `{valid: true, value: null}` (date optionnelle non
+ * renseignée, pas une erreur).
+ */
+function parseOptionalDatetimeLocal(raw: string): { valid: boolean; value: string | null } {
+  if (!raw) return { valid: true, value: null };
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return { valid: false, value: null };
+  return { valid: true, value: parsed.toISOString() };
+}
 
 /**
  * Stock "effectivement illimité" appliqué aux produits d'un plan sans
@@ -119,15 +135,41 @@ export async function saveProduct(
   const tags = parseCommaList(formData.get("tags"))
     .map((t) => t.toLowerCase())
     .slice(0, MAX_TAGS);
-  // Groupes de variantes à nom libre (ex : "Taille", "Couleur", "Matière"...)
-  // — un couple nom/valeurs par groupe non vide, envoyés en parallèle par
-  // VariantGroups (product-form.tsx). getAll() préserve l'ordre d'apparition
-  // dans le DOM, donc les deux tableaux restent alignés par index.
-  const variantGroupNames = formData
-    .getAll("variantGroupName")
+  // "Points forts" — ajouté le 22/09/2026 (migration 0031). Une entrée
+  // <input type="hidden" name="highlight"> par point non vide, voir
+  // HighlightsField (product-form.tsx).
+  const highlights = formData
+    .getAll("highlight")
     .map((v) => String(v).trim())
-    .slice(0, MAX_VARIANT_GROUPS);
-  const variantGroupValues = formData.getAll("variantGroupValues").map((v) => String(v));
+    .filter(Boolean)
+    .slice(0, MAX_HIGHLIGHTS);
+  // Groupes de variantes à nom libre (ex : "Taille", "Couleur", "Matière"...)
+  // — refondu le 22/09/2026 (migration 0031) : chaque VALEUR d'un groupe est
+  // maintenant sa propre ligne (avec SKU/code-barres optionnels), plutôt
+  // qu'un texte unique séparé par virgules. VariantGroups (product-form.tsx)
+  // envoie 4 tableaux parallèles alignés par index (une ligne = un index dans
+  // chacun) — getAll() préserve l'ordre d'apparition dans le DOM.
+  const variantRowNames = formData
+    .getAll("variantRowName")
+    .map((v) => String(v).trim())
+    .slice(0, MAX_VARIANT_ROWS);
+  const variantRowValues = formData
+    .getAll("variantRowValue")
+    .map((v) => String(v).trim())
+    .slice(0, MAX_VARIANT_ROWS);
+  const variantRowSkus = formData
+    .getAll("variantRowSku")
+    .map((v) => String(v).trim())
+    .slice(0, MAX_VARIANT_ROWS);
+  const variantRowBarcodes = formData
+    .getAll("variantRowBarcode")
+    .map((v) => String(v).trim())
+    .slice(0, MAX_VARIANT_ROWS);
+  const sku = String(formData.get("sku") ?? "").trim() || null;
+  const barcode = String(formData.get("barcode") ?? "").trim() || null;
+  const salePriceRaw = String(formData.get("salePrice") ?? "").trim();
+  const saleStartsAtRaw = String(formData.get("saleStartsAt") ?? "").trim();
+  const saleEndsAtRaw = String(formData.get("saleEndsAt") ?? "").trim();
   // Renseignées côté client après upload direct vers Supabase Storage (voir
   // storage.ts) : une valeur par image conservée, dans l'ordre d'affichage.
   const imageUrls = formData
@@ -151,6 +193,38 @@ export async function saveProduct(
     if (!Number.isFinite(compareAtPrice) || compareAtPrice < 0) {
       return { error: "Le prix barré doit être un nombre positif." };
     }
+  }
+
+  // Prix soldé daté — ajouté le 22/09/2026 (migration 0031). Les deux dates
+  // restent optionnelles indépendamment l'une de l'autre (une promo peut
+  // n'avoir qu'une date de fin, ou aucune des deux si le vendeur veut
+  // l'activer immédiatement sans limite) — seule leur COHÉRENCE entre elles
+  // est vérifiée ici, la contrainte définitive restant en base
+  // (`products_sale_window_order`).
+  let salePrice: number | null = null;
+  if (salePriceRaw) {
+    salePrice = Number(salePriceRaw);
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+      return { error: "Le prix soldé doit être un nombre positif." };
+    }
+    if (salePrice >= price) {
+      return { error: "Le prix soldé doit être inférieur au prix normal." };
+    }
+  }
+
+  const saleStarts = parseOptionalDatetimeLocal(saleStartsAtRaw);
+  if (!saleStarts.valid) {
+    return { error: "Date de début de promo invalide." };
+  }
+  const saleEnds = parseOptionalDatetimeLocal(saleEndsAtRaw);
+  if (!saleEnds.valid) {
+    return { error: "Date de fin de promo invalide." };
+  }
+  if (saleStarts.value && saleEnds.value && new Date(saleEnds.value) <= new Date(saleStarts.value)) {
+    return { error: "La date de fin de la promo doit être après la date de début." };
+  }
+  if (salePrice == null && (saleStarts.value || saleEnds.value)) {
+    return { error: "Renseigne un prix soldé pour activer la promo, ou laisse les dates vides." };
   }
 
   let stock = Number(stockRaw);
@@ -202,6 +276,12 @@ export async function saveProduct(
         stock,
         stock_alert_threshold: stockAlertThreshold,
         tags,
+        highlights,
+        sku,
+        barcode,
+        sale_price: salePrice,
+        sale_starts_at: saleStarts.value,
+        sale_ends_at: saleEnds.value,
         updated_at: new Date().toISOString(),
       })
       .eq("id", productId)
@@ -222,6 +302,27 @@ export async function saveProduct(
     // séquentiels — bug trouvé le 15/09/2026 (Isaac bloqué en boucle sur
     // "Échec de la création", root cause confirmée via les logs Vercel :
     // 23505 duplicate key sur products_shop_id_slug_key).
+    // Champs partagés par les deux tentatives d'insertion ci-dessous (essai
+    // normal + retry après collision de slug) — un seul endroit à mettre à
+    // jour si un champ produit change, plutôt que deux objets dupliqués qui
+    // peuvent diverger avec le temps.
+    const baseProductFields = {
+      title,
+      description: description || null,
+      category: category || null,
+      price,
+      compare_at_price: compareAtPrice,
+      stock,
+      stock_alert_threshold: stockAlertThreshold,
+      tags,
+      highlights,
+      sku,
+      barcode,
+      sale_price: salePrice,
+      sale_starts_at: saleStarts.value,
+      sale_ends_at: saleEnds.value,
+    };
+
     const baseSlug = slugify(title) || "produit";
     let slug = baseSlug;
     let attempt = 0;
@@ -247,14 +348,7 @@ export async function saveProduct(
       .insert({
         shop_id: shopId,
         slug,
-        title,
-        description: description || null,
-        category: category || null,
-        price,
-        compare_at_price: compareAtPrice,
-        stock,
-        stock_alert_threshold: stockAlertThreshold,
-        tags,
+        ...baseProductFields,
       })
       .select("id")
       .single();
@@ -270,14 +364,7 @@ export async function saveProduct(
         .insert({
           shop_id: shopId,
           slug,
-          title,
-          description: description || null,
-          category: category || null,
-          price,
-          compare_at_price: compareAtPrice,
-          stock,
-          stock_alert_threshold: stockAlertThreshold,
-          tags,
+          ...baseProductFields,
         })
         .select("id")
         .single());
@@ -293,12 +380,14 @@ export async function saveProduct(
 
   // Variantes : approche simple "supprimer puis recréer" plutôt qu'un diff —
   // le volume par produit reste faible. Groupes à nom libre depuis le
-  // 13/09/2026 (voir VariantGroups dans product-form.tsx) : plus seulement
-  // "Taille"/"Couleur" figés. Le stock détaillé par variante n'est toujours
-  // pas géré : seul products.stock fait foi pour l'instant (voir README).
+  // 13/09/2026 (voir VariantGroups dans product-form.tsx). Chaque VALEUR est
+  // sa propre ligne depuis le 22/09/2026 (migration 0031), avec SKU/code-barres
+  // optionnels — 4 tableaux parallèles (variantRow*) alignés par index, un
+  // index = une ligne. Le stock détaillé par variante n'est toujours pas géré :
+  // seul products.stock fait foi pour l'instant (voir README).
   //
   // Plan Starter : pas de variantes (spec du 15/09/2026). Le champ est masqué
-  // côté UI, donc `variantGroupNames` arrive déjà vide en pratique — mais on
+  // côté UI, donc `variantRowNames` arrive déjà vide en pratique — mais on
   // n'exécute même pas le "supprimer puis recréer" dans ce cas, plutôt que de
   // forcer une liste vide : un vendeur qui downgrade de Business à Starter ne
   // doit pas voir ses variantes existantes silencieusement effacées à la
@@ -307,14 +396,18 @@ export async function saveProduct(
   if (subscription.features.canUseVariants) {
     await supabase.from("product_variants").delete().eq("product_id", resolvedProductId);
 
-    const variantRows = variantGroupNames.flatMap((name, index) => {
-      if (!name) return [];
-      const values = parseCommaList(variantGroupValues[index] ?? null);
-      return values.map((value) => ({
-        product_id: resolvedProductId,
-        name,
-        value,
-      }));
+    const variantRows = variantRowNames.flatMap((name, index) => {
+      const value = variantRowValues[index];
+      if (!name || !value) return [];
+      return [
+        {
+          product_id: resolvedProductId,
+          name,
+          value,
+          sku: variantRowSkus[index] || null,
+          barcode: variantRowBarcodes[index] || null,
+        },
+      ];
     });
 
     if (variantRows.length > 0) {

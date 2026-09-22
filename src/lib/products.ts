@@ -43,3 +43,61 @@ export const STOCK_HEALTH_BAR_CLASS: Record<StockHealth, string> = {
   faible: "bg-attention",
   sain: "bg-succes",
 };
+
+/**
+ * Prix promo daté ("prix soldé") — ajouté le 22/09/2026, migration
+ * 0031_product_universal_features.sql. Distinct de `compareAtPrice`, qui
+ * reste un prix barré PERMANENT (ex: prix "normal" toujours affiché barré).
+ * `salePrice` n'est affiché à la place de `price` que pendant la fenêtre
+ * [saleStartsAt, saleEndsAt] — calculé côté application (pas de job cron
+ * côté base pour "activer" la promo à une date donnée).
+ *
+ * Une seule fonction `getEffectivePrice` centralise ce calcul pour que tous
+ * les points d'affichage (page produit, fiche boutique, page d'accueil
+ * marketplace, product-card) utilisent exactement la même logique — même
+ * pattern que `ORDER_STATUS_LABELS`/`NOTIFICATION_KIND_LABEL` (une seule
+ * source de vérité par comportement partagé).
+ */
+export type ProductPriceInput = {
+  price: number;
+  compareAtPrice: number | null;
+  salePrice?: number | null;
+  saleStartsAt?: string | null;
+  saleEndsAt?: string | null;
+};
+
+export type EffectivePrice = {
+  /** Prix à afficher comme prix principal (soldé si la promo est active, sinon le prix normal). */
+  price: number;
+  /** Prix de référence à afficher barré, s'il y en a un (le prix normal pendant une promo, sinon compareAtPrice). */
+  compareAtPrice: number | null;
+  /** true si une promo datée est active en ce moment (permet d'afficher un badge "Promo"). */
+  isOnSale: boolean;
+};
+
+/**
+ * `saleStartsAt`/`saleEndsAt` à `null` = pas de borne de ce côté (promo
+ * active dès maintenant si `saleStartsAt` est vide, ou sans date de fin si
+ * `saleEndsAt` est vide) — un vendeur n'est jamais obligé de renseigner les
+ * deux dates (cf. contrainte `products_sale_window_order`, qui n'exige un
+ * ordre que si les deux sont renseignées).
+ */
+export function isSaleActive(
+  salePrice: number | null | undefined,
+  saleStartsAt: string | null | undefined,
+  saleEndsAt: string | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (salePrice == null) return false;
+  if (saleStartsAt && new Date(saleStartsAt) > now) return false;
+  if (saleEndsAt && new Date(saleEndsAt) < now) return false;
+  return true;
+}
+
+export function getEffectivePrice(product: ProductPriceInput, now: Date = new Date()): EffectivePrice {
+  const onSale = isSaleActive(product.salePrice, product.saleStartsAt, product.saleEndsAt, now);
+  if (onSale) {
+    return { price: product.salePrice as number, compareAtPrice: product.price, isOnSale: true };
+  }
+  return { price: product.price, compareAtPrice: product.compareAtPrice, isOnSale: false };
+}

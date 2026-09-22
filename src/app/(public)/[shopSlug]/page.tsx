@@ -14,6 +14,7 @@ import { getShopRating } from "@/lib/reviews";
 import { WishlistButton } from "@/components/wishlist-button";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
 import { ProductImage } from "@/components/product-image";
+import { getEffectivePrice } from "@/lib/products";
 
 type PublicProduct = {
   id: string;
@@ -23,6 +24,11 @@ type PublicProduct = {
   compare_at_price: number | null;
   category: string | null;
   product_images: { url: string; position: number }[];
+  // Prix soldé daté — ajouté le 22/09/2026 (migration 0031). Voir
+  // `getEffectivePrice` (src/lib/products.ts).
+  sale_price: number | null;
+  sale_starts_at: string | null;
+  sale_ends_at: string | null;
 };
 
 const PAGE_SIZE = 24;
@@ -176,7 +182,7 @@ export default async function ShopPage({
   let query = supabase
     .from("products")
     .select(
-      "id, slug, title, price, compare_at_price, category, product_images(url, position)",
+      "id, slug, title, price, compare_at_price, category, product_images(url, position), sale_price, sale_starts_at, sale_ends_at",
       { count: "exact" }
     )
     .eq("shop_id", shop.id)
@@ -442,8 +448,17 @@ export default async function ShopPage({
             const thumbnail = [...(product.product_images ?? [])].sort(
               (a, b) => a.position - b.position
             )[0]?.url;
+            // Prix effectif (soldé si une promo datée est active maintenant,
+            // sinon le prix normal) — voir migration 0031 pour le contexte.
+            const effective = getEffectivePrice({
+              price: product.price,
+              compareAtPrice: product.compare_at_price,
+              salePrice: product.sale_price,
+              saleStartsAt: product.sale_starts_at,
+              saleEndsAt: product.sale_ends_at,
+            });
             const hasDiscount =
-              product.compare_at_price != null && product.compare_at_price > product.price;
+              effective.compareAtPrice != null && effective.compareAtPrice > effective.price;
             const rating = ratingsByProduct.get(product.id) ?? null;
             return (
               <div
@@ -457,8 +472,8 @@ export default async function ShopPage({
                       shopSlug,
                       productSlug: product.slug,
                       title: product.title,
-                      price: product.price,
-                      compareAtPrice: product.compare_at_price,
+                      price: effective.price,
+                      compareAtPrice: effective.compareAtPrice,
                       imageUrl: thumbnail,
                     }}
                   />
@@ -477,11 +492,16 @@ export default async function ShopPage({
                       prix + prix barré sur une seule ligne avec des montants à
                       6 chiffres — le prix barré passe alors proprement à la
                       ligne au lieu de déborder de la carte. */}
-                  <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-cuivre-profond">
-                    {product.price} FCFA
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 font-mono text-sm text-cuivre-profond">
+                    {effective.price} FCFA
                     {hasDiscount ? (
                       <span className="font-mono text-xs text-encre/40 line-through">
-                        {product.compare_at_price} FCFA
+                        {effective.compareAtPrice} FCFA
+                      </span>
+                    ) : null}
+                    {effective.isOnSale ? (
+                      <span className="rounded-full bg-erreur px-1.5 py-0.5 text-[10px] font-semibold text-ivoire">
+                        Promo
                       </span>
                     ) : null}
                   </p>
