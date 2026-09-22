@@ -92,8 +92,17 @@ export async function inviteCollaborator(
 
   // Best-effort, ne doit jamais faire échouer l'invitation elle-même (déjà
   // enregistrée en base à ce stade, visible dans la liste même si l'email
-  // échoue).
-  sendCollaboratorInviteEmail({ email, shopName: shop.name }).catch(() => {});
+  // échoue) — mais AWAIT quand même, contrairement à ce qui était fait avant
+  // (juste `.catch(() => {})` sans await). Bug trouvé le 22/09/2026 (Isaac :
+  // "je n'ai reçu aucun email") : sans await, la Server Action pouvait
+  // renvoyer sa réponse et se terminer avant même que la requête réseau vers
+  // Brevo soit partie — sur Vercel, l'exécution de la fonction s'arrête
+  // juste après la réponse, ce qui coupe toute promesse encore en vol sans
+  // la moindre erreur (rien à voir avec la config Brevo elle-même, qui
+  // fonctionne déjà pour les autres emails — commandes, contact — tous
+  // `await`és). Même correctif que partout ailleurs dans le projet :
+  // `await` + erreur avalée, jamais un fire-and-forget.
+  await sendCollaboratorInviteEmail({ email, shopName: shop.name }).catch(() => {});
 
   revalidatePath("/dashboard/collaborateurs");
   return { success: true };
