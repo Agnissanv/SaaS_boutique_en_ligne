@@ -232,7 +232,7 @@ export default function ConditionsUtilisationPage() {
               13. Modifications
             </h2>
             <p className="mt-2">
-              Ces conditions peuvent évoluer avec la plateforme. La date de
+              Ces conditions peuvent évoluer avec KEVA. La date de
               dernière mise à jour est indiquée en haut de cette page.
             </p>
           </section>

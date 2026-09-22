@@ -129,7 +129,7 @@ export function InscriptionClientForm() {
           <>
             <p className="mt-1 text-sm text-encre/70">
               Retrouve facilement l&apos;historique de tes commandes, chez
-              n&apos;importe quel vendeur de la plateforme.
+              n&apos;importe quel vendeur de KEVA.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">

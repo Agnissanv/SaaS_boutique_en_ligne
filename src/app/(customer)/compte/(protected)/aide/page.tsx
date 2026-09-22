@@ -7,7 +7,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: "Comment se passe le paiement ?",
     answer:
-      "Pour l'instant, le paiement se fait à la livraison, en espèces directement auprès du livreur ou du vendeur. Le paiement Mobile Money (Wave, Orange Money...) arrivera dès que l'intégration sera activée sur la plateforme.",
+      "Pour l'instant, le paiement se fait à la livraison, en espèces directement auprès du livreur ou du vendeur. Le paiement Mobile Money (Wave, Orange Money...) arrivera dès que l'intégration sera activée sur KEVA.",
   },
   {
     question: "Dois-je créer un compte pour commander ?",

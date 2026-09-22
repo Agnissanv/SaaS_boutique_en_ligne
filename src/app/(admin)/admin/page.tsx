@@ -83,7 +83,7 @@ export default async function AdminOverviewPage() {
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Vue d&apos;ensemble</h1>
       <p className="mt-1 text-sm text-encre/70">
-        Chiffres toutes boutiques confondues, sur la plateforme entière.
+        Chiffres toutes boutiques confondues, à l&apos;échelle de KEVA.
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -125,7 +125,7 @@ export default async function AdminOverviewPage() {
           <CoinsIcon className="h-6 w-6" />
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-ivoire/60">CA plateforme (commandes non annulées)</p>
+          <p className="text-xs uppercase tracking-wide text-ivoire/60">CA KEVA (commandes non annulées)</p>
           <p className="mt-0.5 font-mono text-2xl font-semibold text-ivoire">
             {platformRevenue === null ? "Indisponible pour l'instant" : `${platformRevenue} FCFA`}
           </p>

@@ -5,25 +5,27 @@ import { CURRENT_SELLER_CHARTER_VERSION, SELLER_CHARTER_SECTIONS } from "@/lib/s
 import { acceptSellerCharter } from "./actions";
 
 export const metadata = {
-  title: "Règles de la plateforme — KEVA",
+  title: "Règles de KEVA",
 };
 
 /**
- * Règles de la plateforme (page/route encore nommée "charte-vendeur" en
- * interne, voir plus bas) — créée le 22/09/2026 à la demande d'Isaac, suite à
- * la question d'un futur vendeur sur les produits autorisés/interdits dans
- * le groupe d'accès anticipé. Les règles existaient déjà dans les conditions
+ * Règles de KEVA (page/route encore nommée "charte-vendeur" en interne, voir
+ * plus bas) — créée le 22/09/2026 à la demande d'Isaac, suite à la question
+ * d'un futur vendeur sur les produits autorisés/interdits dans le groupe
+ * d'accès anticipé. Les règles existaient déjà dans les conditions
  * d'utilisation (section 5, ajoutée le même jour), mais un lien en bas de
  * page n'est pas lu par la plupart des vendeurs — Isaac voulait une étape
  * obligatoire, lue et validée explicitement, avant de pouvoir continuer
  * vers le dashboard/la création de boutique.
  *
- * **Libellé "Charte vendeur" renommé "Règles de la plateforme" le
- * 22/09/2026** : Isaac a jugé "charte" trop compliqué/juridique pour ses
- * vendeurs. Changement purement d'affichage (titre, lien sidebar/Aide) —
- * route, noms de fichiers/fonctions et colonnes en base (`shop_charter_*`,
- * `seller-charter.ts`, `/charte-vendeur`) inchangés pour éviter une
- * migration/renommage de fichiers sans bénéfice utilisateur.
+ * **Libellé renommé deux fois le 22/09/2026** : "Charte vendeur" →
+ * "Règles de la plateforme" (Isaac : "charte" trop compliqué/juridique) →
+ * "Règles de KEVA" (Isaac a ensuite remarqué que "plateforme" revenait
+ * partout sur le site à la place du nom KEVA — remplacé ici et sur toutes
+ * les autres pages concernées, voir decisions-techniques.md). Changement
+ * purement d'affichage — route, noms de fichiers/fonctions et colonnes en
+ * base (`shop_charter_*`, `seller-charter.ts`, `/charte-vendeur`) inchangés
+ * pour éviter une migration/renommage de fichiers sans bénéfice utilisateur.
  *
  * Page volontairement HORS du groupe (vendor)/dashboard : `dashboard/layout.tsx`
  * redirige ici tant que la charte n'est pas acceptée (voir ce fichier) — si
@@ -38,8 +40,23 @@ export const metadata = {
  * moment (lien dans "Aide" et le pied de la sidebar) pour relire le
  * contenu — la case et le bouton ne sont alors plus affichés, juste un
  * rappel de la date d'acceptation et un retour au dashboard.
+ *
+ * **Bug "ça boucle" signalé par Isaac le 22/09/2026** : `acceptSellerCharter`
+ * (actions.ts) redirigeait vers /dashboard sans jamais vérifier si la mise à
+ * jour du profil avait réellement réussi. Si elle échoue (cause la plus
+ * probable : migration 0040 pas encore appliquée sur la base d'Isaac, donc
+ * les colonnes `shop_charter_*` n'existent pas), `dashboard/layout.tsx`
+ * revoit un compte toujours "non accepté" et renvoie aussitôt ici — d'où la
+ * boucle. Corrigé : l'action vérifie l'erreur et renvoie maintenant vers
+ * `?erreur=1` plutôt que vers /dashboard en cas d'échec, avec un message
+ * explicite ci-dessous au lieu d'un aller-retour silencieux.
  */
-export default async function SellerCharterPage() {
+export default async function SellerCharterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erreur?: string }>;
+}) {
+  const { erreur } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,12 +85,24 @@ export default async function SellerCharterPage() {
       </header>
 
       <main className="mx-auto w-full max-w-2xl px-4 py-10">
-        <h1 className="font-display text-2xl font-semibold text-encre">Règles de la plateforme</h1>
+        <h1 className="font-display text-2xl font-semibold text-encre">Règles de KEVA</h1>
         <p className="mt-2 text-sm text-encre/70">
           {alreadyAccepted
-            ? `Acceptée le ${new Date(profile!.shop_charter_accepted_at!).toLocaleDateString("fr-FR")}. Voici un rappel des règles de la plateforme.`
-            : "Avant de continuer, prends deux minutes pour lire les règles de la plateforme."}
+            ? `Acceptée le ${new Date(profile!.shop_charter_accepted_at!).toLocaleDateString("fr-FR")}. Voici un rappel des règles de KEVA.`
+            : "Avant de continuer, prends deux minutes pour lire les règles de KEVA."}
         </p>
+
+        {erreur && (
+          <p className="mt-4 rounded-md border border-erreur/30 bg-erreur/10 px-3 py-2 text-sm text-erreur">
+            Une erreur est survenue et ton acceptation n&apos;a pas pu être
+            enregistrée. Réessaie dans un instant ; si ça persiste,
+            écris-nous à{" "}
+            <a href="mailto:contactkevashop@gmail.com" className="underline">
+              contactkevashop@gmail.com
+            </a>
+            .
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-6">
           {SELLER_CHARTER_SECTIONS.map((section) => (
@@ -104,7 +133,7 @@ export default async function SellerCharterPage() {
         </div>
 
         <p className="mt-6 text-sm text-encre/60">
-          Le détail complet des règles de la plateforme est dans les{" "}
+          Le détail complet des règles de KEVA est dans les{" "}
           <Link href="/conditions-utilisation" className="text-vert-actif underline">
             conditions d&apos;utilisation
           </Link>

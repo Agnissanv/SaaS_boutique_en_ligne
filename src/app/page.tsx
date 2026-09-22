@@ -766,7 +766,7 @@ export default async function Home({
             {featuredShops.length > 0 ? (
               <section className="mt-10">
                 <h2 className="font-display text-lg font-semibold text-encre">
-                  Boutiques de la plateforme
+                  Boutiques sur KEVA
                 </h2>
                 <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth">
                   {featuredShops.map((shop) => (

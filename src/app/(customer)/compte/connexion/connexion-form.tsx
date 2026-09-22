@@ -119,7 +119,7 @@ export function ConnexionClientForm() {
             <p className="mt-1 text-sm text-encre/70">
               {useMagicLink
                 ? "Reçois un lien de connexion par email."
-                : "Retrouve tes commandes passées sur la plateforme."}
+                : "Retrouve tes commandes passées sur KEVA."}
             </p>
 
             {!useMagicLink ? (

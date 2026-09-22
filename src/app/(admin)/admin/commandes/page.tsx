@@ -114,7 +114,7 @@ export default async function AdminOrdersPage({
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Commandes</h1>
       <p className="mt-1 text-sm text-encre/70">
-        Toutes les commandes de la plateforme, tous vendeurs confondus.
+        Toutes les commandes passées sur KEVA, tous vendeurs confondus.
       </p>
 
       <form method="GET" className="mt-4 flex flex-wrap gap-2">

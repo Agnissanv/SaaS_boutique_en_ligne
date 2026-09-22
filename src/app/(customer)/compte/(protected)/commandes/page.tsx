@@ -39,7 +39,7 @@ export default async function CommandesPage() {
       </h1>
       <p className="mt-1 text-sm text-encre/65">
         Retrouve ici toutes les commandes passées avec ce compte, chez
-        n’importe quel vendeur de la plateforme.
+        n’importe quel vendeur de KEVA.
       </p>
 
       {/* Bouton rattacher */}

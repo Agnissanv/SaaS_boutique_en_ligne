@@ -54,7 +54,7 @@ import { MobileNavDrawer } from "./mobile-nav-drawer";
  * désormais vers /dashboard/notifications plutôt que /dashboard/commandes.
  * Voir src/lib/notifications.ts et cette route pour le reste du système.
  *
- * **Charte vendeur obligatoire (22/09/2026)** : redirige vers
+ * **Règles KEVA obligatoires à l'inscription (22/09/2026)** : redirige vers
  * /charte-vendeur tant que `shop_charter_version` du profil est inférieure à
  * `CURRENT_SELLER_CHARTER_VERSION` (ou jamais acceptée). S'applique à tout
  * compte qui atteint le dashboard, propriétaire ou collaborateur — voir
@@ -151,7 +151,7 @@ export default async function DashboardLayout({
             href="/charte-vendeur"
             className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
           >
-            Règles de la plateforme
+            Règles de KEVA
           </Link>
           <form action={signOut}>
             <button
@@ -192,7 +192,7 @@ export default async function DashboardLayout({
                   href="/charte-vendeur"
                   className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
                 >
-                  Règles de la plateforme
+                  Règles de KEVA
                 </Link>
                 <form action={signOut}>
                   <button

@@ -90,7 +90,7 @@ export default function PolitiqueConfidentialitePage() {
               <li>Créer et sécuriser ton compte, et te permettre de retrouver tes commandes.</li>
               <li>T&apos;envoyer des notifications liées à tes commandes (par email et dans ton espace de notification).</li>
               <li>Permettre aux vendeurs de gérer leur boutique et de te contacter au sujet d&apos;une commande.</li>
-              <li>Améliorer la plateforme et assurer sa sécurité (prévenir la fraude, les abus).</li>
+              <li>Améliorer KEVA et assurer sa sécurité (prévenir la fraude, les abus).</li>
             </ul>
           </section>
 
@@ -118,7 +118,7 @@ export default function PolitiqueConfidentialitePage() {
               </li>
               <li>
                 <strong>CinetPay</strong> (traitement des paiements Mobile Money,
-                une fois cette option activée sur la plateforme).
+                une fois cette option activée sur KEVA).
               </li>
               <li>
                 Le vendeur auprès duquel tu commandes, pour les seules
@@ -179,7 +179,7 @@ export default function PolitiqueConfidentialitePage() {
               9. Modifications
             </h2>
             <p className="mt-2">
-              Cette politique peut évoluer avec la plateforme. La date de
+              Cette politique peut évoluer avec KEVA. La date de
               dernière mise à jour est indiquée en haut de cette page.
             </p>
           </section>
