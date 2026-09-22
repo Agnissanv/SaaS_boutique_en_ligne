@@ -76,7 +76,7 @@ export function ProductCard({
           </p>
 
           <div className="flex flex-wrap items-baseline gap-x-1.5">
-            <span className="font-mono text-[15px] font-semibold text-cuivre-profond">
+            <span className="font-mono text-[15px] font-semibold text-vert-actif">
               {product.price.toLocaleString("fr-FR")} FCFA
             </span>
             {hasDiscount ? (

@@ -111,11 +111,11 @@ export function MarketplaceSearch({
           onFocus={() => hasSuggestions && setOpen(true)}
           autoComplete="off"
           placeholder="Rechercher un article..."
-          className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-cuivre-clair"
+          className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
         />
         <button
           type="submit"
-          className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
+          className="shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
         >
           Rechercher
         </button>
@@ -153,7 +153,7 @@ export function MarketplaceSearch({
                     className="h-8 w-8 shrink-0 rounded object-cover"
                   />
                   <span className="line-clamp-1 flex-1">{product.title}</span>
-                  <span className="shrink-0 font-mono text-xs text-cuivre-profond">
+                  <span className="shrink-0 font-mono text-xs text-vert-actif">
                     {product.price.toLocaleString("fr-FR")} FCFA
                   </span>
                 </Link>

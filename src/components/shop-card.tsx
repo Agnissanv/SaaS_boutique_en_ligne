@@ -36,7 +36,7 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
     <Link
       href={`/${shop.slug}`}
       transitionTypes={["nav-forward"]}
-      className={`flex flex-col items-center gap-2 rounded-lg border border-ligne bg-white p-3 text-center transition-all duration-150 hover:-translate-y-0.5 hover:border-cuivre-clair hover:shadow-md ${
+      className={`flex flex-col items-center gap-2 rounded-lg border border-ligne bg-white p-3 text-center transition-all duration-150 hover:-translate-y-0.5 hover:border-vert-actif hover:shadow-md ${
         className ?? ""
       }`}
     >
@@ -48,7 +48,7 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
           className="h-16 w-16 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sable text-lg font-semibold text-cuivre-profond">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brume text-lg font-semibold text-vert-actif">
           {shop.name.charAt(0).toUpperCase()}
         </div>
       )}
@@ -57,7 +57,7 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
         <p className="text-xs text-encre/60">{categoryLabel(shop.category)}</p>
       ) : null}
       {shop.rating ? (
-        <p className="text-xs text-cuivre-profond">
+        <p className="text-xs text-vert-actif">
           <Stars rating={shop.rating.average} />{" "}
           <span className="text-encre/60">({shop.rating.count})</span>
         </p>

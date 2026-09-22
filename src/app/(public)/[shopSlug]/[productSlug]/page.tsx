@@ -316,7 +316,7 @@ export default async function ProductPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-sable px-2.5 py-1 text-xs font-medium text-cuivre-profond"
+                  className="rounded-full bg-brume px-2.5 py-1 text-xs font-medium text-vert-actif"
                 >
                   {tag}
                 </span>
@@ -344,7 +344,7 @@ export default async function ProductPage({
           )}
 
           <div className="mt-5 flex flex-wrap items-baseline gap-2.5">
-            <p className="font-mono text-2xl font-semibold text-cuivre-profond">
+            <p className="font-mono text-2xl font-semibold text-vert-actif">
               {effectivePrice.price} FCFA
             </p>
             {hasDiscount && (
@@ -427,7 +427,7 @@ export default async function ProductPage({
                   key={item.id}
                   href={`/${shopSlug}/${item.slug}`}
                   transitionTypes={["nav-forward"]}
-                  className="group rounded-lg border border-ligne bg-white p-2 transition hover:border-cuivre"
+                  className="group rounded-lg border border-ligne bg-white p-2 transition hover:border-vert-actif"
                 >
                   <ViewTransition name={`product-photo-${item.id}`} share="morph" default="none">
                     <ProductImage
@@ -437,7 +437,7 @@ export default async function ProductPage({
                     />
                   </ViewTransition>
                   <p className="truncate text-xs font-medium text-encre">{item.title}</p>
-                  <p className="font-mono text-xs text-cuivre-profond">{item.price} FCFA</p>
+                  <p className="font-mono text-xs text-vert-actif">{item.price} FCFA</p>
                 </Link>
               );
             })}

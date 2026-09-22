@@ -9,6 +9,7 @@ import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { ProductImage } from "@/components/product-image";
 import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
+import { HeroFeaturedSlideshow } from "@/components/hero-featured-slideshow";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { buildMarketplaceHref } from "@/lib/marketplace/filters";
@@ -66,10 +67,19 @@ type SortValue = (typeof SORTS)[number]["value"];
 // Rendu seulement si la marketplace a au moins une photo de produit récente
 // (voir plus bas) : jamais de case vide à la place, le rectangle placeholder
 // d'avant est simplement retiré si le catalogue est encore vide.
+//
+// Recoloré le 22/09/2026 (passage du hero en fond blanc, voir en-tête du
+// fichier "Fond blanc + vert" dans decisions-techniques.md) : la bordure
+// ivoire/15 servait à détacher les photos du fond vert foncé d'avant — sur
+// fond blanc elle disparaîtrait, remplacée par une ombre portée teintée
+// vert plutôt qu'un simple `shadow-xl` neutre, pour rester dans la charte.
+// Les deux premières cases restent des vignettes statiques (nouveautés) ;
+// la troisième (la plus au premier plan) est désormais le carrousel de
+// meilleures ventes (`HeroFeaturedSlideshow`, voir plus bas).
 const HERO_COLLAGE_POSITIONS = [
-  "absolute left-0 top-6 h-32 w-32 -rotate-6 border-4 border-ivoire/15 shadow-xl",
-  "absolute right-2 top-0 z-10 h-28 w-28 rotate-3 border-4 border-ivoire/15 shadow-xl",
-  "absolute bottom-0 left-16 z-20 h-28 w-28 rotate-2 border-4 border-ivoire/15 shadow-xl",
+  "absolute left-0 top-6 h-32 w-32 -rotate-6 shadow-[0_16px_32px_rgba(14,59,44,0.16)]",
+  "absolute right-2 top-0 z-10 h-28 w-28 rotate-3 shadow-[0_16px_32px_rgba(14,59,44,0.16)]",
+  "absolute bottom-0 left-16 z-20 h-28 w-28 rotate-2 shadow-[0_16px_32px_rgba(14,59,44,0.16)]",
 ];
 
 // Icônes de l'argumentaire de confiance — dessinées à la main en SVG inline,
@@ -484,8 +494,13 @@ export default async function Home({
     >
       <ViewTransition enter="kv-content-in" default="none">
         <>
-          {/* ========== HEADER (full width) ========== */}
-          <header className="sticky top-0 z-20 w-full bg-vert-sapin text-ivoire">
+          {/* ========== HEADER (full width) ==========
+              Passé en fond blanc le 22/09/2026 (retour d'Isaac après avis de
+              devs externes : la charte cuivre/ivoire lisait comme un thème
+              "IA générique" — voir decisions-techniques.md, "Fond blanc +
+              accents verts"). Le vert de marque reste porté par le logo et
+              les accents, plus par un bandeau plein. */}
+          <header className="sticky top-0 z-20 w-full border-b border-ligne bg-white text-encre">
             <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
               <Link href="/" className="flex shrink-0 items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -494,7 +509,7 @@ export default async function Home({
                   alt="KEVA"
                   className="h-9 w-9 rounded-md object-cover"
                 />
-                <span className="font-display text-lg font-semibold tracking-tight">
+                <span className="font-display text-lg font-semibold tracking-tight text-vert-sapin">
                   KEVA
                 </span>
               </Link>
@@ -502,31 +517,36 @@ export default async function Home({
               <MarketplaceSearch defaultValue={q ?? ""} categorie={categorie} />
 
               <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
-                <Link href="/favoris" className="hover:text-cuivre-clair">
+                <Link href="/favoris" className="hover:text-vert-actif">
                   Mes favoris
                 </Link>
-                <Link href="/compte" className="hover:text-cuivre-clair">
+                <Link href="/compte" className="hover:text-vert-actif">
                   Mon compte
                 </Link>
               </div>
             </div>
           </header>
 
-          {/* ========== HERO (full width) ========== */}
-          <section className="w-full bg-vert-profond px-4 py-14 text-ivoire sm:py-20">
+          {/* ========== HERO (full width) ==========
+              Même passage en fond blanc — voir le commentaire du header
+              ci-dessus. Le titre passe en deux tons (première ligne en
+              encre, seconde en vert actif) plutôt qu'une seule couleur
+              plate, pour porter l'accent de marque sans revenir à un bandeau
+              vert plein. */}
+          <section className="w-full bg-white px-4 py-14 sm:py-20">
             <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-xl text-center lg:text-left">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-cuivre-clair">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-vert-actif">
                   Vendez · Encaissez · Grandissez
                 </p>
 
                 <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
-                  Toutes les boutiques
+                  <span className="text-encre">Toutes les boutiques</span>
                   <br className="hidden sm:block" />
-                  en un seul endroit
+                  <span className="text-vert-actif">en un seul endroit</span>
                 </h1>
 
-                <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ivoire/65">
+                <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
                   Des vendeurs indépendants partout en Côte d’Ivoire.
                   Commande sans compte, paie à la livraison.
                 </p>
@@ -534,13 +554,13 @@ export default async function Home({
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                   <a
                     href="#catalogue"
-                    className="rounded-md bg-cuivre px-6 py-3 text-sm font-semibold text-vert-profond transition hover:bg-cuivre-clair"
+                    className="rounded-md bg-vert-actif px-6 py-3 text-sm font-semibold text-white transition hover:bg-vert-sapin"
                   >
                     Voir le catalogue
                   </a>
                   <Link
                     href="/inscription"
-                    className="rounded-md border border-ivoire/20 px-6 py-3 text-sm font-medium text-ivoire/90 transition hover:border-cuivre-clair hover:text-cuivre-clair"
+                    className="rounded-md border border-vert-sapin/25 px-6 py-3 text-sm font-medium text-vert-sapin transition hover:border-vert-actif hover:text-vert-actif"
                   >
                     Ouvrir ma boutique
                   </Link>
@@ -549,17 +569,17 @@ export default async function Home({
                 {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
                   <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
                     <div>
-                      <p className="font-mono text-xl font-semibold text-ivoire">
+                      <p className="font-mono text-xl font-semibold text-encre">
                         {shopsCount ?? 0}
                       </p>
-                      <p className="mt-0.5 text-xs text-ivoire/45">boutiques</p>
+                      <p className="mt-0.5 text-xs text-encre/50">boutiques</p>
                     </div>
-                    <div className="h-8 w-px bg-ivoire/15" />
+                    <div className="h-8 w-px bg-ligne" />
                     <div>
-                      <p className="font-mono text-xl font-semibold text-ivoire">
+                      <p className="font-mono text-xl font-semibold text-encre">
                         {productsCount ?? 0}
                       </p>
-                      <p className="mt-0.5 text-xs text-ivoire/45">produits</p>
+                      <p className="mt-0.5 text-xs text-encre/50">produits</p>
                     </div>
                   </div>
                 ) : null}
@@ -572,7 +592,7 @@ export default async function Home({
                   className="relative hidden h-56 w-56 shrink-0 sm:block"
                   aria-hidden="true"
                 >
-                  {heroThumbnails.map((url, index) => (
+                  {heroThumbnails.slice(0, 2).map((url, index) => (
                     <div
                       key={url}
                       className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}
@@ -584,9 +604,48 @@ export default async function Home({
                       />
                     </div>
                   ))}
+                  {/* Case avant du collage : carrousel de vraies meilleures
+                      ventes plutôt qu'une 3e vignette statique — voir
+                      hero-featured-slideshow.tsx. `aria-hidden` retiré sur
+                      cette seule case : contrairement aux deux autres, elle
+                      est cliquable (lien vers le produit). */}
+                  <div
+                    className={HERO_COLLAGE_POSITIONS[2].replace("rounded-xl", "")}
+                    aria-hidden={false}
+                  >
+                    <HeroFeaturedSlideshow
+                      products={heroSlideshowProducts}
+                      className="h-full w-full"
+                    />
+                  </div>
                 </div>
               ) : null}
             </div>
+          </section>
+
+          {/* Argumentaire de confiance — déplacé juste sous le hero le
+              22/09/2026 (au lieu d'être noyé après "Catégories"), pour
+              reprendre la rangée de badges de confiance sous le hero vue
+              dans la référence d'Isaac. Recoloré bg-sable/text-cuivre-profond
+              → bg-brume/text-vert-actif au passage. */}
+          <section className="mx-auto mt-8 grid w-full max-w-6xl grid-cols-1 gap-3 px-4 sm:grid-cols-3">
+            {TRUST_ITEMS.map((item) => (
+              <div
+                key={item.title}
+                className="flex items-start gap-3 rounded-lg border border-ligne bg-white p-4"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif"
+                >
+                  {item.icon}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-encre">{item.title}</p>
+                  <p className="mt-1 text-xs text-encre/70">{item.body}</p>
+                </div>
+              </div>
+            ))}
           </section>
 
           {/* ========== CONTENU (limité en largeur) ========== */}
@@ -610,27 +669,6 @@ export default async function Home({
                 availableCategories={availableCategories}
               />
             </div>
-
-            {/* Argumentaire de confiance */}
-            <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {TRUST_ITEMS.map((item) => (
-                <div
-                  key={item.title}
-                  className="flex items-start gap-3 rounded-lg border border-ligne bg-white p-4"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sable text-cuivre-profond"
-                  >
-                    {item.icon}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-encre">{item.title}</p>
-                    <p className="mt-1 text-xs text-encre/70">{item.body}</p>
-                  </div>
-                </div>
-              ))}
-            </section>
 
             {/* Boutiques de la plateforme */}
             {featuredShops.length > 0 ? (
@@ -704,7 +742,7 @@ export default async function Home({
                           href={buildMarketplaceHref(current, {
                             page: String(page - 1),
                           })}
-                          className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
+                          className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
                         >
                           ‹ Précédent
                         </Link>
@@ -721,7 +759,7 @@ export default async function Home({
                           href={buildMarketplaceHref(current, {
                             page: String(page + 1),
                           })}
-                          className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-cuivre-clair"
+                          className="rounded-md border border-ligne px-3 py-1.5 text-encre transition hover:border-vert-actif"
                         >
                           Suivant ›
                         </Link>

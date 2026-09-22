@@ -51,7 +51,7 @@ export function StickyAddToCartBar({
           fixes empilées. */}
       <div className="h-[68px] sm:hidden" aria-hidden="true" />
       <div className="fixed inset-x-0 bottom-16 z-30 flex items-center gap-3 border-t border-ligne bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] sm:hidden">
-        <span className="font-mono text-base font-semibold text-cuivre-profond">
+        <span className="font-mono text-base font-semibold text-vert-actif">
           {FMT_FCFA.format(price)} FCFA
         </span>
         <button
@@ -59,7 +59,7 @@ export function StickyAddToCartBar({
           onClick={handleClick}
           style={accentColor ? { backgroundColor: accentColor } : undefined}
           className={`ml-auto flex-1 rounded-md px-4 py-2.5 text-sm font-semibold text-ivoire transition ${
-            accentColor ? "opacity-100 hover:opacity-90" : "bg-cuivre-profond hover:bg-vert-sapin"
+            accentColor ? "opacity-100 hover:opacity-90" : "bg-vert-actif hover:bg-vert-sapin"
           }`}
         >
           Ajouter au panier

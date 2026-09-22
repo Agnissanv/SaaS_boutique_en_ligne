@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
  * boutique publique).
  *
  * Recolorée en charte KEVA le 15/09/2026 (côté client) — pure recolor. Les
- * étoiles utilisent le cuivre plutôt qu'un jaune générique.
+ * étoiles utilisent le vert-actif plutôt qu'un jaune générique.
  */
 export function ReviewForm({
   orderId,
@@ -63,7 +63,7 @@ export function ReviewForm({
             type="button"
             onClick={() => setRating(n)}
             aria-label={`${n} étoile${n > 1 ? "s" : ""}`}
-            className={`text-lg leading-none ${n <= rating ? "text-cuivre-profond" : "text-encre/20"}`}
+            className={`text-lg leading-none ${n <= rating ? "text-vert-actif" : "text-encre/20"}`}
           >
             ★
           </button>
@@ -85,7 +85,7 @@ export function ReviewForm({
       <button
         type="submit"
         disabled={status === "pending"}
-        className="w-fit rounded-md bg-cuivre-profond px-3 py-1.5 text-xs font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
+        className="w-fit rounded-md bg-vert-actif px-3 py-1.5 text-xs font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
       >
         {status === "pending" ? "Envoi..." : "Envoyer mon avis"}
       </button>

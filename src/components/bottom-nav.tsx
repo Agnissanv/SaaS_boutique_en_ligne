@@ -162,7 +162,7 @@ export function BottomNav() {
         <Link
           href="/"
           transitionTypes={["nav-back"]}
-          className={`${TAB_CLASS} ${isHome ? "text-cuivre-profond" : "text-encre/60"}`}
+          className={`${TAB_CLASS} ${isHome ? "text-vert-actif" : "text-encre/60"}`}
         >
           <HomeIcon />
           Accueil
@@ -170,7 +170,7 @@ export function BottomNav() {
 
         <Link
           href="/categories"
-          className={`${TAB_CLASS} ${isCategoriesRoute ? "text-cuivre-profond" : "text-encre/60"}`}
+          className={`${TAB_CLASS} ${isCategoriesRoute ? "text-vert-actif" : "text-encre/60"}`}
         >
           <CategoriesIcon />
           Catégories
@@ -179,11 +179,11 @@ export function BottomNav() {
         {effectiveShop ? (
           <Link
             href={`/${effectiveShop}/panier`}
-            className={`relative ${TAB_CLASS} ${isPanier ? "text-cuivre-profond" : "text-encre/60"}`}
+            className={`relative ${TAB_CLASS} ${isPanier ? "text-vert-actif" : "text-encre/60"}`}
           >
             <CartIcon />
             {cartCount > 0 ? (
-              <span className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cuivre-profond px-1 text-[9px] font-medium text-ivoire">
+              <span className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-vert-actif px-1 text-[9px] font-medium text-ivoire">
                 {cartCount}
               </span>
             ) : null}
@@ -196,17 +196,17 @@ export function BottomNav() {
           </span>
         )}
 
-        <Link href="/favoris" className={`relative ${TAB_CLASS} ${isFavoris ? "text-cuivre-profond" : "text-encre/60"}`}>
+        <Link href="/favoris" className={`relative ${TAB_CLASS} ${isFavoris ? "text-vert-actif" : "text-encre/60"}`}>
           <HeartIcon />
           {favCount > 0 ? (
-            <span className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-cuivre-profond px-1 text-[9px] font-medium text-ivoire">
+            <span className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-vert-actif px-1 text-[9px] font-medium text-ivoire">
               {favCount}
             </span>
           ) : null}
           Favoris
         </Link>
 
-        <Link href="/compte" className={`${TAB_CLASS} ${isCompte ? "text-cuivre-profond" : "text-encre/60"}`}>
+        <Link href="/compte" className={`${TAB_CLASS} ${isCompte ? "text-vert-actif" : "text-encre/60"}`}>
           <UserIcon />
           Compte
         </Link>

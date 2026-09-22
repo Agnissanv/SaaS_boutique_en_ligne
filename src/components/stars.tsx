@@ -6,7 +6,7 @@
 export function Stars({ rating }: { rating: number }) {
   const rounded = Math.round(rating);
   return (
-    <span aria-hidden="true" className="text-cuivre-profond">
+    <span aria-hidden="true" className="text-vert-actif">
       {"★".repeat(rounded)}
       <span className="text-ligne">{"★".repeat(5 - rounded)}</span>
     </span>

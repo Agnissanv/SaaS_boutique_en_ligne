@@ -312,7 +312,7 @@ export default async function ShopPage({
               <Image src={shop.logo_url} alt={shop.name} fill sizes="80px" className="object-cover" />
             </div>
           ) : (
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-sable text-xl font-semibold text-cuivre-profond shadow sm:h-20 sm:w-20">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-brume text-xl font-semibold text-vert-actif shadow sm:h-20 sm:w-20">
               {shop.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -387,7 +387,7 @@ export default async function ShopPage({
           />
           <button
             type="submit"
-            className="shrink-0 rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
+            className="shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
           >
             Rechercher
           </button>
@@ -403,7 +403,7 @@ export default async function ShopPage({
                   ? shop.accent_color
                     ? "text-ivoire"
                     : "border-vert-sapin bg-vert-sapin text-ivoire"
-                  : "border-ligne text-encre hover:border-cuivre-clair"
+                  : "border-ligne text-encre hover:border-vert-actif"
               }`}
             >
               Toutes catégories
@@ -418,7 +418,7 @@ export default async function ShopPage({
                     ? shop.accent_color
                       ? "text-ivoire"
                       : "border-vert-sapin bg-vert-sapin text-ivoire"
-                    : "border-ligne text-encre hover:border-cuivre-clair"
+                    : "border-ligne text-encre hover:border-vert-actif"
                 }`}
               >
                 {c.label}
@@ -492,7 +492,7 @@ export default async function ShopPage({
                       prix + prix barré sur une seule ligne avec des montants à
                       6 chiffres — le prix barré passe alors proprement à la
                       ligne au lieu de déborder de la carte. */}
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 font-mono text-sm text-cuivre-profond">
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 font-mono text-sm text-vert-actif">
                     {effective.price} FCFA
                     {hasDiscount ? (
                       <span className="font-mono text-xs text-encre/40 line-through">

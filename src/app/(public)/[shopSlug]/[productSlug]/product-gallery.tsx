@@ -111,7 +111,7 @@ export function ProductGallery({
               type="button"
               onClick={() => setSelected(index)}
               className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
-                index === activeIndex ? "border-cuivre-profond" : "border-ligne"
+                index === activeIndex ? "border-vert-actif" : "border-ligne"
               }`}
               aria-label={`Voir la photo ${index + 1}`}
             >

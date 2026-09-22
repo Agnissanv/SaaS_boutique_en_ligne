@@ -79,7 +79,7 @@ export function CategoryNav({
               className={`flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 ${
                 isActive
                   ? "bg-vert-sapin text-ivoire shadow-md"
-                  : "bg-white text-cuivre-profond shadow-sm group-hover:-translate-y-1 group-hover:text-vert-sapin group-hover:shadow-md"
+                  : "bg-white text-vert-actif shadow-sm group-hover:-translate-y-1 group-hover:text-vert-sapin group-hover:shadow-md"
               }`}
             >
               <CategoryIcon value={tile.value ?? "all"} className="h-6 w-6" />

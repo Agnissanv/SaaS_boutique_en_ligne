@@ -142,7 +142,7 @@ export function CartCheckout({
                 {item.variantLabel && (
                   <p className="text-xs text-encre/50">{item.variantLabel}</p>
                 )}
-                <p className="font-mono text-sm text-cuivre-profond">{item.price} FCFA</p>
+                <p className="font-mono text-sm text-vert-actif">{item.price} FCFA</p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 <div className="flex items-center rounded-md border border-ligne">
@@ -182,24 +182,24 @@ export function CartCheckout({
         <dl className="mt-4 divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
           <div className="flex justify-between py-2 text-encre/70">
             <dt>Sous-total</dt>
-            <dd className="font-mono text-cuivre-profond">{total} FCFA</dd>
+            <dd className="font-mono text-vert-actif">{total} FCFA</dd>
           </div>
           <div className="flex justify-between py-2 text-encre/70">
             <dt>Livraison</dt>
-            <dd className="font-mono text-cuivre-profond">
+            <dd className="font-mono text-vert-actif">
               {deliveryFee != null ? `${deliveryFee} FCFA` : "à confirmer avec le vendeur"}
             </dd>
           </div>
           <div className="flex justify-between py-2 text-base font-medium text-encre">
             <dt>Total</dt>
-            <dd className="font-mono text-cuivre-profond">{total + (deliveryFee ?? 0)} FCFA</dd>
+            <dd className="font-mono text-vert-actif">{total + (deliveryFee ?? 0)} FCFA</dd>
           </div>
         </dl>
 
         <button
           type="button"
           onClick={() => setStep("commande")}
-          className="mt-4 w-full rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre"
+          className="mt-4 w-full rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
         >
           Passer la commande
         </button>
@@ -212,17 +212,17 @@ export function CartCheckout({
       <dl className="divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Sous-total</dt>
-          <dd className="font-mono text-cuivre-profond">{total} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{total} FCFA</dd>
         </div>
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Livraison</dt>
-          <dd className="font-mono text-cuivre-profond">
+          <dd className="font-mono text-vert-actif">
             {deliveryFee != null ? `${deliveryFee} FCFA` : "à confirmer avec le vendeur"}
           </dd>
         </div>
         <div className="flex justify-between py-2 text-base font-medium text-encre">
           <dt>Total à payer</dt>
-          <dd className="font-mono text-cuivre-profond">{total + (deliveryFee ?? 0)} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{total + (deliveryFee ?? 0)} FCFA</dd>
         </div>
       </dl>
 
@@ -376,7 +376,7 @@ export function CartCheckout({
         <button
           type="submit"
           disabled={pending}
-          className="ml-auto rounded-md bg-cuivre-profond px-4 py-2 text-sm font-medium text-ivoire hover:bg-cuivre disabled:opacity-50"
+          className="ml-auto rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
         >
           {pending ? "Envoi..." : "Confirmer la commande"}
         </button>
