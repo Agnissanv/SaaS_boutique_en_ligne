@@ -50,6 +50,13 @@ export function ProductGallery({
 }) {
   const [selected, setSelected] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  // Fondu à l'arrivée de la photo principale, ajouté le 22/09/2026 (retour
+  // d'Isaac sur la fluidité générale du site) — même raisonnement que
+  // `ProductImage`, mais suivi par URL plutôt qu'un simple booléen : en
+  // gardant la trace de la DERNIÈRE photo arrivée, changer de vignette rejoue
+  // le fondu à chaque fois (photo pas encore vue) sans le rejouer inutilement
+  // en revenant sur une photo déjà affichée une première fois.
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
 
   const activeIndex = images.length > 0 ? Math.min(selected, images.length - 1) : 0;
 
@@ -106,7 +113,10 @@ export function ProductGallery({
             fill
             priority
             sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-cover"
+            className={`object-cover transition-opacity duration-300 ${
+              loadedUrl === images[activeIndex].url ? "opacity-100" : "opacity-0"
+            }`}
+            onLoad={() => setLoadedUrl(images[activeIndex].url)}
           />
           {images.length > 1 && (
             <span className="absolute bottom-2 left-2 rounded-full bg-vert-profond/60 px-2 py-0.5 font-mono text-[11px] font-medium text-ivoire">

@@ -53,6 +53,31 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  /* Supprime le flash gris par défaut d'Android/Chrome au tap sur un lien ou
+     bouton — ajouté le 22/09/2026 (retour d'Isaac : "la fluidité, sur toutes
+     les pages du site, bouton..."). Le vrai retour tactile vient déjà du
+     `:active { scale }` du chantier "langage natif" ci-dessous ; ce flash
+     gris par-dessus le rendait moins net, surtout perceptible sur les
+     éléments à fond clair. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Défilement doux pour toute ancre (`href="#catalogue"` du hero, etc.) et
+   toute remontée programmatique (`scrollIntoView`, bouton "remonter en
+   haut" — voir `scroll-to-top-button.tsx`) — ajouté le 22/09/2026, même
+   retour d'Isaac sur la fluidité générale du site. Sans lui, un lien
+   d'ancre saute instantanément d'un écran à l'autre, ce qui tranche avec le
+   reste des transitions déjà posées (langage natif, transitions d'écran
+   ci-dessous). Désactivé sous `prefers-reduced-motion` : un défilement
+   accéléré et automatique est justement le genre de mouvement que ce
+   réglage demande d'éviter. */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 h1, h2, h3, h4 {
@@ -88,22 +113,42 @@ h1, h2, h3, h4 {
   --duration-sheet: 320ms;
 }
 
+/*
+ * Étendu aux liens à apparence de bouton le 22/09/2026 (retour d'Isaac sur
+ * la fluidité générale : "bouton..." sur toutes les pages) : la règle
+ * ci-dessus ne visait que les vraies balises <button> — tous les CTA
+ * construits avec <Link> (boutons du hero, puces de catégorie, pastilles de
+ * navigation, pagination...) restaient sans retour tactile. Un vrai
+ * <button> déclencherait le mauvais comportement clavier (Espace en plus
+ * d'Entrée) sur un élément qui navigue, donc pas question d'ajouter
+ * `role="button"` juste pour ce style — on cible plutôt, en CSS, les liens
+ * qui SE PRÉSENTENT visuellement comme un bouton dans ce projet : arrondis
+ * (toujours `rounded-*` dans cette charte, jamais sur un lien de texte
+ * courant) et sans soulignement (`underline` reste la signature des vrais
+ * liens de texte, volontairement exclus ici). Repose sur une convention
+ * déjà strictement suivie dans tout le code plutôt que sur une classe à
+ * ajouter partout à la main.
+ */
 button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]) {
+[role="button"]:not([aria-disabled="true"]),
+a[class*="rounded-"]:not([class*="underline"]) {
   transition: transform var(--duration-tap) var(--ease-native);
 }
 button:not(:disabled):active,
-[role="button"]:not([aria-disabled="true"]):active {
+[role="button"]:not([aria-disabled="true"]):active,
+a[class*="rounded-"]:not([class*="underline"]):active {
   transform: scale(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {
   button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]) {
+  [role="button"]:not([aria-disabled="true"]),
+  a[class*="rounded-"]:not([class*="underline"]) {
     transition: opacity var(--duration-tap) linear;
   }
   button:not(:disabled):active,
-  [role="button"]:not([aria-disabled="true"]):active {
+  [role="button"]:not([aria-disabled="true"]):active,
+  a[class*="rounded-"]:not([class*="underline"]):active {
     transform: none;
     opacity: 0.7;
   }

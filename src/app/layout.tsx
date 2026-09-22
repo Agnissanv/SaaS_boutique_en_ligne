@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
 import { BottomNav } from "@/components/bottom-nav";
+import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import "./globals.css";
 
 // Typographie KEVA — révisée le 22/09/2026 (voir decisions-techniques.md,
@@ -119,6 +120,10 @@ export default function RootLayout({
             portails d'authentification et les espaces internes vendeur/admin
             — voir bottom-nav.tsx. */}
         <BottomNav />
+        {/* Bouton "remonter en haut" (chantier fluidité, 22/09/2026) — monté
+            une seule fois ici pour être disponible sur toutes les pages, voir
+            scroll-to-top-button.tsx. */}
+        <ScrollToTopButton />
         <RegisterServiceWorker />
       </body>
     </html>

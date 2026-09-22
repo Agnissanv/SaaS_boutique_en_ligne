@@ -37,6 +37,14 @@ import Image from "next/image";
  * (2 à 6 colonnes selon la largeur d'écran, cf. page d'accueil/boutique) :
  * une valeur légèrement pessimiste plutôt qu'exacte par page, pour rester un
  * seul composant partagé.
+ *
+ * Fondu à l'arrivée ajouté le 22/09/2026 (retour d'Isaac sur la fluidité
+ * générale du site : "image..."). Avant, la photo apparaissait d'un coup dès
+ * que le navigateur avait fini de la décoder — sec sur une connexion lente,
+ * et visible même sur bonne connexion vu le nombre de vignettes chargées
+ * d'un coup sur une grille. `next/image` appelle `onLoad` de façon fiable,
+ * y compris pour une image déjà en cache navigateur (contrairement à un
+ * `<img>` brut) : pas de cas particulier à gérer ici.
  */
 export function ProductImage({
   src,
@@ -48,6 +56,7 @@ export function ProductImage({
   className?: string;
 }) {
   const [broken, setBroken] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   if (!src || broken) {
     return (
@@ -66,13 +75,14 @@ export function ProductImage({
   }
 
   return (
-    <div className={`relative overflow-hidden ${className ?? ""}`}>
+    <div className={`relative overflow-hidden bg-brume ${className ?? ""}`}>
       <Image
         src={src}
         alt={alt}
         fill
         sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
-        className="object-cover"
+        className={`object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setLoaded(true)}
         onError={() => setBroken(true)}
       />
     </div>
