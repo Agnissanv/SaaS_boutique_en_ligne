@@ -37,10 +37,10 @@ export function ProductCard({
 
   return (
     <div
-      className={`group relative bg-white ${className ?? ""}`}
+      className={`group relative rounded-2xl border border-ligne/70 bg-white p-2.5 shadow-sm transition hover:shadow-md ${className ?? ""}`}
     >
       {/* Wishlist */}
-      <div className="absolute right-2 top-2 z-10">
+      <div className="absolute right-4 top-4 z-10">
         <WishlistButton
           item={{
             productId: product.id,
@@ -61,7 +61,17 @@ export function ProductCard({
         className="block"
       >
         <ViewTransition name={`product-photo-${product.id}`} share="morph" default="none">
-          <div className="overflow-hidden rounded-md bg-brume">
+          <div className="relative overflow-hidden rounded-xl bg-brume">
+            {/* Badge promo déplacé sur la photo (au lieu d'à côté du prix
+                uniquement) le 22/09/2026, refonte des cartes produit —
+                inspiré des captures de référence d'Isaac (badge posé sur la
+                photo). Le prix barré en dessous suffit à donner le montant
+                de la remise, pas besoin de répéter "Promo" deux fois. */}
+            {product.isOnSale ? (
+              <span className="absolute left-2 top-2 z-10 rounded-full bg-erreur px-2 py-0.5 text-[10px] font-semibold text-ivoire">
+                Promo
+              </span>
+            ) : null}
             <ProductImage
               src={product.thumbnail}
               alt={product.title}
@@ -82,11 +92,6 @@ export function ProductCard({
             {hasDiscount ? (
               <span className="font-mono text-xs text-encre/40 line-through">
                 {product.compareAtPrice?.toLocaleString("fr-FR")} FCFA
-              </span>
-            ) : null}
-            {product.isOnSale ? (
-              <span className="rounded-full bg-erreur px-1.5 py-0.5 text-[10px] font-semibold text-ivoire">
-                Promo
               </span>
             ) : null}
           </div>

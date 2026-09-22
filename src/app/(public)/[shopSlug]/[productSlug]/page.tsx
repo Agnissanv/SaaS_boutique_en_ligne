@@ -263,16 +263,28 @@ export default async function ProductPage({
           imageUrl: images[0]?.url,
         }}
       />
+      {/* Lien retour : caché sur mobile au profit du chevron flottant sur la
+          photo ci-dessous (refonte fiche produit, 22/09/2026, mockup validé
+          par Isaac) — repris à partir de sm:, où la mise en page à deux
+          colonnes laisse assez de place au-dessus de la galerie. */}
       <Link
         href={`/${shopSlug}`}
         transitionTypes={["nav-back"]}
-        className="inline-flex items-center gap-1 text-sm text-vert-actif hover:underline"
+        className="hidden items-center gap-1 text-sm text-vert-actif hover:underline sm:inline-flex"
       >
         ‹ Retour à la boutique
       </Link>
 
-      <div className="mt-4 grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+      <div className="mt-0 grid gap-8 sm:mt-4 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
         <div className="relative">
+          <Link
+            href={`/${shopSlug}`}
+            transitionTypes={["nav-back"]}
+            aria-label="Retour à la boutique"
+            className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg text-vert-sapin shadow-sm sm:hidden"
+          >
+            ‹
+          </Link>
           <div className="absolute right-3 top-3 z-10">
             <WishlistButton
               item={{

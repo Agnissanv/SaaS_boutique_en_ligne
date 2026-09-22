@@ -31,6 +31,13 @@ type GalleryPhoto = { url: string };
  * (`ProductCard`, grille boutique), pour que la photo grossisse et se
  * déplace jusqu'ici au lieu de disparaître puis réapparaître en arrivant sur
  * la fiche produit. `productId` ajouté comme prop pour former ce nom.
+ *
+ * Compteur "n / total" ajouté le 22/09/2026 (refonte fiche produit, mockup
+ * validé par Isaac) : pastille translucide en bas à gauche de la photo,
+ * même traitement que sur le carrousel du hero (`hero-featured-slideshow.tsx`)
+ * — remplace le rail de miniatures comme seul repère de position sur les
+ * petits écrans (le rail reste l'outil de navigation direct, ce compteur
+ * donne juste le contexte "combien de photos" en un coup d'œil).
  */
 export function ProductGallery({
   images,
@@ -90,7 +97,7 @@ export function ProductGallery({
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-xl border border-ligne"
+          className="relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border border-ligne"
           aria-label="Agrandir la photo"
         >
           <Image
@@ -101,6 +108,11 @@ export function ProductGallery({
             sizes="(min-width: 1024px) 50vw, 100vw"
             className="object-cover"
           />
+          {images.length > 1 && (
+            <span className="absolute bottom-2 left-2 rounded-full bg-vert-profond/60 px-2 py-0.5 font-mono text-[11px] font-medium text-ivoire">
+              {activeIndex + 1} / {images.length}
+            </span>
+          )}
         </button>
       </ViewTransition>
       {images.length > 1 && (

@@ -58,7 +58,7 @@ export function StickyAddToCartBar({
           type="button"
           onClick={handleClick}
           style={accentColor ? { backgroundColor: accentColor } : undefined}
-          className={`ml-auto flex-1 rounded-md px-4 py-2.5 text-sm font-semibold text-ivoire transition ${
+          className={`ml-auto flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-ivoire shadow-[0_6px_14px_rgba(28,107,74,0.2)] transition ${
             accentColor ? "opacity-100 hover:opacity-90" : "bg-vert-actif hover:bg-vert-sapin"
           }`}
         >
