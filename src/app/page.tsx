@@ -76,10 +76,16 @@ type SortValue = (typeof SORTS)[number]["value"];
 // Les deux premières cases restent des vignettes statiques (nouveautés) ;
 // la troisième (la plus au premier plan) est désormais le carrousel de
 // meilleures ventes (`HeroFeaturedSlideshow`, voir plus bas).
+//
+// Agrandi le 22/09/2026 (retour d'Isaac : "je trouve que se carrousel est un
+// peu trop petit... mais ne le rend pas envahissant, le site doit être
+// aéré") — augmentation modérée (~15%) plutôt qu'un doublement, et un cran
+// de plus sur grand écran (`lg:`, hero desktop large) où l'espace libre du
+// cadre du hero le permet sans tasser le texte à côté.
 const HERO_COLLAGE_POSITIONS = [
-  "absolute left-0 top-6 h-32 w-32 -rotate-6 shadow-[0_16px_32px_rgba(14,59,44,0.16)]",
-  "absolute right-2 top-0 z-10 h-28 w-28 rotate-3 shadow-[0_16px_32px_rgba(14,59,44,0.16)]",
-  "absolute bottom-0 left-16 z-20 h-28 w-28 rotate-2 shadow-[0_16px_32px_rgba(14,59,44,0.16)]",
+  "absolute left-0 top-6 h-36 w-36 -rotate-6 shadow-[0_18px_36px_rgba(14,59,44,0.16)] lg:h-40 lg:w-40",
+  "absolute right-2 top-0 z-10 h-32 w-32 rotate-3 shadow-[0_18px_36px_rgba(14,59,44,0.16)] lg:h-36 lg:w-36",
+  "absolute bottom-0 left-16 z-20 h-32 w-32 rotate-2 shadow-[0_18px_36px_rgba(14,59,44,0.16)] lg:h-36 lg:w-36",
 ];
 
 // Icônes de l'argumentaire de confiance — dessinées à la main en SVG inline,
@@ -595,7 +601,7 @@ export default async function Home({
 
                 {heroThumbnails.length > 0 ? (
                   <div
-                    className="relative hidden h-56 w-56 shrink-0 sm:block"
+                    className="relative hidden h-64 w-64 shrink-0 sm:block lg:h-72 lg:w-72"
                     aria-hidden="true"
                   >
                     {heroThumbnails.slice(0, 2).map((url, index) => (
