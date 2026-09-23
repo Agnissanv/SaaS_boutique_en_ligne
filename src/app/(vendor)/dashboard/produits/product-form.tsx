@@ -309,7 +309,7 @@ function HighlightsField({ initial }: { initial: string[] }) {
             onChange={(e) => updateItem(index, e.target.value)}
             placeholder="Ex : 100% coton"
             maxLength={120}
-            className="flex-1 rounded-md border border-ligne px-3 py-1.5 text-sm"
+            className="min-w-0 flex-1 rounded-md border border-ligne px-3 py-1.5 text-sm"
           />
           {item.trim() && <input type="hidden" name="highlight" value={item.trim()} />}
           {items.length > 1 && (
@@ -478,7 +478,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
               onChange={(e) => updateGroupName(groupIndex, e.target.value)}
               placeholder="Nom du groupe (ex : Taille)"
               maxLength={40}
-              className="flex-1 rounded-md border border-ligne px-3 py-1.5 text-sm"
+              className="min-w-0 flex-1 rounded-md border border-ligne px-3 py-1.5 text-sm"
             />
             {groups.length > 1 && (
               <button
@@ -692,7 +692,20 @@ export function ProductForm({
         </p>
       </div>
 
-      <div className="flex gap-3">
+      {/* `flex-col sm:flex-row` (23/09/2026, retour d'Isaac : "des cartes qui
+          n'étaient pas responsives" sur le formulaire produit, testé sur
+          téléphone) — les deux champs côte à côte débordaient sur mobile,
+          pas les champs texte eux-mêmes (qui se réduisent normalement en
+          flexbox) mais leur `<input>` : un champ de formulaire ne rétrécit
+          jamais sous sa largeur par défaut dans un conteneur flex tant qu'on
+          ne le lui dit pas explicitement (min-width vaut "auto" par défaut,
+          pas 0) — déjà corrigé pour les lignes de variantes plus bas
+          (`min-w-0`) mais jamais propagé ici. Empilés verticalement en
+          dessous de `sm` (640px) plutôt que rétrécis en `min-w-0` : plus
+          fiable pour un `datetime-local` (voir plus bas), dont le
+          calendrier natif a une largeur minimale bien à lui que même
+          `min-w-0` ne peut pas faire respecter. */}
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="price" className="text-sm font-medium text-encre">
             Prix (FCFA)
@@ -751,7 +764,7 @@ export function ProductForm({
             className="rounded-md border border-ligne px-3 py-2 text-sm"
           />
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 flex-col gap-1">
             <label htmlFor="saleStartsAt" className="text-sm font-medium text-encre">
               Début <span className="text-encre/50">(optionnel)</span>
@@ -782,7 +795,7 @@ export function ProductForm({
       {/* SKU/code-barres au niveau produit — surtout utile pour un produit
           SANS variante (sinon, un SKU/code-barres par valeur est disponible
           plus bas dans "Variantes"). */}
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="sku" className="text-sm font-medium text-encre">
             SKU <span className="text-encre/50">(optionnel)</span>
