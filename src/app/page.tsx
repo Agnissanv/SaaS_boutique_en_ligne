@@ -580,7 +580,23 @@ export default async function Home({
   // que la bande "Meilleures ventes" plus bas) — jamais une liste vide qui
   // ferait disparaître le bloc sans raison. Pas de nouvelle requête : ces
   // deux tableaux sont déjà chargés (et déjà notés) ci-dessus.
-  const heroSlideshowPool = bestSellingProducts.length > 0 ? bestSellingProducts : newArrivalsProducts;
+  //
+  // Filtre sur `thumbnail` ajouté le 23/09/2026 (capture d'Isaac : "certaines
+  // images du carrousel sont cassées") — en réalité pas des images cassées,
+  // mais un vrai produit sans aucune photo uploadée, qui tombait sur la case
+  // vedette du collage (`HeroFeaturedSlideshow`, la plus visible des trois) et
+  // affichait donc l'icône de repli de `ProductImage`. `heroThumbnails`
+  // (les deux vignettes statiques juste au-dessus) filtrait déjà les
+  // produits sans photo pour cette même raison ("jamais une image de stock
+  // générique") — le même filtre manquait ici, sur la case la plus en avant
+  // des trois. Repli vers les nouveautés si aucune meilleure vente n'a de
+  // photo, plutôt que vers une liste vide.
+  const withThumbnail = (products: typeof bestSellingProducts) =>
+    products.filter((p) => Boolean(p.thumbnail));
+  const heroSlideshowPool =
+    withThumbnail(bestSellingProducts).length > 0
+      ? withThumbnail(bestSellingProducts)
+      : withThumbnail(newArrivalsProducts);
   const heroSlideshowProducts = shuffle(heroSlideshowPool).slice(0, HERO_SLIDESHOW_SIZE);
 
   // Note de confiance par boutique : réutilise `getShopRating` (0014/§4,

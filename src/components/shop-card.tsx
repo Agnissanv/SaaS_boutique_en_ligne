@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Stars } from "@/components/stars";
 import { categoryLabel } from "@/lib/categories";
 import { VerifiedBadge } from "@/components/verified-badge";
@@ -33,6 +34,18 @@ export type MarketplaceShop = {
  * "langage natif", transitions d'écran) : on va plus loin dans la
  * hiérarchie (marketplace → boutique), donc le contenu glisse vers la
  * gauche, comme une fiche produit.
+ *
+ * Logo passé à `next/image` le 23/09/2026 (audit PageSpeed transmis par
+ * Isaac : "Améliorer l'affichage des images", 146 Kio d'économie estimée
+ * sur la page d'accueil) : c'était le seul `<img>` brut encore servi SUR le
+ * premier chargement de la marketplace — jusqu'à 10 logos vendeur (bande
+ * "Boutiques sur KEVA"), potentiellement de gros fichiers uploadés tels
+ * quels, sans redimensionnement ni format moderne. `ProductImage` avait déjà
+ * ce même traitement le 16/09/2026 ; les autres `<img>` bruts du projet
+ * (galerie produit en zoom, formulaires d'upload, avatars du dashboard) ne
+ * chargent pas au premier affichage d'une page publique et restent hors
+ * périmètre. Taille fixe et connue (h-16 w-16) → `sizes="64px"`, pas besoin
+ * de l'approximation par largeur d'écran de `ProductImage`.
  */
 export function ShopCard({ shop, className }: { shop: MarketplaceShop; className?: string }) {
   return (
@@ -44,12 +57,9 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
       }`}
     >
       {shop.logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-        <img
-          src={shop.logoUrl}
-          alt={shop.name}
-          className="h-16 w-16 rounded-full object-cover"
-        />
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-brume">
+          <Image src={shop.logoUrl} alt={shop.name} fill sizes="64px" className="object-cover" />
+        </div>
       ) : (
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brume text-lg font-semibold text-vert-actif">
           {shop.name.charAt(0).toUpperCase()}

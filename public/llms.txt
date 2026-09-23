@@ -1,0 +1,26 @@
+# KEVA
+
+> Marketplace et boutiques en ligne en Côte d'Ivoire. KEVA permet à des
+> vendeurs indépendants de créer leur propre boutique en ligne, et aux
+> clients de découvrir et commander chez ces vendeurs sans créer de compte,
+> en payant à la livraison.
+
+KEVA (https://shopkeva.com) regroupe des boutiques indépendantes réparties
+partout en Côte d'Ivoire : mode, beauté, électronique, maison, alimentation
+et bien d'autres catégories. Chaque boutique est gérée par son propre
+vendeur. Les clients peuvent parcourir la marketplace globale ou visiter
+directement la boutique d'un vendeur, ajouter des produits au panier et
+commander sans créer de compte, avec paiement en espèces à la livraison.
+Le Mobile Money (Orange Money, MTN Money, Moov Money, Wave) est en cours
+de déploiement.
+
+## Pages principales
+
+- [Marketplace](https://shopkeva.com/) : catalogue de toutes les boutiques et produits, par catégorie
+- [Catégories](https://shopkeva.com/categories) : liste complète des catégories de produits
+- [Ouvrir une boutique](https://shopkeva.com/inscription) : inscription vendeur
+- [Politique de confidentialité](https://shopkeva.com/politique-confidentialite)
+- [Conditions d'utilisation](https://shopkeva.com/conditions-utilisation)
+
+Chaque boutique est accessible sur https://shopkeva.com/{nom-de-la-boutique},
+et chaque fiche produit sur https://shopkeva.com/{nom-de-la-boutique}/{produit}.
