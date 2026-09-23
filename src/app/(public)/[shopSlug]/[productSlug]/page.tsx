@@ -18,6 +18,11 @@ import { RecordProductView } from "@/components/record-product-view";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { getCategoryAttributeFields, getAttributeValueLabel } from "@/lib/category-attributes";
 
+// Même variable que `layout.tsx` et `[shopSlug]/page.tsx` (23/09/2026, ajout
+// du canonical) — reprise de la convention déjà utilisée partout dans le
+// projet pour les URLs absolues.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 const RELATED_LIMIT = 4;
 
 type Review = {
@@ -162,11 +167,16 @@ export async function generateMetadata({
     (a: { position: number }, b: { position: number }) => a.position - b.position
   );
   const image = images[0]?.url || "/keva-logo.jpg";
+  const canonicalUrl = `${siteUrl}/${shopSlug}/${productSlug}`;
 
   return {
     title,
     description,
-    openGraph: { title, description, images: [image], type: "website" },
+    // `alternates.canonical` ajouté le 23/09/2026 (audit SEO externe) — même
+    // raison que sur la page boutique : sans lui, la fiche produit héritait
+    // du canonical statique de l'accueil défini dans le layout racine.
+    alternates: { canonical: canonicalUrl },
+    openGraph: { title, description, images: [image], type: "website", url: canonicalUrl },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }

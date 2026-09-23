@@ -26,6 +26,11 @@ import {
 import { computeAttributeFacets } from "@/lib/marketplace/attribute-facets";
 import { getCategoryAttributeFields } from "@/lib/category-attributes";
 
+// Même variable que `layout.tsx` (23/09/2026, ajout du canonical) — pas de
+// nouvelle convention, juste la reprise de celle déjà utilisée partout dans
+// le projet pour les URLs absolues (emails, Open Graph...).
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 type PublicProduct = {
   id: string;
   slug: string;
@@ -124,7 +129,15 @@ export async function generateMetadata({
   return {
     title,
     description,
-    openGraph: { title, description, images: [image], type: "website" },
+    // `alternates.canonical` ajouté le 23/09/2026 (audit SEO externe) : sans
+    // lui, cette page héritait du canonical statique du layout racine
+    // (l'accueil) — toutes les boutiques auraient alors pointé Google vers
+    // `/` au lieu de leur propre URL. La page reste accessible avec des
+    // paramètres de tri/filtre/recherche (`?tri=`, `?categorie=`, `?q=`...) ;
+    // le canonical ignore volontairement ces paramètres pour consolider leur
+    // valeur SEO sur l'URL propre de la boutique.
+    alternates: { canonical: `${siteUrl}/${shopSlug}` },
+    openGraph: { title, description, images: [image], type: "website", url: `${siteUrl}/${shopSlug}` },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }

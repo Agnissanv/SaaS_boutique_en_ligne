@@ -41,30 +41,71 @@ const plexMono = IBM_Plex_Mono({
 // liens envoyés par email ailleurs dans le projet (ex. `commandes/actions.ts`).
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+// Titre/description/OG révisés le 23/09/2026 (audit SEO externe transmis par
+// Isaac, vérifié point par point avant d'agir) :
+// - L'ancien titre ("créez votre boutique en ligne en 5 minutes") ne parlait
+//   qu'aux vendeurs alors que `/` est la marketplace publique — un acheteur
+//   qui atterrit dessus depuis Google n'y retrouve pas ce qu'annonce le titre.
+//   Nouveau titre pensé pour les deux publics, cohérent avec le H1 réel de la
+//   page ("Toutes les boutiques en un seul endroit", src/app/page.tsx).
+// - L'ancienne description promettait un "paiement Mobile Money" : faux à ce
+//   jour (Wave/Orange Money affichés en gris "bientôt disponible" dans le
+//   tunnel de commande, seul le paiement à la livraison est actif tant que
+//   PawaPay n'est pas branché — voir `cart-checkout.tsx` et
+//   decisions-techniques.md). Corrigé pour refléter l'état réel, reprend la
+//   formulation déjà validée du hero ("vendeurs indépendants... paie à la
+//   livraison").
+// - OG/Twitter title portaient juste "KEVA" (trop court pour un aperçu de
+//   partage) — alignés sur le title complet.
+const title = "KEVA — Marketplace et boutiques en ligne en Côte d'Ivoire";
+const description =
+  "Découvre des vendeurs indépendants partout en Côte d'Ivoire, commande sans compte et paie à la livraison. Ou crée ta propre boutique en ligne en quelques minutes.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "KEVA — créez votre boutique en ligne en 5 minutes",
-  description:
-    "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
+  title,
+  description,
+  // `alternates.canonical` ajouté le 23/09/2026 : absent jusqu'ici, ce qui
+  // laissait Google deviner l'URL canonique de chaque page (risque de
+  // duplication avec d'éventuels paramètres de requête sur la marketplace :
+  // `?q=`, `?categorie=`, etc.). Les pages boutique et produit déclarent
+  // chacune la leur dans leur propre `generateMetadata` (sinon celle-ci,
+  // pointant vers l'accueil, s'appliquerait par héritage à tout le site —
+  // vérifié : ni l'une ni l'autre ne définissait `alternates` avant ce jour).
+  alternates: { canonical: siteUrl },
+  keywords: [
+    "boutique en ligne Côte d'Ivoire",
+    "marketplace Côte d'Ivoire",
+    "créer boutique en ligne gratuit",
+    "vendre en ligne Abidjan",
+    "paiement à la livraison",
+    "KEVA",
+  ],
+  authors: [{ name: "KEVA" }],
+  creator: "KEVA",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
   // Valeurs de repli pour les pages qui n'ont pas encore de `generateMetadata`
   // propre — les pages boutique (`[shopSlug]`) et produit
   // (`[shopSlug]/[productSlug]`) déclarent les leurs, qui prennent le dessus
   // (Next.js fusionne les métadonnées de la mise en page vers la page, la
   // page la plus profonde gagnant sur les champs qu'elle redéfinit).
   openGraph: {
-    title: "KEVA",
-    description:
-      "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
+    title,
+    description,
     siteName: "KEVA",
     images: ["/keva-logo.jpg"],
     locale: "fr_CI",
     type: "website",
+    url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: "KEVA",
-    description:
-      "Créez votre boutique en ligne, partagez votre lien et recevez vos commandes avec paiement Mobile Money.",
+    title,
+    description,
     images: ["/keva-logo.jpg"],
   },
   manifest: "/manifest.json",
@@ -103,6 +144,42 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// JSON-LD Organization + WebSite — ajouté le 23/09/2026, absent jusqu'ici
+// (aucune balise structurée nulle part sur le site, vérifié). `potentialAction`
+// pointe vers le vrai paramètre de recherche de la marketplace (`?q=`, voir
+// `src/app/page.tsx`), pas un exemple inventé. Rendu une seule fois ici (pas
+// par page boutique/produit, qui restent des `WebPage`/`Product` implicites
+// sans schéma dédié pour l'instant — hors périmètre de cet audit SEO).
+function OrganizationJsonLd({ siteUrl }: { siteUrl: string }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "KEVA",
+        url: siteUrl,
+        logo: `${siteUrl}/keva-logo.jpg`,
+      },
+      {
+        "@type": "WebSite",
+        name: "KEVA",
+        url: siteUrl,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${siteUrl}/?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -114,6 +191,7 @@ export default function RootLayout({
       className={`h-full antialiased ${archivo.variable} ${workSans.variable} ${plexMono.variable}`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        <OrganizationJsonLd siteUrl={siteUrl} />
         {children}
         {/* Barre de navigation basse mobile (chantier responsive design,
             15/09/2026) : rendue une seule fois ici, masquée elle-même sur les

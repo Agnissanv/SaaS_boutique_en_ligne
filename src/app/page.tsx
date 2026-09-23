@@ -675,8 +675,17 @@ export default async function Home({
                     Vendez · Encaissez · Grandissez
                   </p>
 
+                  {/* Espace explicite ajouté le 23/09/2026 (bug SEO/visuel
+                      signalé via un audit externe transmis par Isaac, vérifié
+                      en relisant ce fichier) : le `<br>` masqué sous `sm`
+                      (`hidden sm:block`) ne laissait plus aucun caractère
+                      entre les deux `<span>` sur mobile, collant les deux
+                      moitiés du H1 ("Toutes les boutiquesen un seul
+                      endroit"). Le `{" "}` comble ce vide sur mobile sans
+                      rien changer au-dessus de `sm`, où le `<br>` redevient
+                      visible et l'espace se réduit avant le saut de ligne. */}
                   <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.4rem]">
-                    <span className="text-encre">Toutes les boutiques</span>
+                    <span className="text-encre">Toutes les boutiques</span>{" "}
                     <br className="hidden sm:block" />
                     <span className="text-vert-actif">en un seul endroit</span>
                   </h1>
