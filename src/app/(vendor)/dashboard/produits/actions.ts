@@ -193,6 +193,20 @@ export async function saveProduct(
     .filter(Boolean)
     .slice(0, 6);
 
+  // Minimum 1 photo — choix explicite d'Isaac le 23/09/2026 (audit
+  // pré-lancement du 22/09 avait relevé qu'un produit à 0 photo restait
+  // possible jusqu'ici, contrairement au "minimum 1, maximum 6" déjà annoncé
+  // par cahier_de_charge.md §3.1.A.3). Revérifié ici côté serveur, pas
+  // seulement côté formulaire (product-form.tsx gère déjà l'upload et pourra
+  // désactiver la soumission côté client en plus, mais la garantie réelle
+  // reste ce contrôle serveur). S'applique à la création ET à la
+  // modification — un produit existant à 0 photo (créé avant ce correctif)
+  // devra en ajouter une avant de pouvoir sauvegarder toute autre
+  // modification, ce qui est l'effet recherché plutôt qu'un oubli.
+  if (imageUrls.length < 1) {
+    return { error: "Ajoute au moins une photo au produit avant d'enregistrer." };
+  }
+
   if (!title || title.length < 2) {
     return { error: "Le titre du produit est trop court." };
   }

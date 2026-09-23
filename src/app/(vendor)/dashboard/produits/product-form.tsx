@@ -202,7 +202,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-medium text-encre">
-        Photos <span className="text-encre/50">(jusqu&apos;à {MAX_PHOTOS})</span>
+        Photos <span className="text-encre/50">(1 à {MAX_PHOTOS})</span>
       </label>
       {urls.map((url) => (
         <input key={url} type="hidden" name="imageUrls" value={url} />
@@ -261,6 +261,12 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
         Résolution entre 500×500 et 2000×2000 px, 2 Mo maximum par photo. Fond
         blanc recommandé, sans filigrane.
       </p>
+      {/* Minimum 1 photo (23/09/2026, choix d'Isaac) — la vraie garantie est
+          le contrôle serveur dans saveProduct (actions.ts), ce texte est
+          juste là pour prévenir avant l'échec de soumission plutôt qu'après. */}
+      {urls.length === 0 && !uploading && (
+        <p className="text-xs text-erreur">Ajoute au moins une photo pour pouvoir enregistrer.</p>
+      )}
       {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
       {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
