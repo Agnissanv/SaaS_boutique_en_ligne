@@ -15,13 +15,23 @@ import Link from "next/link";
  * `conditions-utilisation/page.tsx` (même raisonnement, voir ce fichier) :
  * KEVA n'ayant pas de société enregistrée, l'entité citée est Isaac
  * lui-même en tant qu'exploitant individuel — à remplacer par la raison
- * sociale officielle une fois KEVA immatriculée. L'email de contact utilisé
- * par défaut est celui du compte Isaac (valenbouge@gmail.com), en attendant
- * une adresse dédiée (ex. contact@shopkeva.com) — à corriger dès qu'elle
- * existe. Contenu par ailleurs fidèle aux données réellement collectées et
- * aux prestataires réellement utilisés par KEVA à ce jour (Supabase, Brevo,
- * Google OAuth, CinetPay une fois activé) — pas de mentions génériques
- * inventées.
+ * sociale officielle une fois KEVA immatriculée. Contenu par ailleurs fidèle
+ * aux données réellement collectées et aux prestataires réellement utilisés
+ * par KEVA à ce jour (Supabase, Brevo, Google OAuth, CinetPay une fois
+ * activé) — pas de mentions génériques inventées.
+ *
+ * Révisée le 23/09/2026 : Google a refusé la validation du branding OAuth
+ * ("Continuer avec Google") en signalant cette page comme n'ayant "pas
+ * suffisamment de contenu". En relisant la politique développeur Google
+ * (OAuth API Verification FAQ / Google API Services User Data Policy), le
+ * vrai problème n'était pas la longueur mais une mention obligatoire absente :
+ * toute politique de confidentialité d'une appli utilisant Google Sign-In
+ * doit citer explicitement la "Google API Services User Data Policy" —
+ * ajouté ci-dessous en section 5. Deux autres sections standards attendues
+ * par ce type de contrôle ajoutées au passage (sécurité des données,
+ * mineurs), sincèrement utiles indépendamment de la validation Google.
+ * Email de contact basculé sur `contact@shopkeva.com` (Brevo/DNS finalisés
+ * le 23/09/2026 — plus besoin du Gmail personnel d'Isaac en repli).
  */
 export const metadata = {
   title: "Politique de confidentialité — KEVA",
@@ -42,7 +52,7 @@ export default function PolitiqueConfidentialitePage() {
         <h1 className="font-display text-2xl font-semibold text-encre">
           Politique de confidentialité
         </h1>
-        <p className="mt-2 text-sm text-encre/60">Dernière mise à jour : 21 septembre 2026</p>
+        <p className="mt-2 text-sm text-encre/60">Dernière mise à jour : 23 septembre 2026</p>
 
         <div className="mt-8 flex flex-col gap-6 text-sm leading-relaxed text-encre/80">
           <section>
@@ -135,7 +145,33 @@ export default function PolitiqueConfidentialitePage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              5. Cookies et stockage local
+              5. Utilisation des données de ton compte Google
+            </h2>
+            <p className="mt-2">
+              Si tu choisis « Continuer avec Google » pour te connecter ou
+              créer ton compte, KEVA reçoit uniquement ton nom, ton adresse
+              email et ta photo de profil Google — rien d&apos;autre (ni tes
+              contacts, ni ton agenda, ni tes fichiers). Ces informations
+              servent exclusivement à créer et reconnaître ton compte KEVA :
+              elles ne sont jamais utilisées à des fins publicitaires, jamais
+              revendues, et jamais partagées avec un tiers en dehors des cas
+              déjà décrits à la section 4. L&apos;utilisation par KEVA des
+              informations reçues des API Google respecte la{" "}
+              <a
+                href="https://developers.google.com/terms/api-services-user-data-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-vert-actif underline"
+              >
+                Google API Services User Data Policy
+              </a>
+              , y compris ses exigences de « Limited Use ».
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-base font-semibold text-encre">
+              6. Cookies et stockage local
             </h2>
             <p className="mt-2">
               KEVA utilise le stockage local de ton navigateur (pas de cookies
@@ -147,19 +183,46 @@ export default function PolitiqueConfidentialitePage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              6. Durée de conservation
+              7. Sécurité des données
+            </h2>
+            <p className="mt-2">
+              Tes données sont hébergées chez Supabase, chiffrées en transit
+              (HTTPS) entre ton appareil et nos serveurs. L&apos;accès à la base
+              de données est restreint par des règles de sécurité au niveau
+              des lignes (Row Level Security) : un vendeur ne peut voir que
+              les commandes de sa propre boutique, un client que les siennes.
+              Aucun système n&apos;étant infaillible, nous ne pouvons cependant
+              pas garantir une sécurité absolue.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-base font-semibold text-encre">
+              8. Mineurs
+            </h2>
+            <p className="mt-2">
+              KEVA ne s&apos;adresse pas aux enfants et ne collecte pas
+              sciemment de données concernant des mineurs. Si tu penses qu&apos;un
+              enfant nous a transmis des données personnelles, contacte-nous
+              (section 11) afin que nous les supprimions.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-base font-semibold text-encre">
+              9. Durée de conservation
             </h2>
             <p className="mt-2">
               Tes données sont conservées tant que ton compte existe. Les
               commandes passées en tant qu&apos;invité (sans compte) sont
               conservées le temps nécessaire à leur traitement et au suivi
               après-vente. Tu peux demander la suppression de tes données à
-              tout moment (voir section 7).
+              tout moment (voir section 10).
             </p>
           </section>
 
           <section>
-            <h2 className="font-display text-base font-semibold text-encre">7. Tes droits</h2>
+            <h2 className="font-display text-base font-semibold text-encre">10. Tes droits</h2>
             <p className="mt-2">
               Tu peux à tout moment demander à consulter, corriger ou faire
               supprimer les données te concernant, en nous écrivant à l&apos;adresse
@@ -169,11 +232,11 @@ export default function PolitiqueConfidentialitePage() {
           </section>
 
           <section>
-            <h2 className="font-display text-base font-semibold text-encre">8. Contact</h2>
+            <h2 className="font-display text-base font-semibold text-encre">11. Contact</h2>
             <p className="mt-2">
               Pour toute question sur cette politique ou sur tes données :{" "}
-              <a href="mailto:valenbouge@gmail.com" className="text-vert-actif underline">
-                valenbouge@gmail.com
+              <a href="mailto:contact@shopkeva.com" className="text-vert-actif underline">
+                contact@shopkeva.com
               </a>
               .
             </p>
@@ -181,7 +244,7 @@ export default function PolitiqueConfidentialitePage() {
 
           <section>
             <h2 className="font-display text-base font-semibold text-encre">
-              9. Modifications
+              12. Modifications
             </h2>
             <p className="mt-2">
               Cette politique peut évoluer avec KEVA. La date de
