@@ -18,6 +18,16 @@ import { signOut } from "@/app/auth/actions";
  * connexion, mais on revérifie le rôle ici aussi (défense en profondeur, même
  * principe que le layout admin) plutôt que de faire confiance uniquement à
  * la redirection de connexion.
+ *
+ * **Lien "Mon espace client" ajouté le 23/09/2026** : Isaac a testé en se
+ * connectant avec un compte commercial et signalé une impasse — une fois sur
+ * /compte (accessible à n'importe quel compte connecté, voir le layout de ce
+ * dossier), rien ne permettait de revenir sur /commercial. Un commercial
+ * peut aussi acheter sur KEVA avec le même compte, exactement comme un
+ * vendeur (voir la note "Lien Mon espace client" du 21/09/2026 dans
+ * dashboard/layout.tsx, même raisonnement) — ce lien, plus son pendant côté
+ * /compte ("Espace commercial", voir (customer)/compte/(protected)/page.tsx),
+ * ferme l'aller-retour dans les deux sens.
  */
 export default async function CommercialLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -45,11 +55,16 @@ export default async function CommercialLayout({ children }: { children: React.R
             <span className="font-display text-base font-semibold text-encre">Espace commercial</span>
           </Link>
 
-          <form action={signOut}>
-            <button type="submit" className="text-sm text-encre/60 underline hover:text-vert-actif">
-              Déconnexion
-            </button>
-          </form>
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/compte" className="text-encre/60 underline hover:text-vert-actif">
+              Mon espace client
+            </Link>
+            <form action={signOut}>
+              <button type="submit" className="text-encre/60 underline hover:text-vert-actif">
+                Déconnexion
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 

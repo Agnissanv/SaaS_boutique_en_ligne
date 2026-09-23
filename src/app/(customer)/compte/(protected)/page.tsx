@@ -20,7 +20,7 @@ export default async function ComptePage() {
   // donc systématiquement sur la partie locale de l'email plutôt que le
   // vrai nom du client.
   const [{ data: profile }, access, unreadNotificationsCount] = await Promise.all([
-    supabase.from("profiles").select("display_name, phone").eq("id", user?.id ?? "").single(),
+    supabase.from("profiles").select("display_name, phone, role").eq("id", user?.id ?? "").single(),
     user ? getAccessibleShop(supabase, user.id) : Promise.resolve(null),
     user
       ? supabase
@@ -94,6 +94,25 @@ export default async function ComptePage() {
           </h2>
           <div className="overflow-hidden rounded-xl border border-ligne bg-white">
             <AccountLink href="/dashboard" label="Gérer ma boutique" last />
+          </div>
+        </section>
+      )}
+
+      {/* ========== ESPACE COMMERCIAL ==========
+          Ajouté le 23/09/2026 : même raisonnement que "Espace vendeur"
+          ci-dessus (un commercial peut aussi acheter sur KEVA avec son
+          compte) — Isaac est tombé sur une impasse en testant : depuis
+          /commercial rien n'empêchait d'arriver ici via "Mon espace
+          client", mais rien ne permettait de revenir. Affiché uniquement
+          si le rôle est bien 'commercial' (voir migration 0046), jamais
+          une invitation à le devenir. */}
+      {profile?.role === "commercial" && (
+        <section>
+          <h2 className="mb-2 font-display text-base font-semibold text-encre">
+            Espace commercial
+          </h2>
+          <div className="overflow-hidden rounded-xl border border-ligne bg-white">
+            <AccountLink href="/commercial" label="Voir mon espace commercial" last />
           </div>
         </section>
       )}
