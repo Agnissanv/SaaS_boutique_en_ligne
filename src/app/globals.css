@@ -300,7 +300,23 @@ a[class*="rounded-"]:not([class*="underline"]):active {
 }
 
 /* Pulsation des blocs de squelette (`src/components/skeleton.tsx`) — Sable
-   plutôt qu'un gris générique, pour rester sur charte même à vide. */
+   plutôt qu'un gris générique, pour rester sur charte même à vide.
+ *
+ * `infinite` → 4 itérations (~6s) le 23/09/2026 : cause identifiée du
+ * "Error! NO_LCP" remonté par PageSpeed Insights sur la page d'accueil
+ * (voir decisions-techniques.md, section du même jour). Une animation
+ * d'opacité SANS FIN sur les blocs de squelette (le plus grand élément
+ * peint pendant que `page.tsx` attend Supabase, cf. `src/app/loading.tsx`)
+ * empêche Chrome de finaliser un candidat LCP tant qu'elle continue de
+ * changer l'écran — bug Chromium documenté sur exactement ce motif
+ * (squelette à pulsation infinie). En conditions réseau/CPU limitées
+ * (le test PageSpeed simule les deux), le vrai contenu n'arrive parfois pas
+ * avant la fin de la fenêtre d'analyse : l'animation ne s'arrête jamais,
+ * donc aucun LCP n'est jamais rapporté. Borner à 4 itérations laisse la
+ * pulsation largement le temps de jouer son rôle pour un chargement normal
+ * (quelques secondes), puis elle se fige sur son état final (opacité 1,
+ * déjà la valeur de base du composant) — un squelette immobile reste un
+ * signal de chargement tout à fait normal au-delà de ce délai. */
 @keyframes kv-pulse {
   0%,
   100% {
@@ -311,7 +327,7 @@ a[class*="rounded-"]:not([class*="underline"]):active {
   }
 }
 .animate-kv-pulse {
-  animation: kv-pulse 1.5s ease-in-out infinite;
+  animation: kv-pulse 1.5s ease-in-out 4;
 }
 
 @media (prefers-reduced-motion: reduce) {
