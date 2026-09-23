@@ -22,6 +22,11 @@ export const PASSWORD_MIN_LENGTH = 8;
 export function roleHomePath(role: string | null | undefined): string {
   if (role === "admin") return "/admin";
   if (role === "customer") return "/compte";
+  // 'commercial' (23/09/2026, parrainage commercial) : ne s'inscrit jamais
+  // par ce chemin en pratique (compte créé par un admin, voir
+  // decisions-techniques.md) mais ajouté ici par cohérence avec
+  // `resolveHomePath` juste en dessous.
+  if (role === "commercial") return "/commercial";
   return "/dashboard";
 }
 
@@ -62,6 +67,11 @@ export async function resolveHomePath(
   role: string | null | undefined
 ): Promise<string> {
   if (role === "admin") return "/admin";
+  // 'commercial' (23/09/2026, parrainage commercial, voir
+  // decisions-techniques.md) : traité avant la vérification de boutique
+  // ci-dessous, un commercial n'en possède jamais une par construction —
+  // même raisonnement que 'admin' juste au-dessus.
+  if (role === "commercial") return "/commercial";
 
   const [{ data: owned }, { data: collab }] = await Promise.all([
     supabase.from("shops").select("id").eq("owner_id", userId).maybeSingle(),

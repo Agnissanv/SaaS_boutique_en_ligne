@@ -36,6 +36,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/dashboard/collaborateurs", label: "Collaborateurs", icon: IconUsers, ownerOnly: true },
       { href: "/dashboard/paiements", label: "Paiements", icon: IconWallet, ownerOnly: true },
       { href: "/dashboard/abonnement", label: "Abonnement", icon: IconBadge, ownerOnly: true },
+      { href: "/dashboard/parrainage", label: "Parrainage", icon: IconGift, ownerOnly: true },
     ],
   },
   {
@@ -189,6 +190,19 @@ function IconBadge(props: React.SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <circle cx="12" cy="9" r="6" />
       <path d="M8.5 14.5 7 21l5-2.5 5 2.5-1.5-6.5" />
+    </svg>
+  );
+}
+
+/** Ajoutée le 23/09/2026 pour "Parrainage" (système de parrainage vendeur). */
+function IconGift(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="9" width="18" height="4" rx="1" />
+      <rect x="5" y="13" width="14" height="8" rx="1" />
+      <path d="M12 9v12" />
+      <path d="M12 9c-1.2-3-3-4.5-4.5-4.5A2 2 0 0 0 5.5 6.5C5.5 8 7.5 9 12 9Z" />
+      <path d="M12 9c1.2-3 3-4.5 4.5-4.5a2 2 0 0 1 2 2c0 1.5-2 2.5-6.5 2.5Z" />
     </svg>
   );
 }

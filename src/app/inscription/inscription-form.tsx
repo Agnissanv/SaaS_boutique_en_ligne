@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PASSWORD_MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
 import { GoogleAuthButton } from "@/components/google-auth-button";
@@ -30,10 +30,32 @@ import { GoogleAuthButton } from "@/components/google-auth-button";
  * /dashboard/boutique (déjà fonctionnelle, avec upload logo/couverture,
  * catégorie, slug...), pour ne pas dupliquer ce formulaire ni créer une
  * boutique à moitié remplie avant que le vendeur ait vu le dashboard.
+ *
+ * `?ref=<slug>` (23/09/2026, système de parrainage — voir
+ * decisions-techniques.md et supabase/migrations/0045_referral_system.sql) :
+ * lien de parrainage généré sur /dashboard/parrainage par un vendeur déjà
+ * inscrit. Transmis via `options.data.referred_by_code` à signUp() — même
+ * mécanisme que `display_name` (migration 0009) — et capturé par
+ * `handle_new_user()` dans `profiles.referred_by_code`, consommé plus tard
+ * par `saveShop()` (dashboard/boutique/actions.ts) au moment où ce nouveau
+ * vendeur crée sa propre boutique. Route déjà en `dynamic = "force-dynamic"`
+ * (page.tsx), donc pas de souci de prerendering avec `useSearchParams()` ici
+ * (même raisonnement que (customer)/compte/inscription/inscription-form.tsx).
+ * Pour le chemin Google (aucune métadonnée arbitraire transmissible), voir
+ * `GoogleAuthButton` et `/auth/callback/route.ts`.
+ *
+ * `?agent=<code>` (23/09/2026, parrainage COMMERCIAL — voir
+ * decisions-techniques.md et supabase/migrations/0046_commercial_referral_system.sql) :
+ * même mécanisme que `?ref=` ci-dessus mais pour un lien de commercial
+ * plutôt qu'un lien de vendeur — canal complètement séparé (colonne
+ * `referred_by_agent_code`, jamais mélangé avec `referred_by_code`).
  */
 export function InscriptionForm() {
   const router = useRouter();
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const referredByCode = searchParams.get("ref");
+  const referredByAgentCode = searchParams.get("agent");
 
   type View = "form" | "confirmation-envoyee" | "compte-existant";
   const [view, setView] = useState<View>("form");
@@ -69,7 +91,11 @@ export function InscriptionForm() {
       email,
       password,
       options: {
-        data: { display_name: trimmedName },
+        data: {
+          display_name: trimmedName,
+          ...(referredByCode ? { referred_by_code: referredByCode } : {}),
+          ...(referredByAgentCode ? { referred_by_agent_code: referredByAgentCode } : {}),
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -216,7 +242,10 @@ export function InscriptionForm() {
               <div className="h-px flex-1 bg-ligne" />
             </div>
             <div className="mt-4">
-              <GoogleAuthButton />
+              <GoogleAuthButton
+                referralCode={referredByCode ?? undefined}
+                agentCode={referredByAgentCode ?? undefined}
+              />
             </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">

@@ -26,14 +26,37 @@ import { createClient } from "@/lib/supabase/client";
  * provider Google dans le dashboard Supabase Auth — étapes manuelles, côté
  * Google Cloud Console et Supabase, qu'aucun outil ici ne peut faire à sa
  * place.
+ *
+ * `referralCode` (23/09/2026, parrainage vendeur) / `agentCode` (23/09/2026,
+ * parrainage COMMERCIAL — voir decisions-techniques.md) : Google ne transmet
+ * aucune métadonnée arbitraire à `signUp()` comme le fait le formulaire
+ * email/mot de passe (`options.data.referred_by_code`/`referred_by_agent_code`)
+ * — le seul canal disponible pour ce provider est un paramètre sur l'URL de
+ * retour `redirectTo`, repris ensuite par `/auth/callback` (voir ce
+ * fichier), même principe que `portal=customer` juste au-dessus.
+ * `inscription-form.tsx` est le seul appelant à passer ces deux props (lus
+ * depuis `?ref=`/`?agent=` sur sa propre URL) — les autres formulaires
+ * (connexion vendeur/client, inscription client) n'ont rien à transmettre
+ * ici.
  */
-export function GoogleAuthButton({ portal }: { portal?: "customer" }) {
+export function GoogleAuthButton({
+  portal,
+  referralCode,
+  agentCode,
+}: {
+  portal?: "customer";
+  referralCode?: string;
+  agentCode?: string;
+}) {
   const supabase = createClient();
 
   async function handleClick() {
-    const redirectTo = portal
-      ? `${window.location.origin}/auth/callback?portal=${portal}`
-      : `${window.location.origin}/auth/callback`;
+    const params = new URLSearchParams();
+    if (portal) params.set("portal", portal);
+    if (referralCode) params.set("ref", referralCode);
+    if (agentCode) params.set("agent", agentCode);
+    const query = params.toString();
+    const redirectTo = `${window.location.origin}/auth/callback${query ? `?${query}` : ""}`;
 
     await supabase.auth.signInWithOAuth({
       provider: "google",

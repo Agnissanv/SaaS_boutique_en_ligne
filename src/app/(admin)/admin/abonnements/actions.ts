@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { applyPlanToShop } from "@/lib/subscription";
+import { maybeGrantReferralReward } from "@/lib/referrals";
+import { maybeCreditCommercialCommission } from "@/lib/commercial-referrals";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -55,6 +57,19 @@ export async function assignPlan(shopId: string, planCode: string, durationMonth
 
   const result = await applyPlanToShop(supabase, shopId, planCode, durationDays);
   if (!result) return;
+
+  // Système de parrainage (23/09/2026, voir src/lib/referrals.ts) : ce point
+  // représente un vrai paiement confirmé (encaissement manuel par Isaac),
+  // exactement le déclencheur choisi pour récompenser un éventuel parrain —
+  // ne fait rien si cette boutique n'a pas de parrain ou si le plan assigné
+  // est gratuit (Starter).
+  await maybeGrantReferralReward(supabase, shopId, result.planId);
+
+  // Parrainage COMMERCIAL (23/09/2026, voir src/lib/commercial-referrals.ts)
+  // : même déclencheur (paiement confirmé), mécanique de récompense
+  // différente (commission en argent réel, à chaque paiement) — ne fait
+  // rien si cette boutique n'a pas été recrutée par un commercial.
+  await maybeCreditCommercialCommission(supabase, shopId, result.planCode);
 
   await supabase.from("transaction_logs").insert({
     actor_id: userId,

@@ -168,6 +168,45 @@ export async function saveShop(
     // abonnement manuellement si besoin).
     if (newShop) {
       await supabase.rpc("start_free_subscription", { p_shop_id: newShop.id });
+
+      // Système de parrainage (23/09/2026, voir decisions-techniques.md et
+      // supabase/migrations/0045_referral_system.sql) : `referred_by_code`
+      // a été capturé à l'inscription (formulaire email/mot de passe ou
+      // `?ref=` via Google, voir inscription-form.tsx et
+      // auth/callback/route.ts) et dort sur le profil jusqu'à ce que ce
+      // vendeur crée enfin sa boutique — seul moment où on a un
+      // `referred_shop_id` à enregistrer. `create_referral()` (RPC
+      // `security definer`) revalide tout elle-même (slug existant,
+      // boutique active, pas d'auto-parrainage) et ne fait rien en silence
+      // si le code est invalide ou périmé — non bloquant, même principe que
+      // `start_free_subscription` juste au-dessus : une erreur ici
+      // n'empêche jamais la création de boutique.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("referred_by_code, referred_by_agent_code")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.referred_by_code) {
+        await supabase.rpc("create_referral", {
+          p_referred_shop_id: newShop.id,
+          p_referrer_slug: profile.referred_by_code,
+        });
+      }
+
+      // Parrainage COMMERCIAL (23/09/2026, voir decisions-techniques.md et
+      // supabase/migrations/0046_commercial_referral_system.sql) — canal
+      // totalement séparé du parrainage vendeur ci-dessus (`?agent=` plutôt
+      // que `?ref=`, capturé dans `referred_by_agent_code`) : un vendeur
+      // recruté par un commercial reste indépendant du système entre
+      // vendeurs, jamais les deux mélangés. Même philosophie "non
+      // bloquant" que `create_referral` juste au-dessus.
+      if (profile?.referred_by_agent_code) {
+        await supabase.rpc("create_commercial_referral", {
+          p_referred_shop_id: newShop.id,
+          p_agent_code: profile.referred_by_agent_code,
+        });
+      }
     }
   }
 

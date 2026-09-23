@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import {
   ClipboardIcon,
   CoinsIcon,
+  GiftIcon,
   GridIcon,
   MailIcon,
   PackageIcon,
   StorefrontIcon,
   TagIcon,
   TicketIcon,
+  UsersIcon,
 } from "@/components/admin/admin-icons";
 
 type NavItem = {
@@ -30,6 +32,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/vendeurs", label: "Vendeurs", icon: StorefrontIcon },
   { href: "/admin/commandes", label: "Commandes", icon: PackageIcon },
   { href: "/admin/abonnements", label: "Abonnements", icon: TicketIcon },
+  { href: "/admin/parrainages", label: "Parrainages", icon: GiftIcon },
+  { href: "/admin/commerciaux", label: "Commerciaux", icon: UsersIcon },
   { href: "/admin/paiements", label: "Paiements", icon: CoinsIcon },
   { href: "/admin/codes-promo", label: "Codes promo", icon: TagIcon },
   { href: "/admin/messages", label: "Messages", icon: MailIcon },

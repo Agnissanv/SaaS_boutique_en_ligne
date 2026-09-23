@@ -36,12 +36,30 @@ import { resolveHomePath } from "@/lib/auth-constants";
  * depuis /compte/connexion ou /compte/inscription" du cas "compte vendeur
  * existant qui cliquerait par erreur sur ce bouton depuis le portail
  * client" — ce dernier ne doit jamais se faire changer de rôle.
+ *
+ * `?ref=<slug>` (23/09/2026, système de parrainage — voir GoogleAuthButton
+ * et supabase/migrations/0045_referral_system.sql) : seul canal disponible
+ * pour transmettre un code de parrainage à travers un flux OAuth Google
+ * (aucune métadonnée arbitraire possible côté `signUp()` comme pour le
+ * formulaire email/mot de passe). Même garde-fou `createdRecently` que pour
+ * `portal=customer` juste au-dessus, et pour la même raison : n'écrit
+ * `referred_by_code` que pour un compte créé il y a moins d'une minute,
+ * jamais pour un vendeur existant qui cliquerait sur un lien de parrainage
+ * en étant déjà connecté.
+ *
+ * `?agent=<code>` (23/09/2026, parrainage COMMERCIAL) : même chemin que
+ * `?ref=` juste au-dessus, pour un lien de commercial plutôt qu'un lien de
+ * vendeur — écrit dans `referred_by_agent_code`, jamais mélangé avec
+ * `referred_by_code`. Voir decisions-techniques.md et
+ * supabase/migrations/0046_commercial_referral_system.sql.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const explicitNext = searchParams.get("next");
   const portal = searchParams.get("portal");
+  const referralCode = searchParams.get("ref");
+  const agentCode = searchParams.get("agent");
 
   if (code) {
     const supabase = await createClient();
@@ -51,6 +69,8 @@ export async function GET(request: Request) {
     } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && user) {
+      const createdRecently = Date.now() - new Date(user.created_at).getTime() < 60_000;
+
       if (portal === "customer") {
         const { data: currentProfile } = await supabase
           .from("profiles")
@@ -58,10 +78,25 @@ export async function GET(request: Request) {
           .eq("id", user.id)
           .maybeSingle();
 
-        const createdRecently = Date.now() - new Date(user.created_at).getTime() < 60_000;
         if (currentProfile?.role === "vendor" && createdRecently) {
           await supabase.from("profiles").update({ role: "customer" }).eq("id", user.id);
         }
+      }
+
+      if (referralCode && createdRecently) {
+        await supabase
+          .from("profiles")
+          .update({ referred_by_code: referralCode })
+          .eq("id", user.id)
+          .is("referred_by_code", null);
+      }
+
+      if (agentCode && createdRecently) {
+        await supabase
+          .from("profiles")
+          .update({ referred_by_agent_code: agentCode })
+          .eq("id", user.id)
+          .is("referred_by_agent_code", null);
       }
 
       if (explicitNext) {

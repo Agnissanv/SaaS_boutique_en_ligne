@@ -124,3 +124,28 @@ export function ClipboardIcon({ className = "h-5 w-5" }: { className?: string })
     </svg>
   );
 }
+
+/** Ajoutée le 23/09/2026 pour "Commerciaux" (parrainage commercial, comptes dédiés). */
+export function UsersIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <circle cx="7.5" cy="7" r="2.6" />
+      <path d="M2.5 17c0-2.6 2.2-4.7 5-4.7s5 2.1 5 4.7" />
+      <circle cx="14.5" cy="7.4" r="2" />
+      <path d="M13 12.5c2 .4 3.5 2.1 3.5 4.5" />
+    </svg>
+  );
+}
+
+/** Ajoutée le 23/09/2026 pour "Parrainages" (système de parrainage vendeur). */
+export function GiftIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <rect x="2.8" y="7.5" width="14.4" height="3.4" rx="0.8" />
+      <rect x="4.2" y="10.9" width="11.6" height="6.6" rx="0.8" />
+      <path d="M10 7.5v10" />
+      <path d="M10 7.5c-1-2.4-2.4-3.6-3.6-3.6a1.6 1.6 0 0 0-1.6 1.6c0 1.2 1.6 2 5.2 2Z" />
+      <path d="M10 7.5c1-2.4 2.4-3.6 3.6-3.6a1.6 1.6 0 0 1 1.6 1.6c0 1.2-1.6 2-5.2 2Z" />
+    </svg>
+  );
+}

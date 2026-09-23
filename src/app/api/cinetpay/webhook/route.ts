@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { checkCinetPayTransactionStatus } from "@/lib/cinetpay";
 import { applyPlanToShop } from "@/lib/subscription";
+import { maybeGrantReferralReward } from "@/lib/referrals";
+import { maybeCreditCommercialCommission } from "@/lib/commercial-referrals";
 
 /**
  * Webhook de notification CinetPay pour les paiements d'abonnement —
@@ -100,6 +102,19 @@ export async function POST(request: NextRequest) {
 
   if (verification.status === "ACCEPTED") {
     const result = await applyPlanToShop(supabase, payment.shop_id, payment.intent_plan_code);
+
+    // Système de parrainage (23/09/2026, voir src/lib/referrals.ts) : un
+    // paiement CinetPay confirmé (statut ACCEPTED vérifié auprès de leur
+    // API, jamais depuis le payload webhook lui-même — voir la doc de
+    // sécurité plus haut) est l'un des deux seuls déclencheurs de
+    // récompense — ne fait rien si cette boutique n'a pas de parrain ou si
+    // le plan assigné est gratuit.
+    if (result) {
+      await maybeGrantReferralReward(supabase, payment.shop_id, result.planId);
+      // Parrainage commercial (23/09/2026) : commission en argent réel à
+      // chaque paiement confirmé, voir src/lib/commercial-referrals.ts.
+      await maybeCreditCommercialCommission(supabase, payment.shop_id, result.planCode);
+    }
 
     await supabase
       .from("payments")
