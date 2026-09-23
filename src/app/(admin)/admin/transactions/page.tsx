@@ -133,6 +133,14 @@ export default async function AdminTransactionsPage({
                   <p className="truncate text-encre">
                     {ACTION_LABELS[log.action] ?? log.action}
                     {shop ? ` — ${shop.name}` : ""}
+                    {/* Durée choisie affichée depuis le 23/09/2026 (assignation
+                        manuelle avec durée personnalisable) — utile pour
+                        retrouver ce qui a réellement été accordé lors d'un
+                        encaissement manuel, sans avoir à recouper avec
+                        `expires_at` sur /admin/abonnements. */}
+                    {log.action === "subscription_plan_assigned" && typeof log.metadata?.duration_months === "number"
+                      ? ` (${log.metadata.duration_months} mois)`
+                      : ""}
                   </p>
                   <p className="text-xs text-encre/50">
                     Par {actor?.display_name ?? "—"} le{" "}

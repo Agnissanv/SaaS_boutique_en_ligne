@@ -279,7 +279,16 @@ export async function applyPlanToShop(
   // exposent la même API `SupabaseClient<Database>` sous le capot.
   supabase: Awaited<ReturnType<typeof createClient>>,
   shopId: string,
-  planCode: string
+  planCode: string,
+  // `durationDaysOverride` — ajouté le 23/09/2026 pour l'assignation
+  // manuelle admin (encaissement manuel en attendant PawaPay/KYB, Isaac
+  // collecte parfois plusieurs mois d'un coup). `undefined` (le cas des DEUX
+  // AUTRES appelants, `subscription-lifecycle.ts` et le webhook CinetPay)
+  // retombe sur `plan.duration_days` — comportement strictement inchangé
+  // pour eux. Ne jamais laisser un appelant automatique fournir cette
+  // valeur : un vrai paiement CinetPay doit toujours durer exactement
+  // `duration_days`, jamais une durée choisie à la main.
+  durationDaysOverride?: number
 ): Promise<ApplyPlanResult | null> {
   const { data: plan } = await supabase
     .from("subscription_plans")
@@ -289,7 +298,8 @@ export async function applyPlanToShop(
 
   if (!plan) return null;
 
-  const expiresAt = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString();
+  const durationDays = durationDaysOverride ?? plan.duration_days;
+  const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
   // Upsert atomique plutôt qu'un "vérifier puis écrire" — corrigé le
   // 22/09/2026 (audit pré-lancement du back-office) : cette fonction est

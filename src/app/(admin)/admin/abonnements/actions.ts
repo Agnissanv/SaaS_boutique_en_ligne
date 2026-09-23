@@ -20,6 +20,13 @@ async function requireAdmin() {
   return profile?.role === "admin" ? { supabase, userId: user.id } : null;
 }
 
+// Durée en mois proposée dans le sélecteur admin (plan-select.tsx) —
+// convertie en jours sur la base de 30 jours/mois, cohérente avec
+// `duration_days = 30` déjà utilisé pour un mois "normal" partout ailleurs
+// dans le projet (0001_init.sql, 0016_subscription_plans_v2.sql) plutôt que
+// des mois calendaires de longueur variable.
+const DAYS_PER_MONTH = 30;
+
 /**
  * Assigne/change manuellement le plan d'abonnement d'une boutique
  * (cahier des charges §3.1.C.3 — "Gestion des abonnements").
@@ -31,20 +38,32 @@ async function requireAdmin() {
  * (`applyPlanToShop`, src/lib/subscription.ts) est désormais partagée avec
  * le webhook de paiement — un seul endroit, pas deux implémentations qui
  * pourraient diverger.
+ *
+ * `durationMonths` (23/09/2026) — question directe d'Isaac : en attendant
+ * PawaPay, l'encaissement se fait manuellement, et un vendeur peut très bien
+ * payer plusieurs mois d'un coup. `undefined`/`1` retombe sur le
+ * comportement d'origine (30 jours, la valeur `duration_days` du plan) ;
+ * toute autre valeur passe une durée explicite à `applyPlanToShop`.
  */
-export async function assignPlan(shopId: string, planCode: string) {
+export async function assignPlan(shopId: string, planCode: string, durationMonths?: number) {
   const admin = await requireAdmin();
   if (!admin) return;
   const { supabase, userId } = admin;
 
-  const result = await applyPlanToShop(supabase, shopId, planCode);
+  const durationDays =
+    durationMonths && durationMonths > 1 ? durationMonths * DAYS_PER_MONTH : undefined;
+
+  const result = await applyPlanToShop(supabase, shopId, planCode, durationDays);
   if (!result) return;
 
   await supabase.from("transaction_logs").insert({
     actor_id: userId,
     shop_id: shopId,
     action: "subscription_plan_assigned",
-    metadata: { plan: result.planCode },
+    // `duration_months` consigné pour garder une trace de ce qui a
+    // réellement été accordé (encaissement manuel) — 1 par défaut quand
+    // aucune durée explicite n'a été choisie.
+    metadata: { plan: result.planCode, duration_months: durationMonths ?? 1 },
   });
 
   if (result.deactivatedProductIds.length > 0) {
