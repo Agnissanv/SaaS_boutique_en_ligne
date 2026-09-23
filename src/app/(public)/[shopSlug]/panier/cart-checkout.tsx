@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
@@ -55,6 +55,52 @@ export function CartCheckout({
   // 0023), un code invalide/expiré remonte comme une erreur de commande
   // normale (voir handleSubmitOrder) plutôt qu'un aller-retour séparé.
   const [promoCode, setPromoCode] = useState("");
+  const abandonedCartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Paniers abandonnés (23/09/2026, voir migration 0044) : capture
+  // silencieuse et débattue (1,5s), dès que le client a rempli un nom et un
+  // numéro qui ressemble à un vrai téléphone à l'étape "commande" — jamais
+  // visible pour le client, jamais bloquant (best-effort, erreur ignorée).
+  // Si la commande aboutit, la ligne est effacée juste après (voir
+  // handleSubmitOrder ci-dessous). La relance elle-même reste 100% manuelle
+  // côté vendeur (bouton WhatsApp sur /dashboard/paniers-abandonnes) :
+  // aucun email, aucun envoi automatique fait au nom de KEVA — décision
+  // explicite d'Isaac pour ne pas toucher au quota Brevo partagé par toute
+  // la plateforme. Voir le raisonnement complet dans la migration.
+  useEffect(() => {
+    if (step !== "commande" || items.length === 0) return;
+
+    const digits = customerPhone.replace(/[^0-9]/g, "");
+    const name = customerName.trim();
+    if (name.length === 0 || digits.length < 8) return;
+
+    if (abandonedCartTimeoutRef.current) clearTimeout(abandonedCartTimeoutRef.current);
+    abandonedCartTimeoutRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const supabase = createClient();
+          await supabase.rpc("save_abandoned_cart", {
+            p_shop_id: shopId,
+            p_customer_name: name,
+            p_customer_phone: customerPhone,
+            p_cart_snapshot: items.map((i) => ({
+              title: i.title,
+              quantity: i.quantity,
+              price: i.price,
+              variantLabel: i.variantLabel ?? null,
+            })),
+            p_cart_total: total,
+          });
+        } catch {
+          // Best-effort et invisible pour le client — jamais d'erreur affichée.
+        }
+      })();
+    }, 1500);
+
+    return () => {
+      if (abandonedCartTimeoutRef.current) clearTimeout(abandonedCartTimeoutRef.current);
+    };
+  }, [step, customerName, customerPhone, items, total, shopId]);
 
   // Beaucoup d'adresses à Abidjan n'ont pas de repère écrit fiable : on
   // propose au client de partager sa position GPS en plus de l'adresse
@@ -139,6 +185,15 @@ export function CartCheckout({
     }
 
     clear();
+    // Le panier a été confirmé, il n'est plus "abandonné" — voir migration
+    // 0044. Best-effort : la commande a déjà réussi, une erreur ici ne doit
+    // jamais faire échouer le parcours client.
+    supabase
+      .rpc("clear_abandoned_cart", { p_shop_id: shopId, p_customer_phone: customerPhone })
+      .then(
+        () => {},
+        () => {}
+      );
     // Best-effort, non bloquant : on ne fait jamais attendre le client pour
     // l'envoi d'un email au vendeur (voir notify-vendor-action.ts).
     notifyVendorNewOrder(orderId).catch(() => {});

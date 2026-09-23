@@ -23,6 +23,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/dashboard", label: "Aperçu", icon: IconGrid },
       { href: "/dashboard/produits", label: "Produits", icon: IconBox },
       { href: "/dashboard/commandes", label: "Commandes", icon: IconReceipt },
+      { href: "/dashboard/paniers-abandonnes", label: "Paniers abandonnés", icon: IconCartAlert },
       { href: "/dashboard/statistiques", label: "Statistiques", icon: IconChart },
       { href: "/dashboard/avis", label: "Avis", icon: IconStar },
     ],
@@ -133,6 +134,18 @@ function IconReceipt(props: React.SVGProps<SVGSVGElement>) {
 }
 
 /** Ajoutée le 16/09/2026 pour "Statistiques" (plan Business+, has_advanced_stats). */
+/** Ajoutée le 23/09/2026 pour "Paniers abandonnés" (Business+, voir migration 0044). */
+function IconCartAlert(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 4h2l2.2 11.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20.5 8H6" />
+      <circle cx="9.5" cy="20" r="1.4" />
+      <circle cx="17" cy="20" r="1.4" />
+      <path d="M17 3.5v4M15 5.5h4" />
+    </svg>
+  );
+}
+
 function IconChart(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
