@@ -124,7 +124,7 @@ export async function generateMetadata({
   const description = shop.description
     ? truncate(shop.description, 155)
     : `Découvre les produits de ${shop.name} sur KEVA : commande sans compte, paiement à la livraison.`;
-  const image = shop.cover_url || shop.logo_url || "/keva-logo.jpg";
+  const image = shop.cover_url || shop.logo_url || "/keva-logo-og.jpg";
 
   return {
     title,

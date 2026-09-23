@@ -166,7 +166,7 @@ export async function generateMetadata({
   const images = [...(product.product_images ?? [])].sort(
     (a: { position: number }, b: { position: number }) => a.position - b.position
   );
-  const image = images[0]?.url || "/keva-logo.jpg";
+  const image = images[0]?.url || "/keva-logo-og.jpg";
   const canonicalUrl = `${siteUrl}/${shopSlug}/${productSlug}`;
 
   return {

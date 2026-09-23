@@ -34,11 +34,24 @@ const plexMono = IBM_Plex_Mono({
 
 // `metadataBase` (16/09/2026, enrichissement partage social) : nécessaire
 // pour que les `openGraph.images` déclarés avec un chemin relatif (ex.
-// "/keva-logo.jpg", utilisé en repli boutique/produit sans photo) se
+// "/keva-logo-og.jpg", utilisé en repli boutique/produit sans photo) se
 // résolvent en URL absolue — sans ça, Next.js les laisse relatifs et la
 // plupart des clients de prévisualisation (WhatsApp, Instagram, Messenger)
 // n'affichent alors aucune image. Même variable d'environnement que les
 // liens envoyés par email ailleurs dans le projet (ex. `commandes/actions.ts`).
+//
+// Deux fichiers logo distincts depuis le 23/09/2026 (bug de partage remonté
+// par Isaac — voir decisions-techniques.md) : `keva-logo.jpg` est le mark
+// carré (utilisé tel quel dans les en-têtes de l'appli, à côté du texte
+// "KEVA" déjà affiché séparément, et dans `Organization.logo` ci-dessous, un
+// logo carré étant la forme attendue par schema.org) ; `keva-logo-og.jpg` est
+// une version large (1200×630, avec le mot "KEVA" inclus dans l'image
+// puisque rien d'autre ne l'affiche à côté sur une carte de partage) dédiée
+// aux `openGraph.images`/`twitter.images`. Avant cette date, un seul fichier
+// carré faisait les deux métiers — d'où des cartes de partage tronquées par
+// endroits. Isaac a aussi changé le logo KEVA lui-même le 23/09/2026 (nouveau
+// mark "K" en forme de caddie) : les deux fichiers ont été régénérés à cette
+// occasion à partir du nouveau logo, en même temps que `public/icons/*`.
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 // Titre/description/OG révisés le 23/09/2026 (audit SEO externe transmis par
@@ -97,7 +110,7 @@ export const metadata: Metadata = {
     title,
     description,
     siteName: "KEVA",
-    images: ["/keva-logo.jpg"],
+    images: ["/keva-logo-og.jpg"],
     locale: "fr_CI",
     type: "website",
     url: siteUrl,
@@ -106,7 +119,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/keva-logo.jpg"],
+    images: ["/keva-logo-og.jpg"],
   },
   manifest: "/manifest.json",
   // statusBarStyle "black" plutôt que "default" (blanc) : le bandeau système
