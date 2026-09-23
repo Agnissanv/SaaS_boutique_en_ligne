@@ -50,17 +50,28 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
  * l'identique pour rester cohérent visuellement entre les deux formulaires :
  * une tuile cliquable en pointillés qui déclenche un input file caché
  * (`fileInputRef`), plutôt que de réinventer un style différent ici.
+ *
+ * `hint` ajouté le 23/09/2026 : Isaac a vu une boutique où le vendeur avait
+ * mis sa bannière à la place du logo (recadrée en rond, donc moche) —
+ * "je suppose qu'elle n'avait pas encore vu la possibilité d'ajouter un
+ * logo". Les deux champs se ressemblaient à l'œil (même tuile, même texte
+ * "Ajouter"), rien ne disait que l'un est carré (logo, recadré en rond) et
+ * l'autre large (bannière). Une phrase simple par champ plutôt qu'un
+ * pourcentage/ratio technique — l'objectif d'Isaac est "rendre simple, pas
+ * compliqué".
  */
 function ImageField({
   label,
   fieldName,
   subpath,
   initialUrl,
+  hint,
 }: {
   label: string;
   fieldName: string;
   subpath: string;
   initialUrl: string | null | undefined;
+  hint: string;
 }) {
   const [url, setUrl] = useState(initialUrl ?? "");
   const [uploading, setUploading] = useState(false);
@@ -101,6 +112,7 @@ function ImageField({
   return (
     <div className="flex flex-col gap-1">
       <label className="text-sm font-medium text-encre">{label}</label>
+      <p className="text-xs text-encre/50">{hint}</p>
       <input type="hidden" name={fieldName} value={url} />
       {url ? (
         <div className="flex items-center gap-3">
@@ -228,6 +240,7 @@ export function ShopForm({
           fieldName="logoUrl"
           subpath="shop/logo"
           initialUrl={shop?.logo_url}
+          hint="Photo carrée, comme une photo de profil (elle s'affiche dans un rond) — ex. 500×500 px."
         />
       ) : (
         <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
@@ -239,6 +252,7 @@ export function ShopForm({
         fieldName="coverUrl"
         subpath="shop/cover"
         initialUrl={shop?.cover_url}
+        hint="Photo large, comme une bannière (pas carrée) — ex. 1200×400 px."
       />
 
       {canCustomizeBranding === "complete" ? (
