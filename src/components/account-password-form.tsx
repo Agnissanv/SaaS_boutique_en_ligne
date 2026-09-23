@@ -11,9 +11,9 @@ import { PASSWORD_MIN_LENGTH as MIN_LENGTH } from "@/lib/auth-constants";
  * entièrement générique, aucune raison d'en garder une deuxième copie.
  *
  * Même appel `supabase.auth.updateUser({ password })` que le flux "mot de
- * passe oublié" (connexion/nouveau-mot-de-passe-form.tsx), mais sans passer
- * par un lien de réinitialisation par email puisque la session est déjà
- * valide ici.
+ * passe oublié" (connexion-form.tsx, passé à un code par email le
+ * 23/09/2026 — voir ce fichier), mais sans code à vérifier ni email à
+ * envoyer puisque la session est déjà valide ici.
  */
 export function PasswordForm() {
   const supabase = createClient();

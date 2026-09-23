@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
 import { GoogleAuthButton } from "@/components/google-auth-button";
 
 /**
@@ -16,27 +17,45 @@ import { GoogleAuthButton } from "@/components/google-auth-button";
  * /dashboard — pas de branchement par rôle nécessaire, ce portail n'est
  * utilisé que pour ça.
  *
+ * **Passage du lien au code, le 23/09/2026** — même changement, même
+ * raisonnement que sur /connexion (vendeur/admin, voir ce fichier pour le
+ * détail complet) : remontée d'Isaac comme quoi la réinitialisation de mot
+ * de passe est trouvée "compliquée" côté utilisateurs, cause probable étant
+ * le lien cliquable (flux PKCE, pièges déjà connus : expiré, déjà utilisé,
+ * ouvert dans un autre navigateur/appli). Décision confirmée par Isaac :
+ * code à 6 chiffres PAR EMAIL (pas SMS, pas de coût récurrent), sur les deux
+ * flux (connexion par code ET mot de passe oublié).
+ *
  * Fonctionnalités calquées sur connexion-form.tsx (vendeur) : mot de passe +
- * lien magique + mot de passe oublié — le lien magique est même plus adapté
- * ici, beaucoup de clients WhatsApp/Instagram préférant ne rien retenir.
+ * code par email + mot de passe oublié — le code par email est même plus
+ * adapté ici, beaucoup de clients WhatsApp/Instagram préférant ne rien
+ * retenir.
  */
 export function ConnexionClientForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
 
-  type View = "password" | "magic-sent" | "reset-sent";
+  type View = "password" | "email-code" | "reset-code";
   const [view, setView] = useState<View>("password");
-  const [useMagicLink, setUseMagicLink] = useState(false);
+  const [useEmailCode, setUseEmailCode] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(() =>
     searchParams.get("erreur") === "lien_invalide"
-      ? "Ce lien n'est plus valide (expiré, déjà utilisé, ou ouvert dans un autre navigateur que celui utilisé pour la demande). Réessaie ci-dessous."
+      ? "La connexion avec Google a échoué (lien expiré ou déjà utilisé). Réessaie ci-dessous."
       : null
   );
+
+  function goToAccount() {
+    router.push("/compte");
+    router.refresh();
+  }
 
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -49,26 +68,22 @@ export function ConnexionClientForm() {
 
     if (error || !data.user) {
       setError(
-        "Email ou mot de passe incorrect — ou pas encore de mot de passe défini pour ce compte. Utilise « mot de passe oublié » ci-dessous, ou connecte-toi par lien magique."
+        "Email ou mot de passe incorrect — ou pas encore de mot de passe défini pour ce compte. Utilise « mot de passe oublié » ci-dessous, ou connecte-toi par code reçu par email."
       );
       return;
     }
 
-    router.push("/compte");
-    router.refresh();
+    goToAccount();
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
+  async function handleSendLoginCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setPending(true);
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/compte`,
-      },
+      options: { shouldCreateUser: false },
     });
 
     setPending(false);
@@ -77,15 +92,33 @@ export function ConnexionClientForm() {
       setError(
         error.message.includes("rate limit")
           ? "Trop de tentatives : réessaie dans quelques minutes."
-          : "Impossible d'envoyer l'email — vérifie l'adresse, ou crée un compte si tu n'en as pas encore."
+          : "Impossible d'envoyer le code — vérifie l'adresse, ou crée un compte si tu n'en as pas encore."
       );
       return;
     }
 
-    setView("magic-sent");
+    setCode("");
+    setView("email-code");
   }
 
-  async function handleForgotPassword() {
+  async function handleVerifyLoginCode(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+
+    setPending(false);
+
+    if (error || !data.user) {
+      setError("Code invalide ou expiré. Vérifie le code reçu par email, ou demande-en un nouveau.");
+      return;
+    }
+
+    goToAccount();
+  }
+
+  async function handleSendResetCode() {
     if (!email) {
       setError("Renseigne d'abord ton adresse email ci-dessus.");
       return;
@@ -93,15 +126,50 @@ export function ConnexionClientForm() {
     setError(null);
     setPending(true);
 
-    // Réutilise la page partagée /connexion/nouveau-mot-de-passe (mécanique
-    // Supabase identique quel que soit le rôle) : elle redirige maintenant
-    // via roleHomePath(), donc un client atterrit bien sur /compte ensuite.
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/connexion/nouveau-mot-de-passe`,
-    });
+    // On ignore volontairement le résultat détaillé (existence du compte) :
+    // même message dans tous les cas, pour ne pas révéler quels emails sont
+    // inscrits sur la plateforme.
+    await supabase.auth.resetPasswordForEmail(email);
 
     setPending(false);
-    setView("reset-sent");
+    setCode("");
+    setNewPassword("");
+    setNewPasswordConfirm("");
+    setView("reset-code");
+  }
+
+  async function handleVerifyResetCode(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+      setError(`Le mot de passe doit faire au moins ${PASSWORD_MIN_LENGTH} caractères.`);
+      return;
+    }
+    if (newPassword !== newPasswordConfirm) {
+      setError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setPending(true);
+
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
+
+    if (error || !data.user) {
+      setPending(false);
+      setError("Code invalide ou expiré. Vérifie le code reçu par email, ou demande-en un nouveau.");
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setPending(false);
+
+    if (updateError) {
+      setError("Code vérifié, mais impossible d'enregistrer le mot de passe. Réessaie.");
+      return;
+    }
+
+    goToAccount();
   }
 
   return (
@@ -117,12 +185,12 @@ export function ConnexionClientForm() {
         {view === "password" && (
           <>
             <p className="mt-1 text-sm text-encre/70">
-              {useMagicLink
-                ? "Reçois un lien de connexion par email."
+              {useEmailCode
+                ? "Reçois un code de connexion par email."
                 : "Retrouve tes commandes passées sur KEVA."}
             </p>
 
-            {!useMagicLink ? (
+            {!useEmailCode ? (
               <form onSubmit={handlePasswordLogin} className="mt-6 flex flex-col gap-3">
                 <label className="text-sm font-medium text-encre" htmlFor="email">
                   Adresse email
@@ -146,7 +214,7 @@ export function ConnexionClientForm() {
                   </label>
                   <button
                     type="button"
-                    onClick={handleForgotPassword}
+                    onClick={handleSendResetCode}
                     className="text-xs text-vert-actif underline"
                   >
                     Oublié / pas encore défini ?
@@ -177,21 +245,21 @@ export function ConnexionClientForm() {
                 <button
                   type="button"
                   onClick={() => {
-                    setUseMagicLink(true);
+                    setUseEmailCode(true);
                     setError(null);
                   }}
                   className="text-center text-sm text-encre/60 underline"
                 >
-                  Se connecter par lien magique à la place
+                  Se connecter avec un code reçu par email à la place
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleMagicLink} className="mt-6 flex flex-col gap-3">
-                <label className="text-sm font-medium text-encre" htmlFor="email-magic">
+              <form onSubmit={handleSendLoginCode} className="mt-6 flex flex-col gap-3">
+                <label className="text-sm font-medium text-encre" htmlFor="email-code">
                   Adresse email
                 </label>
                 <input
-                  id="email-magic"
+                  id="email-code"
                   name="email"
                   type="email"
                   required
@@ -208,12 +276,12 @@ export function ConnexionClientForm() {
                   disabled={pending}
                   className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
                 >
-                  {pending ? "Envoi..." : "Recevoir le lien"}
+                  {pending ? "Envoi..." : "Recevoir le code"}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setUseMagicLink(false);
+                    setUseEmailCode(false);
                     setError(null);
                   }}
                   className="text-center text-sm text-encre/60 underline"
@@ -241,43 +309,151 @@ export function ConnexionClientForm() {
           </>
         )}
 
-        {view === "magic-sent" && (
-          <div className="mt-6 flex flex-col gap-3">
+        {view === "email-code" && (
+          <form onSubmit={handleVerifyLoginCode} className="mt-6 flex flex-col gap-3">
             <p className="text-sm text-encre/70">
-              Email envoyé à {email}. Clique sur le lien reçu pour te
-              connecter. Pense à vérifier tes spams s&apos;il n&apos;arrive
+              Code envoyé à {email}. Vérifie tes spams s&apos;il n&apos;arrive
               pas après quelques minutes.
             </p>
+            <label className="text-sm font-medium text-encre" htmlFor="login-otp">
+              Code à 6 chiffres
+            </label>
+            <input
+              id="login-otp"
+              name="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              required
+              autoFocus
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+              className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
+            />
+
+            {error && <p className="text-sm text-erreur">{error}</p>}
+
             <button
-              type="button"
-              onClick={() => {
-                setView("password");
-                setError(null);
-              }}
-              className="text-sm text-encre/60 underline"
+              type="submit"
+              disabled={pending}
+              className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
             >
-              Retour
+              {pending ? "Vérification..." : "Se connecter"}
             </button>
-          </div>
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                onClick={handleSendLoginCode}
+                disabled={pending}
+                className="text-vert-actif underline disabled:opacity-50"
+              >
+                Renvoyer le code
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setView("password");
+                  setError(null);
+                }}
+                className="text-encre/60 underline"
+              >
+                Retour
+              </button>
+            </div>
+          </form>
         )}
 
-        {view === "reset-sent" && (
-          <div className="mt-6 flex flex-col gap-3">
+        {view === "reset-code" && (
+          <form onSubmit={handleVerifyResetCode} className="mt-6 flex flex-col gap-3">
             <p className="text-sm text-encre/70">
-              Si un compte existe avec l&apos;adresse {email}, un email vient
-              de lui être envoyé pour définir un mot de passe.
+              Si un compte existe avec l&apos;adresse {email}, un code vient
+              de lui être envoyé par email. Vérifie tes spams s&apos;il
+              n&apos;arrive pas après quelques minutes.
             </p>
+            <label className="text-sm font-medium text-encre" htmlFor="reset-otp">
+              Code à 6 chiffres
+            </label>
+            <input
+              id="reset-otp"
+              name="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              required
+              autoFocus
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+              className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
+            />
+
+            <label className="text-sm font-medium text-encre" htmlFor="reset-new-password">
+              Nouveau mot de passe
+            </label>
+            <input
+              id="reset-new-password"
+              name="new-password"
+              type="password"
+              required
+              autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="••••••••"
+              className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+            />
+
+            <label className="text-sm font-medium text-encre" htmlFor="reset-confirm-password">
+              Confirme le mot de passe
+            </label>
+            <input
+              id="reset-confirm-password"
+              name="confirm-password"
+              type="password"
+              required
+              autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              value={newPasswordConfirm}
+              onChange={(e) => setNewPasswordConfirm(e.target.value)}
+              placeholder="••••••••"
+              className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+            />
+
+            {error && <p className="text-sm text-erreur">{error}</p>}
+
             <button
-              type="button"
-              onClick={() => {
-                setView("password");
-                setError(null);
-              }}
-              className="text-sm text-encre/60 underline"
+              type="submit"
+              disabled={pending}
+              className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
             >
-              Retour
+              {pending ? "Enregistrement..." : "Réinitialiser le mot de passe"}
             </button>
-          </div>
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                onClick={handleSendResetCode}
+                disabled={pending}
+                className="text-vert-actif underline disabled:opacity-50"
+              >
+                Renvoyer le code
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setView("password");
+                  setError(null);
+                }}
+                className="text-encre/60 underline"
+              >
+                Retour
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>

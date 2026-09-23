@@ -3,27 +3,27 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveHomePath } from "@/lib/auth-constants";
 
 /**
- * Point d'arrivée du lien magique envoyé par email (Supabase Auth).
+ * Point d'arrivée du flux OAuth "Se connecter avec Google" (Supabase Auth).
  * Route : /auth/callback?code=...
  *
- * Supabase (flux PKCE, actif par défaut côté navigateur) envoie par défaut
- * un email contenant un LIEN plutôt qu'un simple code à 6 chiffres, même
- * quand on appelle `signInWithOtp`. Sans cette route, cliquer sur ce lien
- * renvoyait vers la page d'accueil avec un `?code=...` jamais consommé —
- * l'utilisateur restait non connecté sans comprendre pourquoi.
+ * **Le 23/09/2026, cette route a cessé de servir le lien magique et le mot
+ * de passe oublié** : ces deux flux (voir connexion-form.tsx) sont passés
+ * d'un lien cliquable par email à un code à 6 chiffres vérifié directement
+ * sur place (`verifyOtp`), sans plus jamais transiter par ici — remontée
+ * d'Isaac comme quoi ces liens étaient une source de friction ("compliqué"),
+ * avec les pièges déjà rencontrés en pratique (lien expiré, déjà utilisé, ou
+ * ouvert dans un autre navigateur/appli que celui ayant fait la demande —
+ * limite connue du PKCE, le `code_verifier` restant dans le navigateur
+ * d'origine). Cette route reste nécessaire pour Google : OAuth échange
+ * toujours un `?code=` par nature, aucune alternative "code à 6 chiffres"
+ * possible pour ce flux-là.
  *
- * Avec `emailRedirectTo` pointé ici (voir connexion-form.tsx), le lien
- * atterrit sur cette route, qui échange le code contre une session, puis
- * redirige vers l'espace correspondant au compte (portail de connexion
+ * Redirige vers l'espace correspondant au compte (portail de connexion
  * unique, cf. demande d'Isaac du 13/09/2026 : "un vrai portail... qui
  * reconnaît le rôle de chacun") — pas un `/dashboard` toujours fixe, qui
  * obligeait un admin à taper /admin lui-même après connexion. Depuis le
  * 21/09/2026, `resolveHomePath` regarde aussi ce que le compte possède
  * réellement (boutique), pas seulement `profiles.role` — voir sa doc.
- *
- * Cette même route sert aussi de retour pour "Se connecter avec Google"
- * (GoogleAuthButton, ajouté le 21/09/2026) — le flux OAuth de Supabase
- * échange lui aussi un `?code=` ici, exactement comme un lien magique.
  *
  * `?portal=customer` (ajouté par GoogleAuthButton uniquement sur le portail
  * client) corrige un problème propre à Google : ses métadonnées OAuth ne
