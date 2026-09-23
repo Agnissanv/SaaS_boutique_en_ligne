@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getShopSubscription } from "@/lib/subscription";
+import { getShopSubscription, parseFeatureFlags } from "@/lib/subscription";
 import { ShopForm } from "./shop-form";
 import { ShareShopLinks } from "./share-shop-links";
 import { acceptCollaboratorInvite } from "./actions";
@@ -62,14 +62,35 @@ export default async function ShopSettingsPage() {
     }
   }
 
-  // Personnalisation de la marque : logo (Business+) et couleur d'accent
-  // (Pro) — ajouté le 16/09/2026, voir shop-form.tsx/actions.ts pour
-  // l'application complète. Pas de boutique = pas d'abonnement encore : la
-  // création se fait toujours sans logo/couleur (équivalent Starter), voir
-  // le raisonnement dans actions.ts.
-  const canCustomizeBranding = shop
-    ? (await getShopSubscription(supabase, shop.id)).features.canCustomizeBranding
-    : "none";
+  // Personnalisation de la marque : logo (tous plans depuis le 22/09/2026,
+  // migration 0041_starter_logo_unlock.sql) et couleur d'accent (Pro) —
+  // ajouté le 16/09/2026, voir shop-form.tsx/actions.ts pour l'application
+  // complète.
+  //
+  // Pas de boutique = pas d'abonnement encore, donc on ne peut pas lire
+  // `getShopSubscription` (elle a besoin d'un shop.id). Corrigé le
+  // 23/09/2026 : ce cas hardcodait "none" ("équivalent Starter"), exact au
+  // 16/09/2026 mais jamais mis à jour quand Starter a débloqué le logo le
+  // 22/09/2026 — un vendeur créant sa boutique voyait donc "Logo réservé au
+  // plan Business" alors que son futur plan Starter l'autorise déjà (bug
+  // remonté par Isaac juste après le lancement). On lit maintenant le plan
+  // Starter réel en base au lieu de deviner sa valeur en dur, pour ne plus
+  // jamais diverger si ce plan change à nouveau (même logique que
+  // DEFAULT_FEATURE_FLAGS/parseFeatureFlags dans subscription.ts, qui reste
+  // volontairement à "none" pour un cas différent : une boutique EXISTANTE
+  // sans abonnement du tout, un cas anormal, pas la création).
+  let canCustomizeBranding: "none" | "basic" | "complete" = "none";
+  if (shop) {
+    canCustomizeBranding = (await getShopSubscription(supabase, shop.id)).features
+      .canCustomizeBranding;
+  } else {
+    const { data: starterPlan } = await supabase
+      .from("subscription_plans")
+      .select("features")
+      .eq("code", "starter")
+      .maybeSingle();
+    canCustomizeBranding = parseFeatureFlags(starterPlan?.features).canCustomizeBranding;
+  }
 
   if (pendingInvite) {
     return (

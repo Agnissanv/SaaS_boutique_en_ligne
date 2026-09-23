@@ -134,8 +134,15 @@ export const DEFAULT_FEATURE_FLAGS: ShopFeatureFlags = {
  * soit le plan — jamais une fonctionnalité à vendre). Voir
  * supabase/migrations/0019_drop_can_remove_branding.sql, qui retire aussi la
  * clé du jsonb en base pour qu'elle ne puisse pas resurgir par erreur.
+ *
+ * Exportée le 23/09/2026 pour être réutilisée par `dashboard/boutique/
+ * page.tsx` au moment de la CRÉATION d'une boutique (pas encore d'abonnement
+ * en base) : ce cas doit refléter le plan Starter réel, pas le filet de
+ * sécurité `DEFAULT_FEATURE_FLAGS` ci-dessus (qui, lui, reste volontairement
+ * figé à "none" pour un cas anormal — voir son commentaire). Un seul point de
+ * décodage du jsonb, comme partout ailleurs dans ce fichier.
  */
-function parseFeatureFlags(features: unknown): ShopFeatureFlags {
+export function parseFeatureFlags(features: unknown): ShopFeatureFlags {
   const f = (features ?? {}) as Record<string, unknown>;
   return {
     maxProducts:

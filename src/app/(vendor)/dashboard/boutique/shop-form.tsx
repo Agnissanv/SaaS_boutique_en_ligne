@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { saveShop, type ShopFormState } from "./actions";
 import {
@@ -38,7 +38,19 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   );
 }
 
-/** Upload d'une image unique (logo ou couverture) avec aperçu et suppression. */
+/**
+ * Upload d'une image unique (logo ou couverture) avec aperçu et suppression.
+ *
+ * Tuile "Ajouter" refondue le 23/09/2026 : même bug que celui déjà corrigé
+ * le 22/09/2026 sur l'ajout de photo produit (`product-form.tsx`) — un
+ * `<input type="file">` natif sans aucun style, invisible comme bouton dans
+ * n'importe quel navigateur. Repéré ici par Isaac juste après le lancement
+ * ("je ne vois même pas de champ comme bouton intuitif"), sur ce champ-ci qui
+ * n'avait pas été touché par le correctif du 22/09. Même solution reprise à
+ * l'identique pour rester cohérent visuellement entre les deux formulaires :
+ * une tuile cliquable en pointillés qui déclenche un input file caché
+ * (`fileInputRef`), plutôt que de réinventer un style différent ici.
+ */
 function ImageField({
   label,
   fieldName,
@@ -53,6 +65,7 @@ function ImageField({
   const [url, setUrl] = useState(initialUrl ?? "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -106,14 +119,24 @@ function ImageField({
           </button>
         </div>
       ) : (
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleChange}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="text-sm text-encre/80"
-        />
+          className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/50 transition hover:border-vert-actif hover:text-vert-actif disabled:opacity-50"
+        >
+          <span className="text-xl leading-none">+</span>
+          <span className="text-[10px] font-medium">Ajouter</span>
+        </button>
       )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleChange}
+        disabled={uploading}
+        className="hidden"
+      />
       {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
       {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
