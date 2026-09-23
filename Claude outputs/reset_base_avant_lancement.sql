@@ -66,10 +66,19 @@ BEGIN
   DELETE FROM public.transaction_logs;
   DELETE FROM public.contact_messages;
 
+  -- order_items.product_id et order_item_variants.variant_id n'ont PAS
+  -- de ON DELETE cascade/set null (0001_init.sql / 0010_...sql) — donc
+  -- sans cette suppression explicite, la cascade depuis auth.users
+  -- essaie de supprimer un produit/une variante encore reference(e)
+  -- par un order_item, et Postgres refuse (contrainte de cle
+  -- etrangere violee). order_item_variants se vide tout seul en
+  -- cascade derriere (order_item_id -> order_items, on delete cascade).
+  DELETE FROM public.order_items;
+
   -- Tout le reste (profiles, shops, products, orders, promo_codes,
   -- subscriptions, shop_admin_notes, shop_page_views, abandoned_carts,
   -- shop_collaborators, product_images, product_variants,
-  -- product_reviews, order_items, order_item_variants, notifications,
+  -- product_reviews, order_item_variants, notifications,
   -- guest_claim_rate_limits) part en cascade depuis auth.users.
   -- `subscription_plans` n'a aucune cle etrangere qui la vise : elle
   -- n'est pas touchee, elle reste intacte comme demande.
@@ -91,6 +100,7 @@ SELECT
   (SELECT count(*) FROM public.shops)              AS boutiques_restantes,  -- attendu : 0
   (SELECT count(*) FROM public.products)           AS produits_restants,    -- attendu : 0
   (SELECT count(*) FROM public.orders)             AS commandes_restantes,  -- attendu : 0
+  (SELECT count(*) FROM public.order_items)        AS articles_restants,    -- attendu : 0
   (SELECT count(*) FROM public.payments)           AS paiements_restants,   -- attendu : 0
   (SELECT count(*) FROM public.transaction_logs)   AS logs_restants,        -- attendu : 0
   (SELECT count(*) FROM public.contact_messages)   AS messages_restants,    -- attendu : 0
