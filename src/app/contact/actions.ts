@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendContactMessageEmail } from "@/lib/email/contact-message";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export type ContactFormState = {
   error?: string;
@@ -16,11 +18,24 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Action volontairement accessible sans authentification : un client invité
  * (sans compte) ou quelqu'un bloqué hors de son compte doit pouvoir joindre
  * le support, exactement comme avec l'ancien mailto:.
+ *
+ * Limité à 5 envois / 10 minutes par IP (28/09/2026, audit pré-lancement) —
+ * voir src/lib/rate-limit.ts. Manquait jusqu'ici : rien n'empêchait un
+ * script de remplir `contact_messages` en boucle.
  */
 export async function sendContactMessage(
   _prevState: ContactFormState,
   formData: FormData
 ): Promise<ContactFormState> {
+  const ip = getClientIp(await headers());
+  const allowed = await checkRateLimit("contact_form", ip, {
+    maxAttempts: 5,
+    windowMinutes: 10,
+  });
+  if (!allowed) {
+    return { error: "Trop de messages envoyés récemment. Réessaie dans quelques minutes." };
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();

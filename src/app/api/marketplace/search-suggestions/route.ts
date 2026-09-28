@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getEffectivePrice } from "@/lib/products";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * Suggestions de recherche marketplace (autocomplete) — ajouté le 21/09/2026,
@@ -29,6 +30,19 @@ export async function GET(request: NextRequest) {
 
   if (q.length < MIN_QUERY_LENGTH) {
     return NextResponse.json({ products: [], shops: [] });
+  }
+
+  // 60 requêtes / minute par IP (28/09/2026, audit pré-lancement) — généreux
+  // pour une frappe normale au clavier (une requête par lettre tapée), mais
+  // empêche un script d'appeler cette route en boucle pour rien. Voir
+  // src/lib/rate-limit.ts.
+  const ip = getClientIp(request.headers);
+  const allowed = await checkRateLimit("search_suggestions", ip, {
+    maxAttempts: 60,
+    windowMinutes: 1,
+  });
+  if (!allowed) {
+    return NextResponse.json({ products: [], shops: [] }, { status: 429 });
   }
 
   const supabase = await createClient();
