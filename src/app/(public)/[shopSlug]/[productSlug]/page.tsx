@@ -13,6 +13,8 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
+import { MobileMoneyBadge } from "@/components/mobile-money-badge";
+import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
 import { LOW_STOCK_THRESHOLD, getEffectivePrice } from "@/lib/products";
 import { RecordProductView } from "@/components/record-product-view";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
@@ -127,7 +129,7 @@ const getProductForPublicPage = cache(async (shopSlug: string, productSlug: stri
   const { data: product } = await supabase
     .from("products")
     .select(
-      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, accent_color), product_images(url, position), product_variants(id, name, value, extra_price)"
+      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, mobile_money_number, mobile_money_operator, accent_color), product_images(url, position), product_variants(id, name, value, extra_price)"
     )
     .eq("slug", productSlug)
     .eq("shop.slug", shopSlug)
@@ -415,6 +417,18 @@ export default async function ProductPage({
               />
             ) : null}
           </div>
+
+          {/* Numéro Mobile Money du vendeur (29/09/2026) — voir
+              decisions-techniques.md, même badge purement informatif que sur
+              la page boutique. */}
+          {shop.mobile_money_number && shop.mobile_money_operator && isMobileMoneyOperator(shop.mobile_money_operator) ? (
+            <div className="mt-2">
+              <MobileMoneyBadge
+                operator={shop.mobile_money_operator}
+                number={shop.mobile_money_number}
+              />
+            </div>
+          ) : null}
 
           {/* `id="acheter"` : cible du scroll de la barre fixe mobile
               (`sticky-add-to-cart-bar.tsx`), voir son commentaire pour le

@@ -48,6 +48,17 @@ export const runtime = "nodejs";
  * Email de confirmation (29/09/2026) : `payment.completed` déclenche aussi
  * `sendSubscriptionPaymentReceiptEmail` (voir
  * email/subscription-payment-receipt.ts) — best-effort, jamais bloquant.
+ *
+ * Ce webhook ne gère QUE les paiements d'abonnement — le paiement en ligne
+ * des commandes clients via Nyole a été construit le 29/09/2026 puis
+ * abandonné le jour même sur décision d'Isaac (centraliser l'argent des
+ * ventes sur le compte Nyole de KEVA avec reversement manuel aux vendeurs
+ * était jugé être une responsabilité inutile pour la plateforme — "Keva n'a
+ * pas à gérer ça [...] Shopify ne fait pas ça"). Voir
+ * claude/decisions-techniques.md pour le détail de la marche arrière ; les
+ * vendeurs qui veulent du Mobile Money renseignent désormais leur propre
+ * numéro sur leur fiche boutique (`shops.mobile_money_number`), en dehors de
+ * tout parcours KEVA.
  */
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();

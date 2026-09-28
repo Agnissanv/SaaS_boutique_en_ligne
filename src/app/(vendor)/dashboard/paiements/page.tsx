@@ -41,11 +41,17 @@ type Order = {
  * (le vendeur a physiquement reçu l'argent à la livraison) ; "en attente" =
  * commandes payées/en préparation (l'argent sera encaissé à la livraison,
  * pas encore fait) ; les commandes annulées ne comptent jamais. C'est une
- * approximation qui donne une vraie valeur au vendeur dès maintenant, à
- * remplacer par un vrai relevé de transactions une fois le paiement en
- * ligne des commandes CLIENT branché (distinct du paiement d'abonnement
- * Nyole déjà actif, qui ne concerne que KEVA) — voir
- * claude/decisions-techniques.md pour le détail de ce choix.
+ * approximation qui donne une vraie valeur au vendeur dès maintenant.
+ *
+ * **29/09/2026** : un paiement en ligne des commandes (Mobile Money via
+ * Nyole, centralisé sur le compte KEVA avec reversement manuel) a été
+ * construit puis abandonné le jour même sur décision d'Isaac — "Keva n'a
+ * pas à gérer ça [...] Shopify ne fait pas ça". Le paiement à la livraison
+ * reste donc le seul mode réellement actif ; un vendeur qui accepte le
+ * Mobile Money renseigne désormais son propre numéro sur sa fiche boutique
+ * (`shops.mobile_money_number`, voir dashboard/boutique), réglé directement
+ * avec le client, hors de toute logique KEVA — voir
+ * claude/decisions-techniques.md pour le détail de cette marche arrière.
  *
  * **Filtre + pagination ajoutés le 22/09/2026** (audit "filtres partout"
  * d'Isaac) : la liste se chargeait entièrement sans limite. Les deux totaux
@@ -114,9 +120,10 @@ export default async function PaymentsPage({
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Paiements</h1>
       <p className="mt-2 text-sm text-encre/70">
-        Le paiement en ligne (Mobile Money) n&apos;est pas encore disponible :
-        ce relevé se base sur le paiement à la livraison, seul mode actif
-        aujourd&apos;hui.
+        Le paiement en ligne (Mobile Money) n&apos;est pas disponible via
+        KEVA : ce relevé se base sur le paiement à la livraison, seul mode
+        actif aujourd&apos;hui. Renseigne ton propre numéro Mobile Money sur
+        ta fiche boutique si tu veux le proposer directement à tes clients.
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">

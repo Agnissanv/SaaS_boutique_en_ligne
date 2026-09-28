@@ -16,12 +16,19 @@ type Step = "panier" | "commande";
  * principaux en Cuivre Profond, focus des champs en Vert Actif, messages
  * d'erreur/succès sur les tokens sémantiques.
  *
- * Quantité et mode de paiement reconstruits le 15/09/2026 (chantier "langage
- * natif", voir decisions-techniques.md — même geste que la fiche produit) :
- * le `<input type="number">` de chaque ligne de panier devient un compteur
- * [−] [+], et les boutons radio du mode de paiement deviennent des cartes à
- * toucher en entier (le petit rond de radio natif est une cible bien trop
- * étroite au doigt). Logique de commande (RPC, géolocalisation) inchangée.
+ * Quantité reconstruite le 15/09/2026 (chantier "langage natif", voir
+ * decisions-techniques.md — même geste que la fiche produit) : le
+ * `<input type="number">` de chaque ligne de panier devient un compteur
+ * [−] [+]. Logique de commande (RPC, géolocalisation) inchangée.
+ *
+ * **Paiement en ligne (Mobile Money via Nyole) construit puis abandonné le
+ * 29/09/2026** : Isaac a tranché que KEVA ne doit pas centraliser l'argent
+ * des ventes vendeur (voir claude/decisions-techniques.md pour le détail de
+ * la marche arrière) — paiement à la livraison redevient donc le seul mode
+ * de paiement du parcours de commande. Un vendeur qui veut du Mobile Money
+ * renseigne désormais son propre numéro sur sa fiche boutique
+ * (`shops.mobile_money_number`), affiché au client en dehors de ce
+ * checkout, à régler directement entre eux — KEVA n'y participe pas.
  */
 export function CartCheckout({
   shopId,
@@ -44,9 +51,6 @@ export function CartCheckout({
   const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
   const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
   const [geoStatus, setGeoStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
-  const [paymentMethod, setPaymentMethod] = useState<"cash_on_delivery" | "mobile_money">(
-    "cash_on_delivery"
-  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Codes promo — plan Pro (`can_use_promo_codes`, ajouté le 16/09/2026).
@@ -146,7 +150,7 @@ export function CartCheckout({
       p_customer_name: customerName,
       p_customer_phone: customerPhone,
       p_delivery_address: deliveryAddress,
-      p_payment_method: paymentMethod,
+      p_payment_method: "cash_on_delivery",
       p_items: items.map((i) => ({
         product_id: i.productId,
         variant_ids: i.variantIds ?? [],
@@ -399,38 +403,20 @@ export function CartCheckout({
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-encre">Mode de paiement</span>
-        <div role="radiogroup" aria-label="Mode de paiement" className="flex flex-col gap-2">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={paymentMethod === "cash_on_delivery"}
-            onClick={() => setPaymentMethod("cash_on_delivery")}
-            className={`flex items-center justify-between gap-3 rounded-lg border px-3.5 py-3 text-left text-sm ${
-              paymentMethod === "cash_on_delivery"
-                ? "border-vert-actif bg-vert-actif/5 text-encre"
-                : "border-ligne text-encre"
-            }`}
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-vert-actif bg-vert-actif/5 px-3.5 py-3 text-left text-sm text-encre">
+          Paiement à la livraison
+          <span
+            aria-hidden="true"
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-vert-actif"
           >
-            Paiement à la livraison
-            <span
-              aria-hidden="true"
-              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                paymentMethod === "cash_on_delivery" ? "border-vert-actif" : "border-ligne"
-              }`}
-            >
-              {paymentMethod === "cash_on_delivery" && <span className="h-2.5 w-2.5 rounded-full bg-vert-actif" />}
-            </span>
-          </button>
-          <div
-            role="radio"
-            aria-checked={false}
-            aria-disabled="true"
-            className="flex items-center justify-between gap-3 rounded-lg border border-ligne px-3.5 py-3 text-sm text-encre/40"
-          >
-            Mobile Money (Wave, Orange Money...) — bientôt disponible
-            <span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border-2 border-ligne" />
-          </div>
+            <span className="h-2.5 w-2.5 rounded-full bg-vert-actif" />
+          </span>
         </div>
+        <p className="text-xs text-encre/50">
+          Tu paies en espèces à la réception. Si le vendeur accepte le Mobile
+          Money, son numéro est indiqué sur sa fiche boutique — à régler
+          directement avec lui.
+        </p>
       </div>
 
       {error && <p className="text-sm text-erreur">{error}</p>}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/supabase/storage";
 import { CATEGORIES } from "@/lib/categories";
 import { NativeSelect } from "@/components/native-select";
+import { MOBILE_MONEY_OPERATORS, MOBILE_MONEY_OPERATOR_LABELS } from "@/lib/utils/mobile-money";
 
 type Shop = {
   id: string;
@@ -22,6 +23,8 @@ type Shop = {
   accent_color?: string | null;
   delivery_fee?: number | null;
   whatsapp_number?: string | null;
+  mobile_money_number?: string | null;
+  mobile_money_operator?: string | null;
   notification_email?: string | null;
 };
 
@@ -315,6 +318,37 @@ export function ShopForm({
         <p className="text-xs text-encre/50">
           Affiche un bouton « Contacter sur WhatsApp » sur ta boutique et tes
           fiches produit. Laisse vide pour ne pas l&apos;afficher.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-encre">
+          Numéro Mobile Money <span className="text-encre/50">(optionnel)</span>
+        </span>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <NativeSelect
+            id="mobileMoneyOperator"
+            name="mobileMoneyOperator"
+            label="Opérateur"
+            placeholder="Opérateur"
+            defaultValue={shop?.mobile_money_operator ?? ""}
+            options={MOBILE_MONEY_OPERATORS.map((op) => ({ value: op, label: MOBILE_MONEY_OPERATOR_LABELS[op] }))}
+            className="sm:w-48"
+          />
+          <input
+            id="mobileMoneyNumber"
+            name="mobileMoneyNumber"
+            type="tel"
+            placeholder="+225 07 00 00 00 00"
+            defaultValue={shop?.mobile_money_number ?? ""}
+            className="flex-1 rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
+          />
+        </div>
+        <p className="text-xs text-encre/50">
+          Affiché sur ta boutique pour les clients qui veulent payer par
+          Mobile Money directement avec toi — KEVA ne s&apos;occupe pas de ce
+          paiement, c&apos;est entre toi et le client. Laisse vide pour ne
+          pas l&apos;afficher.
         </p>
       </div>
 

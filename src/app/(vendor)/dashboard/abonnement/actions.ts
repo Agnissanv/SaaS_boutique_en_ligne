@@ -2,7 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
-import { createNyoleCheckoutSession, isNyolePaymentsEnabled } from "@/lib/nyole";
+import {
+  createNyoleCheckoutSession,
+  grossUpAmountForNyoleCommission,
+  isNyolePaymentsEnabled,
+} from "@/lib/nyole";
 
 export type InitiatePaymentState = {
   error?: string;
@@ -103,6 +107,15 @@ export async function initiateSubscriptionPayment(
   // session réel de Nyole dès qu'il est connu.
   const transactionId = `sub-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 
+  // Majoration pour que la commission Nyole soit supportée par le vendeur
+  // (le payeur ici), pas par KEVA — voir `grossUpAmountForNyoleCommission`
+  // dans src/lib/nyole.ts (demande explicite d'Isaac, 29/09/2026). Le
+  // vendeur voit donc un montant légèrement supérieur au prix affiché
+  // (2500/7000 FCFA) sur la page Nyole, et c'est CE montant qu'on enregistre
+  // dans `payments.amount` — c'est réellement ce qui a été facturé, la
+  // réconciliation doit s'y référer, pas au prix catalogue.
+  const chargedAmount = grossUpAmountForNyoleCommission(plan.price);
+
   // Enregistré AVANT d'afficher le guichet (même précaution que pour
   // CinetPay) : c'est cette ligne, retrouvée par `provider_transaction_id`,
   // qui dit au webhook QUEL plan activer pour QUELLE boutique une fois le
@@ -112,7 +125,7 @@ export async function initiateSubscriptionPayment(
     provider: "nyole",
     provider_transaction_id: transactionId,
     intent_plan_code: plan.code,
-    amount: plan.price,
+    amount: chargedAmount,
     currency: "XOF",
     status: "pending",
   });
@@ -124,8 +137,8 @@ export async function initiateSubscriptionPayment(
 
   const result = await createNyoleCheckoutSession({
     idempotencyKey: transactionId,
-    amount: plan.price,
-    description: `Abonnement KEVA — Plan ${plan.name}`,
+    amount: chargedAmount,
+    description: `Abonnement KEVA — Plan ${plan.name} (frais de transaction inclus)`,
     successUrl: `${siteUrl}/dashboard/abonnement?paiement=succes`,
     cancelUrl: `${siteUrl}/dashboard/abonnement?paiement=echec`,
     customerEmail: user.email ?? undefined,

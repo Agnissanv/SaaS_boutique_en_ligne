@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
 import { isValidCategory } from "@/lib/categories";
 import { getShopSubscription } from "@/lib/subscription";
+import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -51,10 +52,26 @@ export async function saveShop(
   // l'envoi plutôt que de bloquer l'enregistrement de la boutique.
   const whatsappNumber = String(formData.get("whatsappNumber") ?? "").trim();
   const notificationEmail = String(formData.get("notificationEmail") ?? "").trim();
+  // Numéro Mobile Money du vendeur — ajouté le 29/09/2026 (voir migration
+  // 0047 et decisions-techniques.md). Purement informatif comme
+  // `whatsappNumber` juste au-dessus : KEVA ne traite jamais ce paiement,
+  // donc aucune validation de format stricte ici non plus.
+  const mobileMoneyNumber = String(formData.get("mobileMoneyNumber") ?? "").trim();
+  const mobileMoneyOperatorRaw = String(formData.get("mobileMoneyOperator") ?? "").trim();
 
   if (!name || name.length < 2) {
     return { error: "Le nom de la boutique est trop court." };
   }
+  // Le numéro n'a de sens que si un opérateur est choisi (et vice versa) —
+  // sinon on afficherait juste un numéro sans savoir quel bouton/icône
+  // utiliser côté boutique publique.
+  if (mobileMoneyNumber && !mobileMoneyOperatorRaw) {
+    return { error: "Choisis l'opérateur correspondant à ton numéro Mobile Money." };
+  }
+  if (mobileMoneyOperatorRaw && !isMobileMoneyOperator(mobileMoneyOperatorRaw)) {
+    return { error: "Opérateur Mobile Money invalide." };
+  }
+  const mobileMoneyOperator = mobileMoneyNumber ? mobileMoneyOperatorRaw : "";
   if (description.length > 300) {
     return { error: "La description dépasse 300 caractères." };
   }
@@ -105,6 +122,8 @@ export async function saveShop(
         ...(accentColor !== undefined ? { accent_color: accentColor } : {}),
         delivery_fee: deliveryFee,
         whatsapp_number: whatsappNumber || null,
+        mobile_money_number: mobileMoneyNumber || null,
+        mobile_money_operator: mobileMoneyOperator || null,
         notification_email: notificationEmail || null,
         updated_at: new Date().toISOString(),
       })
@@ -150,6 +169,8 @@ export async function saveShop(
         cover_url: coverUrl || null,
         delivery_fee: deliveryFee,
         whatsapp_number: whatsappNumber || null,
+        mobile_money_number: mobileMoneyNumber || null,
+        mobile_money_operator: mobileMoneyOperator || null,
         notification_email: notificationEmail || null,
       })
       .select("id")

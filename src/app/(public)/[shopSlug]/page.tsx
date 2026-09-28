@@ -12,6 +12,8 @@ import { SortSelect } from "@/components/sort-select";
 import { Stars } from "@/components/stars";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
+import { MobileMoneyBadge } from "@/components/mobile-money-badge";
+import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
 import { getEffectivePrice } from "@/lib/products";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard } from "@/components/product-card";
@@ -90,7 +92,7 @@ const getShopForPublicPage = cache(async (shopSlug: string) => {
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "id, name, description, logo_url, cover_url, whatsapp_number, delivery_fee, accent_color, is_verified"
+      "id, name, description, logo_url, cover_url, whatsapp_number, mobile_money_number, mobile_money_operator, delivery_fee, accent_color, is_verified"
     )
     .eq("slug", shopSlug)
     .eq("status", "active")
@@ -423,13 +425,29 @@ export default async function ShopPage({
           ) : null}
         </div>
 
+        {/* Numéro Mobile Money du vendeur (29/09/2026) — remplace le paiement
+            en ligne via Nyole, construit puis abandonné le jour même (voir
+            decisions-techniques.md) : purement informatif, réglé directement
+            entre le vendeur et le client, KEVA n'y participe pas. */}
+        {shop.mobile_money_number && shop.mobile_money_operator && isMobileMoneyOperator(shop.mobile_money_operator) ? (
+          <div className="mt-3">
+            <p className="mb-1.5 text-xs text-encre/50">
+              Paiement Mobile Money direct avec le vendeur :
+            </p>
+            <MobileMoneyBadge
+              operator={shop.mobile_money_operator}
+              number={shop.mobile_money_number}
+            />
+          </div>
+        ) : null}
+
         {/* Bloc de confiance — adapté de l'argumentaire déjà présent sur la
             page d'accueil marketplace (13/09/2026), pour une seule boutique.
             Toujours des faits vérifiables : le paiement à la livraison est
-            réellement le seul mode fonctionnel aujourd'hui, le tarif de
-            livraison est le vrai `delivery_fee` du vendeur (ou une mention
-            honnête qu'il reste à négocier), et le contact direct n'apparaît
-            que si un numéro WhatsApp est réellement renseigné. */}
+            réellement le seul mode fonctionnel via KEVA aujourd'hui, le
+            tarif de livraison est le vrai `delivery_fee` du vendeur (ou une
+            mention honnête qu'il reste à négocier), et le contact direct
+            n'apparaît que si un numéro WhatsApp est réellement renseigné. */}
         <div className="mt-4 grid grid-cols-1 gap-2 border-t border-ligne pt-4 sm:grid-cols-3">
           <TrustItem
             label="Paiement à la livraison"

@@ -88,6 +88,48 @@ export function isNyolePaymentsEnabled(): boolean {
   return process.env.NYOLE_PAYMENTS_ENABLED !== "false";
 }
 
+/**
+ * Fait porter la commission Nyole (5% par défaut — voir doc "Commission et
+ * frais") par le PAYEUR plutôt que par le bénéficiaire — ajouté le 29/09/2026
+ * à la demande explicite d'Isaac pour les abonnements ("Est-ce qu'il y a
+ * possibilité de faire en sorte que les frais soient enlevés chez le
+ * client ? [...] Si il y a possibilité, fais-le"), puis étendu par cohérence
+ * aux paiements de commande en ligne (même logique : "100% pour le vendeur,
+ * on ne touche pas à sa commission" — un vendeur qui garde 100% de sa marge
+ * affichée doit recevoir le montant plein, pas montant-moins-5%).
+ *
+ * D'après la doc Nyole elle-même : "Le réglage ne déplace que les frais de
+ * passerelle, jamais la commission" — la commission Nyole n'est PAS un
+ * paramètre API ni un réglage transférable, contrairement aux frais de
+ * passerelle (réseau/opérateur, eux configurables côté tableau de bord Nyole
+ * pour être à la charge du client — mais uniquement depuis l'espace Nyole
+ * d'Isaac, jamais via cette API). La seule façon d'obtenir le même résultat
+ * ("le bénéficiaire touche le plein montant") est donc de majorer ici le
+ * montant réellement facturé au payeur, pour qu'une fois la commission
+ * Nyole déduite, il reste exactement (environ) le montant net voulu :
+ *
+ *   montant_facturé = montant_net / (1 - taux)
+ *
+ * `Math.ceil` plutôt que `Math.round` : en cas d'arrondi, mieux vaut que le
+ * bénéficiaire touche quelques francs CFA de PLUS que promis, jamais moins.
+ *
+ * Le taux vient d'une variable d'environnement (`NYOLE_COMMISSION_RATE`,
+ * défaut 5%) plutôt que d'être codé en dur : c'est un réglage du compte
+ * Nyole d'Isaac ("Il est de 5% par défaut", donc modifiable), pas une
+ * constante de cette API — un changement de taux côté Nyole ne doit pas
+ * nécessiter un déploiement de code pour rester exact.
+ *
+ * Si le taux configuré est invalide (absent, hors de ]0;1[), on renvoie le
+ * montant net tel quel plutôt que de planter ou de diviser par zéro —
+ * dégrade proprement vers "pas de majoration" plutôt que de bloquer un
+ * paiement.
+ */
+export function grossUpAmountForNyoleCommission(netAmount: number): number {
+  const rate = Number(process.env.NYOLE_COMMISSION_RATE ?? "0.05");
+  if (!Number.isFinite(rate) || rate <= 0 || rate >= 1) return netAmount;
+  return Math.ceil(netAmount / (1 - rate));
+}
+
 function getSecretKey(): string {
   const key = process.env.NYOLE_SECRET_KEY;
   if (!key) {
