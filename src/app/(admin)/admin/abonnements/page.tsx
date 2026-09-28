@@ -41,8 +41,10 @@ const PLAN_ICON_CLASS: Record<string, string> = {
 };
 
 // Gestion des abonnements (cahier des charges §3.1.C.3). Le paiement réel
-// via CinetPay n'est pas encore branché (voir decisions-techniques.md) :
-// cette page permet d'assigner un plan manuellement en attendant.
+// via Nyole est branché depuis le 28/09/2026 (voir decisions-techniques.md,
+// self-service pour le vendeur sur /dashboard/abonnement) : cette page reste
+// utile pour assigner un plan manuellement dans les cas hors Nyole (virement
+// direct, geste commercial...).
 //
 // Le statut affiché est CALCULÉ à partir de `expires_at` (voir
 // src/lib/subscription.ts), pas lu depuis `subscriptions.status` : cette
@@ -87,9 +89,9 @@ export default async function AdminSubscriptionsPage({
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Abonnements</h1>
       <p className="mt-1 text-sm text-encre/70">
-        Le paiement d&apos;abonnement via Mobile Money n&apos;est pas encore
-        branché (CinetPay). En attendant, un plan peut être assigné
-        manuellement ci-dessous.
+        Le paiement d&apos;abonnement via Mobile Money/carte (Nyole) est actif
+        depuis le dashboard vendeur. Un plan peut aussi être assigné
+        manuellement ci-dessous (virement direct, geste commercial...).
       </p>
 
       {error && (

@@ -18,7 +18,8 @@ import type { createClient } from "@/lib/supabase/server";
  * `maybeGrantReferralReward` est appelée EXPLICITEMENT depuis les deux seuls
  * endroits qui représentent un vrai paiement confirmé :
  * - admin/abonnements/actions.ts (`assignPlan`, après encaissement manuel)
- * - api/cinetpay/webhook/route.ts (statut ACCEPTED confirmé par l'API)
+ * - api/nyole/webhook/route.ts (événement payment.completed, webhook signé
+ *   — basculé depuis api/cinetpay/webhook/route.ts le 28/09/2026)
  *
  * Jamais depuis `applyPlanToShop` elle-même (src/lib/subscription.ts,
  * fonction commune déjà critique, testée par les deux appelants ci-dessus —

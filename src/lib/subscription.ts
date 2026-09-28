@@ -15,10 +15,13 @@ import type { createClient } from "@/lib/supabase/server";
  *
  * Période de grâce : le vendeur garde un accès complet quelques jours après
  * la date d'expiration, pour ne pas couper brutalement l'accès à quelqu'un
- * qui est simplement en train de renouveler (pas de paiement automatique
- * CinetPay tant que le compte marchand n'est pas validé — le renouvellement
- * passe pour l'instant par un admin qui réassigne un plan manuellement,
- * cf. `/admin/abonnements`).
+ * qui est simplement en train de renouveler. Le renouvellement peut se faire
+ * en self-service via Nyole depuis /dashboard/abonnement (voir
+ * dashboard/abonnement/actions.ts, basculé depuis CinetPay le 28/09/2026) ou,
+ * pour les cas hors Nyole, par un admin qui réassigne un plan manuellement
+ * (cf. `/admin/abonnements`) — dans les deux cas il n'y a aucun renouvellement
+ * automatique/récurrent : le vendeur (ou l'admin) doit agir explicitement à
+ * chaque échéance.
  */
 export const SUBSCRIPTION_GRACE_PERIOD_DAYS = 7;
 
@@ -271,14 +274,14 @@ export type ApplyPlanResult = {
  * supplémentaires sans les supprimer"). Extrait le 15/09/2026 pour être
  * appelé depuis DEUX endroits qui ne doivent pas diverger : l'assignation
  * manuelle admin (`/admin/abonnements`, `assignPlan`) ET la confirmation
- * automatique d'un paiement CinetPay réel (`/api/cinetpay/webhook`) —
+ * automatique d'un paiement Nyole réel (`/api/nyole/webhook`) —
  * chacun avec son propre contrôle d'accès (rôle admin vs statut de paiement
  * vérifié), mais la même logique de fond une fois l'autorisation acquise.
  *
  * Ne fait AUCUNE vérification d'autorisation elle-même — c'est aux
  * appelants de s'assurer que l'assignation est légitime avant d'appeler
- * cette fonction (rôle admin vérifié, ou paiement confirmé via l'API de
- * vérification CinetPay, jamais sur la seule foi d'un payload de webhook).
+ * cette fonction (rôle admin vérifié, ou paiement confirmé par le webhook
+ * signé Nyole, jamais sur la seule foi d'un payload non vérifié).
  */
 export async function applyPlanToShop(
   // Accepte aussi bien le client authentifié (Server Action admin) que le
@@ -288,13 +291,13 @@ export async function applyPlanToShop(
   shopId: string,
   planCode: string,
   // `durationDaysOverride` — ajouté le 23/09/2026 pour l'assignation
-  // manuelle admin (encaissement manuel en attendant PawaPay/KYB, Isaac
-  // collecte parfois plusieurs mois d'un coup). `undefined` (le cas des DEUX
-  // AUTRES appelants, `subscription-lifecycle.ts` et le webhook CinetPay)
-  // retombe sur `plan.duration_days` — comportement strictement inchangé
-  // pour eux. Ne jamais laisser un appelant automatique fournir cette
-  // valeur : un vrai paiement CinetPay doit toujours durer exactement
-  // `duration_days`, jamais une durée choisie à la main.
+  // manuelle admin (encaissement manuel hors Nyole, Isaac collecte parfois
+  // plusieurs mois d'un coup). `undefined` (le cas des DEUX AUTRES
+  // appelants, `subscription-lifecycle.ts` et le webhook Nyole) retombe sur
+  // `plan.duration_days` — comportement strictement inchangé pour eux. Ne
+  // jamais laisser un appelant automatique fournir cette valeur : un vrai
+  // paiement Nyole doit toujours durer exactement `duration_days`, jamais
+  // une durée choisie à la main.
   durationDaysOverride?: number
 ): Promise<ApplyPlanResult | null> {
   const { data: plan } = await supabase
@@ -311,7 +314,7 @@ export async function applyPlanToShop(
   // Upsert atomique plutôt qu'un "vérifier puis écrire" — corrigé le
   // 22/09/2026 (audit pré-lancement du back-office) : cette fonction est
   // appelée à la fois par l'assignation manuelle admin et par le webhook
-  // CinetPay (voir doc ci-dessus), qui peuvent donc courir en concurrence
+  // Nyole (voir doc ci-dessus), qui peuvent donc courir en concurrence
   // l'un de l'autre (ou un simple double clic admin) ; l'ancienne version
   // "SELECT puis UPDATE/INSERT" pouvait, dans cette fenêtre, créer deux
   // lignes `subscriptions` pour la même boutique — repéré parce que ça
@@ -327,7 +330,7 @@ export async function applyPlanToShop(
       status: "active",
       started_at: new Date().toISOString(),
       expires_at: expiresAt,
-      // Toute assignation réelle de plan (admin ou paiement CinetPay
+      // Toute assignation réelle de plan (admin ou paiement Nyole
       // confirmé) efface le statut d'essai — voir migration 0029.
       is_trial: false,
     },

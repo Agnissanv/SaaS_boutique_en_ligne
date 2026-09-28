@@ -33,8 +33,8 @@ const DAYS_PER_MONTH = 30;
  * Assigne/change manuellement le plan d'abonnement d'une boutique
  * (cahier des charges §3.1.C.3 — "Gestion des abonnements").
  *
- * Reste utile même maintenant que le paiement CinetPay réel est branché
- * (voir /api/cinetpay/webhook) : un vendeur qui paie autrement (virement
+ * Reste utile même maintenant que le paiement Nyole réel est branché
+ * (voir /api/nyole/webhook) : un vendeur qui paie autrement (virement
  * Wave direct à Isaac, geste commercial, etc.) peut toujours être passé sur
  * un plan à la main ici. La logique d'application du plan elle-même
  * (`applyPlanToShop`, src/lib/subscription.ts) est désormais partagée avec

@@ -18,11 +18,12 @@ function SubmitButton({ planName }: { planName: string }) {
 }
 
 /**
- * Bouton de paiement réel CinetPay pour passer à un plan payant — ajouté le
- * 15/09/2026 (compte marchand CinetPay validé, voir decisions-techniques.md).
- * Soumet `initiateSubscriptionPayment` qui redirige directement vers le
- * guichet CinetPay en cas de succès (la redirection se fait côté serveur,
- * cette page ne revoit jamais la main sauf en cas d'erreur avant paiement).
+ * Bouton de paiement réel Nyole pour passer à un plan payant — ajouté le
+ * 15/09/2026 avec CinetPay, basculé sur Nyole le 28/09/2026 (voir
+ * decisions-techniques.md). Soumet `initiateSubscriptionPayment` qui
+ * redirige directement vers la page de paiement Nyole en cas de succès (la
+ * redirection se fait côté serveur, cette page ne revoit jamais la main sauf
+ * en cas d'erreur avant paiement).
  */
 export function UpgradeButton({ planCode, planName }: { planCode: string; planName: string }) {
   const [state, formAction] = useActionState<InitiatePaymentState, FormData>(

@@ -16,8 +16,9 @@ import type { createClient } from "@/lib/supabase/server";
  *
  * Appelée EXPLICITEMENT depuis les deux mêmes endroits que
  * `maybeGrantReferralReward` : l'assignation manuelle admin
- * (`admin/abonnements/actions.ts`) et le webhook CinetPay ACCEPTED
- * (`api/cinetpay/webhook/route.ts`) — l'idempotence de ces deux appelants
+ * (`admin/abonnements/actions.ts`) et le webhook Nyole payment.completed
+ * (`api/nyole/webhook/route.ts`, basculé depuis CinetPay le 28/09/2026) —
+ * l'idempotence de ces deux appelants
  * (un clic admin = un événement, un webhook déjà protégé par
  * `payment.status === "success"`) suffit à garantir qu'on ne crée jamais
  * deux lignes pour le même paiement réel, sans verrou supplémentaire ici.

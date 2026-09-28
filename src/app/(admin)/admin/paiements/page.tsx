@@ -39,13 +39,11 @@ const STATUS_LABEL: Record<string, string> = {
 
 /**
  * Paiements — tentatives d'abonnement (et, plus tard, de commande en ligne)
- * toutes plateformes confondues (`payments.provider` : "cinetpay" aujourd'hui,
- * "pawapay" une fois cette migration terminée — voir decisions-techniques.md).
- * Ajoutée le 22/09/2026 (suite de l'audit back-office) : jusqu'ici, malgré la
- * policy RLS `payments_admin_read` posée dès le 13/09 (0007), aucune page
- * n'exploitait cet accès — le commentaire de /admin/transactions disait même
- * lui-même "les paiements CinetPay s'y ajouteront ici une fois branchés", en
- * oubliant que CinetPay était déjà branché depuis une semaine.
+ * toutes plateformes confondues (`payments.provider` : "nyole" aujourd'hui,
+ * "cinetpay" pour l'historique antérieur au 28/09/2026 — voir
+ * decisions-techniques.md). Ajoutée le 22/09/2026 (suite de l'audit
+ * back-office) : jusqu'ici, malgré la policy RLS `payments_admin_read` posée
+ * dès le 13/09 (0007), aucune page n'exploitait cet accès.
  *
  * Pas fusionnée avec /admin/transactions (le journal des actions admin) :
  * source différente (webhook fournisseur de paiement vs actions admin), donc

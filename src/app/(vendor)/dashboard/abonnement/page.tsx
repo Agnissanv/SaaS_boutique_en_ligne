@@ -5,7 +5,7 @@ import {
   getShopSubscription,
   SUBSCRIPTION_STATE_LABELS,
 } from "@/lib/subscription";
-import { isCinetPayEnabled } from "@/lib/cinetpay";
+import { isNyolePaymentsEnabled } from "@/lib/nyole";
 import { UpgradeButton } from "./upgrade-button";
 
 type Plan = {
@@ -112,12 +112,13 @@ function renderFeatures(features: Plan["features"]) {
  * expiré ou proche de l'expiration, jamais un état clair de son plan actuel
  * ni des plans disponibles (cahier des charges §3.1.A.7).
  *
- * Paiement CinetPay réel branché le 15/09/2026 (compte marchand d'Isaac
- * validé) : un bouton "Passer à ce plan" sur les plans payants démarre un
- * vrai paiement Mobile Money (voir actions.ts/upgrade-button.tsx et
- * /api/cinetpay/webhook pour l'activation à la confirmation). L'assignation
+ * Paiement Nyole réel branché le 28/09/2026 (bascule complète depuis
+ * CinetPay, compte Nyole d'Isaac vérifié — voir decisions-techniques.md) :
+ * un bouton "Passer à ce plan" sur les plans payants démarre un vrai
+ * paiement Mobile Money/carte (voir actions.ts/upgrade-button.tsx et
+ * /api/nyole/webhook pour l'activation à la confirmation). L'assignation
  * manuelle par un admin (`/admin/abonnements`) reste possible en parallèle
- * pour les cas hors CinetPay (virement direct, geste commercial...).
+ * pour les cas hors Nyole (virement direct, geste commercial...).
  */
 export default async function SubscriptionPage() {
   const supabase = await createClient();
@@ -143,12 +144,12 @@ export default async function SubscriptionPage() {
       .order("price", { ascending: true }),
   ]);
 
-  // Pause du 17/09/2026 — voir `isCinetPayEnabled` dans cinetpay.ts. Le
+  // Coupe-circuit optionnel — voir `isNyolePaymentsEnabled` dans nyole.ts. Le
   // bouton de paiement est masqué plutôt que laissé cliquable pour échouer :
-  // un vendeur qui veut quand même changer de plan pendant la pause est
-  // orienté vers le contact, l'admin pouvant toujours assigner un plan
-  // manuellement depuis /admin/abonnements.
-  const cinetPayEnabled = isCinetPayEnabled();
+  // un vendeur qui veut quand même changer de plan pendant une éventuelle
+  // pause est orienté vers le contact, l'admin pouvant toujours assigner un
+  // plan manuellement depuis /admin/abonnements.
+  const nyoleEnabled = isNyolePaymentsEnabled();
 
   return (
     <div>
@@ -197,10 +198,10 @@ export default async function SubscriptionPage() {
       <h2 className="mt-8 font-display text-sm font-semibold text-encre">
         Plans disponibles
       </h2>
-      {cinetPayEnabled ? (
+      {nyoleEnabled ? (
         <p className="mt-1 text-xs text-encre/60">
-          Paiement Mobile Money sécurisé via CinetPay — le plan est activé dès
-          confirmation du paiement.
+          Paiement Mobile Money/carte sécurisé via Nyole — le plan est activé
+          dès confirmation du paiement.
         </p>
       ) : (
         <p className="mt-1 rounded-md bg-brume px-2 py-1.5 text-xs text-encre/70">
@@ -241,7 +242,7 @@ export default async function SubscriptionPage() {
               / {plan.duration_days} jours
             </p>
             {renderFeatures(plan.features)}
-            {cinetPayEnabled && plan.price > 0 && plan.code !== subscription.planCode && (
+            {nyoleEnabled && plan.price > 0 && plan.code !== subscription.planCode && (
               <UpgradeButton planCode={plan.code} planName={plan.name} />
             )}
           </div>

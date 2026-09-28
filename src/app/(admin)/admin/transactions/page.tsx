@@ -38,7 +38,7 @@ type LogRow = {
 // Logs des transactions (cahier des charges §3.1.C.4) : audit des actions
 // admin sensibles (suspension/réactivation de boutique, changement de plan)
 // et des webhooks de paiement — alimenté par les Server Actions de
-// /admin/vendeurs, /admin/abonnements et /api/cinetpay/webhook.
+// /admin/vendeurs, /admin/abonnements et /api/nyole/webhook.
 //
 // Filtre + pagination ajoutés le 22/09/2026 (reprise de l'audit back-office,
 // point signalé comme le plus urgent après les messages de contact) : cette

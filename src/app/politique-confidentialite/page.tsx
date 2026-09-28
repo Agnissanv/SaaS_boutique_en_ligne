@@ -17,8 +17,12 @@ import Link from "next/link";
  * lui-même en tant qu'exploitant individuel — à remplacer par la raison
  * sociale officielle une fois KEVA immatriculée. Contenu par ailleurs fidèle
  * aux données réellement collectées et aux prestataires réellement utilisés
- * par KEVA à ce jour (Supabase, Brevo, Google OAuth, CinetPay une fois
- * activé) — pas de mentions génériques inventées.
+ * par KEVA à ce jour (Supabase, Brevo, Google OAuth, Nyole pour le paiement
+ * de l'abonnement vendeur) — pas de mentions génériques inventées.
+ *
+ * Mis à jour le 28/09/2026 : CinetPay (jamais activé en pratique, compte
+ * bloqué en attente de validation) remplacé par Nyole comme agrégateur de
+ * paiement — voir decisions-techniques.md.
  *
  * Révisée le 23/09/2026 : Google a refusé la validation du branding OAuth
  * ("Continuer avec Google") en signalant cette page comme n'ayant "pas
@@ -132,8 +136,8 @@ export default function PolitiqueConfidentialitePage() {
                 Google » pour te connecter).
               </li>
               <li>
-                <strong>CinetPay</strong> (traitement des paiements Mobile Money,
-                une fois cette option activée sur KEVA).
+                <strong>Nyole</strong> (traitement des paiements Mobile Money et
+                carte bancaire, pour le paiement de ton abonnement vendeur).
               </li>
               <li>
                 Le vendeur auprès duquel tu commandes, pour les seules

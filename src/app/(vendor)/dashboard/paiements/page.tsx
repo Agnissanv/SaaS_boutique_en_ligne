@@ -28,13 +28,12 @@ type Order = {
 
 /**
  * Page "Paiements" — créée le 15/09/2026 en réponse au manque "Historique
- * des paiements reçus" du cahier des charges (§3.1.A.6). IMPORTANT :
- * l'intégration CinetPay/Mobile Money reste explicitement hors scope du
- * mandat du 15/09/2026 ("sauf ce qui dépend encore des moyens de paiement"),
- * donc ceci n'est PAS un relevé de transactions CinetPay — la table
- * `payments` n'est alimentée par aucun webhook actif pour l'instant (le
- * stub `src/app/api/cinetpay/webhook/route.ts` n'est jamais appelé en
- * pratique tant que le compte marchand n'est pas validé).
+ * des paiements reçus" du cahier des charges (§3.1.A.6). IMPORTANT : la
+ * table `payments` (webhook `src/app/api/nyole/webhook/route.ts`, ex-
+ * CinetPay) ne suit QUE les paiements d'abonnement — l'argent que KEVA
+ * encaisse auprès du vendeur, pas l'inverse. Le paiement en ligne d'une
+ * commande CLIENT reste hors scope (aucun mode en ligne pour les commandes
+ * à ce jour), donc ceci n'est PAS un relevé basé sur `payments`.
  *
  * Choix : un relevé basé sur les COMMANDES elles-mêmes plutôt que sur la
  * table `payments`, en utilisant le seul mode de paiement réellement actif
@@ -43,9 +42,10 @@ type Order = {
  * commandes payées/en préparation (l'argent sera encaissé à la livraison,
  * pas encore fait) ; les commandes annulées ne comptent jamais. C'est une
  * approximation qui donne une vraie valeur au vendeur dès maintenant, à
- * remplacer par un vrai relevé de transactions CinetPay une fois le
- * paiement en ligne branché — voir claude/decisions-techniques.md pour le
- * détail de ce choix.
+ * remplacer par un vrai relevé de transactions une fois le paiement en
+ * ligne des commandes CLIENT branché (distinct du paiement d'abonnement
+ * Nyole déjà actif, qui ne concerne que KEVA) — voir
+ * claude/decisions-techniques.md pour le détail de ce choix.
  *
  * **Filtre + pagination ajoutés le 22/09/2026** (audit "filtres partout"
  * d'Isaac) : la liste se chargeait entièrement sans limite. Les deux totaux
