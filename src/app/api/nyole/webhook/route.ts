@@ -4,6 +4,8 @@ import { verifyNyoleWebhookSignature } from "@/lib/nyole";
 import { applyPlanToShop } from "@/lib/subscription";
 import { maybeGrantReferralReward } from "@/lib/referrals";
 import { maybeCreditCommercialCommission } from "@/lib/commercial-referrals";
+import { resolveNotificationEmail } from "@/lib/subscription-lifecycle";
+import { sendSubscriptionPaymentReceiptEmail } from "@/lib/email/subscription-payment-receipt";
 
 // Route Handler Node (jamais Edge) — nécessaire pour `node:crypto` utilisé
 // par `verifyNyoleWebhookSignature`. Explicite plutôt que de compter sur le
@@ -42,6 +44,10 @@ export const runtime = "nodejs";
  * Route serveur-à-serveur : `createServiceRoleClient` est le bon choix ici
  * (pas de session utilisateur, pas de cookies) — même pattern que le reste
  * du projet pour les écritures de paiement.
+ *
+ * Email de confirmation (29/09/2026) : `payment.completed` déclenche aussi
+ * `sendSubscriptionPaymentReceiptEmail` (voir
+ * email/subscription-payment-receipt.ts) — best-effort, jamais bloquant.
  */
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
@@ -66,7 +72,14 @@ export async function POST(request: NextRequest) {
 
   let payload: {
     event?: string;
-    data?: { id?: string; status?: string; metadata?: Record<string, unknown> };
+    data?: {
+      id?: string;
+      status?: string;
+      metadata?: Record<string, unknown>;
+      order_id?: string;
+      amount?: number;
+      currency?: string;
+    };
   } | null = null;
   try {
     payload = JSON.parse(rawBody);
@@ -86,7 +99,7 @@ export async function POST(request: NextRequest) {
 
   const { data: payment } = await supabase
     .from("payments")
-    .select("id, shop_id, status, intent_plan_code")
+    .select("id, shop_id, status, intent_plan_code, amount, currency")
     .eq("provider_transaction_id", sessionId)
     .maybeSingle();
 
@@ -133,6 +146,38 @@ export async function POST(request: NextRequest) {
         applied: Boolean(result),
       },
     });
+
+    // Email de confirmation KEVA (29/09/2026) — voir
+    // email/subscription-payment-receipt.ts pour le raisonnement complet.
+    // Best-effort, ne doit jamais faire échouer le webhook : le plan est
+    // déjà activé ci-dessus, un email manqué n'est qu'une notification
+    // ratée, jamais une activation ratée.
+    if (result) {
+      try {
+        const { data: shop } = await supabase
+          .from("shops")
+          .select("name, notification_email, owner_id")
+          .eq("id", payment.shop_id)
+          .maybeSingle();
+
+        if (shop) {
+          const email = await resolveNotificationEmail(supabase, shop);
+          if (email) {
+            await sendSubscriptionPaymentReceiptEmail({
+              to: email,
+              shopName: shop.name,
+              planName: result.planName,
+              amount: payload?.data?.amount ?? payment.amount,
+              currency: payload?.data?.currency ?? payment.currency,
+              reference: payload?.data?.order_id ?? sessionId,
+              expiresAt: result.expiresAt,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Nyole webhook — échec envoi email de confirmation:", error);
+      }
+    }
   } else if (event === "payment.failed" || event === "payment.cancelled") {
     // `payments.status` n'a que trois valeurs possibles (pending/success/
     // failed, voir 0001_init.sql) — un paiement annulé par le client est

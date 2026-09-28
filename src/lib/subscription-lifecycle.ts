@@ -76,8 +76,13 @@ type ShopRow = {
  * du vendeur (`auth.users`, accessible uniquement via le client service
  * role) — pour ne jamais rater un vendeur qui n'a simplement jamais
  * configuré ce champ facultatif.
+ *
+ * Exportée le 29/09/2026 pour être réutilisée par `api/nyole/webhook`
+ * (email de confirmation de paiement, voir
+ * `email/subscription-payment-receipt.ts`) — même résolution d'adresse,
+ * inutile de la dupliquer.
  */
-async function resolveNotificationEmail(
+export async function resolveNotificationEmail(
   supabase: ReturnType<typeof createServiceRoleClient>,
   shop: Pick<ShopRow, "notification_email" | "owner_id">
 ): Promise<string | null> {

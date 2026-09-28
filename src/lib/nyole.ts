@@ -61,6 +61,21 @@
 const NYOLE_BASE_URL = "https://app.nyole.com/api";
 
 /**
+ * Nom + logo forcés sur CHAQUE session (29/09/2026, demande d'Isaac après le
+ * premier essai à blanc : la page de paiement affichait "keva" et un logo
+ * minuscule tirés des réglages de son compte Nyole, pas du vrai logo KEVA).
+ * D'après la doc ("Créer une session de paiement") : `merchant_name` et
+ * `merchant_logo` sont les DEUX SEULS leviers de personnalisation exposés par
+ * la page hébergée Nyole — pas de couleurs, pas de police, pas de mise en
+ * page. `merchant_logo` exige une adresse https publique (PNG/JPG/SVG) :
+ * `keva-logo.jpg` (800x800, public/keva-logo.jpg) est déjà servi tel quel
+ * par Next depuis `/public`, donc accessible en direct sur le domaine de
+ * prod — pas besoin de l'héberger ailleurs.
+ */
+const NYOLE_MERCHANT_NAME = "KEVA";
+const NYOLE_MERCHANT_LOGO_URL = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shopkeva.com"}/keva-logo.jpg`;
+
+/**
  * Coupe-circuit optionnel — même principe que `isCinetPayEnabled()` en son
  * temps, gardé par prudence opérationnelle (permet de masquer proprement le
  * paiement en ligne depuis Vercel sans déploiement si un incident survient
@@ -126,6 +141,8 @@ export async function createNyoleCheckoutSession(
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
         metadata: params.metadata,
+        merchant_name: NYOLE_MERCHANT_NAME,
+        merchant_logo: NYOLE_MERCHANT_LOGO_URL,
       }),
     });
 
