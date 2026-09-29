@@ -136,7 +136,13 @@ export async function uploadShopAssetImage(
   });
 
   if (error) {
-    throw new ImageUploadError(`Échec de l'upload : ${error.message}`);
+    // Message Supabase Storage brut (anglais, technique — ex. "The resource
+    // already exists", "Payload too large") gardé seulement en console :
+    // corrigé le 30/09/2026 (audit technique) après avoir trouvé qu'il
+    // pouvait remonter tel quel dans l'UI, au milieu d'une interface
+    // entièrement en français.
+    console.error("uploadShopAssetImage — erreur Supabase Storage:", error);
+    throw new ImageUploadError("Échec de l'upload. Réessaie dans un instant.");
   }
 
   const {

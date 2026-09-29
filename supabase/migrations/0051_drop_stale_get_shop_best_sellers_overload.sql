@@ -1,0 +1,33 @@
+-- ============================================================================
+-- Nettoyage d'une vraie ambiguïté de surcharge sur get_shop_best_sellers
+-- (30/09/2026, audit technique — bug trouvé en reconstituant le schéma pour
+-- src/lib/types/database.ts, voir claude/audit-technique-2026-09-29.md).
+--
+-- La migration 0049 voulait remplacer la fonction créée en 0025
+-- (`get_shop_best_sellers(uuid, integer)`) par une version enrichie avec
+-- `revenue` et `p_since` (`get_shop_best_sellers(uuid, integer, timestamptz)`).
+-- Mais son `drop function if exists public.get_shop_best_sellers(uuid,
+-- integer, timestamptz)` visait déjà la NOUVELLE signature à 3 arguments —
+-- qui n'existait pas encore à ce moment-là — donc ce drop ne faisait rien
+-- (`if exists` a simplement évité une erreur). La vraie ancienne version, à 2
+-- arguments (0025), n'a donc jamais été supprimée : les deux coexistent
+-- aujourd'hui en base.
+--
+-- Conséquence concrète : `statistiques/page.tsx` appelle cette fonction avec
+-- seulement `p_shop_id`/`p_limit` (2 arguments nommés) — PostgREST trouve
+-- deux fonctions candidates et refuse l'appel (PGRST203, "Could not choose
+-- the best candidate function"), erreur silencieusement ignorée par la page.
+-- Résultat pour le vendeur : la section "Top produits" de ses statistiques
+-- est vide, tous ses produits apparaissent comme "jamais vendus", RIEN
+-- n'indique qu'une erreur a eu lieu. Le code appelant a été corrigé en
+-- parallèle (passe désormais `p_since: null` explicitement, ce qui ne laisse
+-- plus qu'une seule candidate possible), mais tant que l'ancienne surcharge
+-- existe en base, n'importe quel futur appel à 2 arguments retombe dans le
+-- même piège — ce correctif supprime le problème à la racine.
+--
+-- Sans risque : `get_shop_best_sellers(uuid, integer)` n'est plus appelée
+-- nulle part dans le code (vérifié par grep sur tout `src/`) — seule la
+-- version à 3 arguments (0049) l'est.
+-- ============================================================================
+
+drop function if exists public.get_shop_best_sellers(uuid, integer);

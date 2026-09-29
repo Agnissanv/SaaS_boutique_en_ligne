@@ -13,6 +13,29 @@
  * erreur (issue négative finale). Pas de nouvelle couleur inventée : on
  * réutilise les trois tokens sémantiques existants + le vert de marque.
  */
+import type { OrderStatus } from "@/lib/types/database";
+
+/**
+ * Les 5 valeurs de la contrainte `orders.status` (migration 0001), dans
+ * l'ordre d'affichage de `ORDER_STATUS_LABELS` ci-dessous — ajouté le
+ * 30/09/2026 (audit technique, typage réel de `src/lib/types/database.ts`) :
+ * `Object.keys(ORDER_STATUS_LABELS)` et `x in ORDER_STATUS_LABELS` ne
+ * donnent qu'un `string`, que le client Supabase désormais typé refuse
+ * (à juste titre) dans `.eq("status", ...)` / `.update({ status })`.
+ */
+export const ORDER_STATUSES = [
+  "pending",
+  "paid",
+  "preparing",
+  "delivered",
+  "cancelled",
+] as const satisfies readonly OrderStatus[];
+
+/** Garde de type : `value` est l'un des 5 statuts de commande valides. */
+export function isOrderStatus(value: string | null | undefined): value is OrderStatus {
+  return ORDER_STATUSES.some((status) => status === value);
+}
+
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
   paid: "Payée",

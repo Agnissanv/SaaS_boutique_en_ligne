@@ -9,6 +9,18 @@ import { ProductImage } from "@/components/product-image";
 import { RevenueTrendChart, ComparisonTile, StatTile, CountBars } from "./statistiques/charts";
 import { PeriodSelect } from "./statistiques/period-select";
 
+// Même ordre de grandeur que le `PAGE_SIZE` des listes paginées du dashboard
+// vendeur/admin (30/09/2026, audit technique — voir
+// audit-technique-2026-09-29.md) : la requête `lowStockProducts` plus bas
+// chargeait tout le catalogue actif d'une boutique, triée par stock croissant,
+// pour n'en retenir que ceux sous le seuil d'alerte. Comme le tri place déjà
+// les stocks les plus bas en tête, plafonner à ce nombre ne peut manquer une
+// alerte réelle que pour une boutique cumulant plus de
+// `LOW_STOCK_ALERTS_LIMIT` produits sous le seuil en même temps — un cas
+// limite acceptable pour ce widget d'aperçu, largement compensé par l'aller
+// simple en base évité pour les boutiques à gros catalogue.
+const LOW_STOCK_ALERTS_LIMIT = 50;
+
 /**
  * Aperçu du dashboard vendeur — refondu le 29/09/2026 sur inspiration d'une
  * maquette générique envoyée par Isaac ("on change notre dashboard").
@@ -179,7 +191,8 @@ export default async function DashboardOverviewPage({
       .eq("shop_id", shop.id)
       .eq("is_active", true)
       .is("deleted_at", null)
-      .order("stock", { ascending: true }),
+      .order("stock", { ascending: true })
+      .limit(LOW_STOCK_ALERTS_LIMIT),
     // Business+ seulement — pas de requête pour un plan qui ne l'affichera
     // pas (même discipline que `/dashboard/statistiques`).
     subscription.features.hasAdvancedStats

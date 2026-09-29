@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
+import { isReservedShopSlug } from "@/lib/utils/reserved-slugs";
 import { isValidCategory } from "@/lib/categories";
 import { getShopSubscription } from "@/lib/subscription";
 import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
@@ -76,7 +77,15 @@ export async function saveShop(
   if (mobileMoneyOperatorRaw && !isMobileMoneyOperator(mobileMoneyOperatorRaw)) {
     return { error: "Opérateur Mobile Money invalide." };
   }
-  const mobileMoneyOperator = mobileMoneyNumber ? mobileMoneyOperatorRaw : "";
+  // Revalidé ici par la garde de type (30/09/2026, audit technique) plutôt
+  // que de réutiliser `mobileMoneyOperatorRaw` tel quel : les deux `if`
+  // ci-dessus garantissent déjà un opérateur valide dès qu'un numéro est
+  // saisi, mais TypeScript ne le déduit pas — or `shops.mobile_money_operator`
+  // n'accepte que les 4 valeurs de sa contrainte `check` (migration 0047)
+  // depuis le typage réel du schéma. Résultat strictement identique :
+  // opérateur si un numéro est renseigné, `null` sinon.
+  const mobileMoneyOperator =
+    mobileMoneyNumber && isMobileMoneyOperator(mobileMoneyOperatorRaw) ? mobileMoneyOperatorRaw : null;
   if (description.length > 300) {
     return { error: "La description dépasse 300 caractères." };
   }
@@ -128,7 +137,7 @@ export async function saveShop(
         delivery_fee: deliveryFee,
         whatsapp_number: whatsappNumber || null,
         mobile_money_number: mobileMoneyNumber || null,
-        mobile_money_operator: mobileMoneyOperator || null,
+        mobile_money_operator: mobileMoneyOperator,
         updated_at: new Date().toISOString(),
       })
       .eq("id", shopId)
@@ -144,6 +153,10 @@ export async function saveShop(
     let attempt = 0;
 
     // Jusqu'à 5 tentatives pour trouver un slug libre (ex: "chez-awa-2").
+    // `isReservedShopSlug` (30/09/2026, correctif d'audit) traité exactement
+    // comme une collision en base : un slug pris par une route statique
+    // (/tarifs, /contact, /admin...) rendrait la boutique invisible en
+    // silence si on le laissait passer — voir reserved-slugs.ts.
     while (attempt < 5) {
       const { data: existing } = await supabase
         .from("shops")
@@ -151,17 +164,24 @@ export async function saveShop(
         .eq("slug", slug)
         .maybeSingle();
 
-      if (!existing) break;
+      if (!existing && !isReservedShopSlug(slug)) break;
       attempt += 1;
       slug = `${baseSlug}-${attempt + 1}`;
     }
 
-    // Une boutique qui vient d'être créée n'a pas encore d'abonnement
-    // (démarré juste après, via start_free_subscription plus bas) : son plan
-    // est donc toujours équivalent Starter au moment de cette création, qui
-    // n'a pas de logo/couleur d'accent — cohérent avec canCustomizeBranding
-    // === "none" pour Starter. Le vendeur les ajoutera après upgrade, depuis
-    // "Ma boutique".
+    // Logo à la création (corrigé le 30/09/2026, audit technique — bug
+    // remonté par Isaac) : ce commentaire disait auparavant qu'une boutique
+    // fraîchement créée "n'a pas de logo" car son plan serait "toujours
+    // équivalent Starter" avec canCustomizeBranding === "none" — c'était vrai
+    // avant migration 0041 (22/09/2026), qui a débloqué le logo ("basic")
+    // pour Starter précisément. Depuis, boutique/page.tsx affiche bien le
+    // champ logo dès la création (canCustomizeBranding lu sur le plan
+    // Starter réel, voir son commentaire), mais cet insert ignorait
+    // silencieusement `logoUrl` : le vendeur uploadait un logo à la création
+    // et le retrouvait vide, sans erreur, jusqu'à le réuploader depuis "Ma
+    // boutique" en modification. La couleur d'accent reste absente ici :
+    // exclusive au plan Pro ("complete"), jamais affichée sur le formulaire
+    // de création (Starter = "basic").
     const { data: newShop, error } = await supabase
       .from("shops")
       .insert({
@@ -170,11 +190,12 @@ export async function saveShop(
         slug,
         description: description || null,
         category,
+        logo_url: logoUrl || null,
         cover_url: coverUrl || null,
         delivery_fee: deliveryFee,
         whatsapp_number: whatsappNumber || null,
         mobile_money_number: mobileMoneyNumber || null,
-        mobile_money_operator: mobileMoneyOperator || null,
+        mobile_money_operator: mobileMoneyOperator,
       })
       .select("id")
       .single();

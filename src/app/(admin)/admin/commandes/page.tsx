@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS, isOrderStatus } from "@/lib/orders";
 import { PackageIcon, SearchIcon } from "@/components/admin/admin-icons";
 
 const PAGE_SIZE = 50;
@@ -47,7 +47,11 @@ export default async function AdminOrdersPage({
 }) {
   const { q, status: statusParam, page: pageParam } = await searchParams;
   const trimmedQuery = q?.trim() || undefined;
-  const status = statusParam && statusParam in ORDER_STATUS_LABELS ? statusParam : undefined;
+  // Garde de type plutôt que `statusParam in ORDER_STATUS_LABELS` (30/09/2026,
+  // audit technique) : même filtrage, mais `status` est désormais typé
+  // `OrderStatus`, ce qu'exige `.eq("status", ...)` depuis le typage réel du
+  // schéma (src/lib/types/database.ts).
+  const status = isOrderStatus(statusParam) ? statusParam : undefined;
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;

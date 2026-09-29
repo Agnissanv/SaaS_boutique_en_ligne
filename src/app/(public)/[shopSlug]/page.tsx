@@ -213,12 +213,14 @@ export default async function ShopPage({
 
   const supabase = await createClient();
 
-  const rating = await getShopRating(supabase, shop.id);
-
   // Compteur de vues (cf. cahier des charges §3.1.A.4) : simple incrément,
   // pas de déduplication par visiteur — voir 0005_shop_stats.sql. On ignore
   // volontairement une éventuelle erreur : ça ne doit jamais empêcher
-  // l'affichage de la boutique.
+  // l'affichage de la boutique. Mutation gardée à part, jamais regroupée dans
+  // le Promise.all plus bas avec les lectures (30/09/2026, audit technique) :
+  // aucune valeur de retour n'est utilisée, pas de raison de la faire
+  // dépendre du timing des lectures ni l'inverse — même choix que
+  // `increment_product_view` sur la fiche produit.
   await supabase.rpc("increment_shop_view", { p_shop_slug: shopSlug, p_source: src ?? "direct" });
 
   let query = supabase
@@ -250,8 +252,6 @@ export default async function ShopPage({
   else if (sort === "prix_desc") query = query.order("price", { ascending: false });
   else query = query.order("created_at", { ascending: false });
 
-  const { data: products, count } = await query;
-
   // Échantillon borné pour les facettes de filtre — même principe et même
   // périmètre (recherche + catégorie, jamais recroisé avec prix/attributs
   // déjà sélectionnés) que la marketplace globale, scopé à cette boutique.
@@ -264,25 +264,41 @@ export default async function ShopPage({
     .limit(400);
   if (q) facetRowsQuery = facetRowsQuery.ilike("title", `%${q}%`);
   if (categorie) facetRowsQuery = facetRowsQuery.eq("category", categorie);
-  const { data: facetRows } = await facetRowsQuery;
+
+  // Regroupées en Promise.all (30/09/2026, audit technique — voir
+  // audit-technique-2026-09-29.md) : note de confiance de la boutique, grille
+  // produits, échantillon des facettes et catégories disponibles ne dépendent
+  // d'aucun des trois autres résultats (seulement de `shop.id`/`q`/`categorie`,
+  // déjà connus à ce stade) — elles étaient awaited l'une après l'autre sans
+  // raison. `ratingsByProduct` plus bas reste en revanche séquentielle : elle
+  // a besoin des `id` renvoyés par la requête produits ci-dessous.
+  const [
+    rating,
+    { data: products, count },
+    { data: facetRows },
+    { data: shopCategoriesRaw },
+  ] = await Promise.all([
+    getShopRating(supabase, shop.id),
+    query,
+    facetRowsQuery,
+    // Catégories réellement disponibles dans cette boutique (16/09/2026,
+    // retour d'Isaac : "les catégories de filtre présentes sur les boutiques
+    // ne doivent pas s'afficher toutes, seulement celles qui sont dispo sur
+    // la boutique du vendeur") — calculée sur TOUS les produits actifs de la
+    // boutique, pas seulement la page courante de résultats — sinon les chips
+    // changeraient selon la page affichée, ce qui serait déroutant. Passée le
+    // 22/09/2026 (chantier scalabilité, migration 0033) à la RPC
+    // `get_shop_available_categories`, qui fait le DISTINCT directement en
+    // base au lieu de relire une ligne par produit puis dédupliquer en JS —
+    // même correction que la marketplace globale (`src/app/page.tsx`).
+    supabase.rpc("get_shop_available_categories", { p_shop_id: shop.id }),
+  ]);
+
   const { facets, priceBounds } = computeAttributeFacets(
     categorie,
     (facetRows ?? []) as { price: number; attributes: Record<string, string> | null }[]
   );
 
-  // Catégories réellement disponibles dans cette boutique (16/09/2026,
-  // retour d'Isaac : "les catégories de filtre présentes sur les boutiques
-  // ne doivent pas s'afficher toutes, seulement celles qui sont dispo sur
-  // la boutique du vendeur") — calculée sur TOUS les produits actifs de la
-  // boutique, pas seulement la page courante de résultats — sinon les chips
-  // changeraient selon la page affichée, ce qui serait déroutant. Passée le
-  // 22/09/2026 (chantier scalabilité, migration 0033) à la RPC
-  // `get_shop_available_categories`, qui fait le DISTINCT directement en
-  // base au lieu de relire une ligne par produit puis dédupliquer en JS —
-  // même correction que la marketplace globale (`src/app/page.tsx`).
-  const { data: shopCategoriesRaw } = await supabase.rpc("get_shop_available_categories", {
-    p_shop_id: shop.id,
-  });
   const shopCategoryValues = new Set(
     ((shopCategoriesRaw ?? []) as { category: string | null }[])
       .map((p) => p.category)

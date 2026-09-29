@@ -183,11 +183,23 @@ export default async function StatistiquesPage({
       .select("created_at")
       .eq("shop_id", access.shopId)
       .gte("created_at", since.toISOString()),
-    supabase.rpc("get_shop_best_sellers", { p_shop_id: access.shopId, p_limit: 5 }),
+    // `p_since: null` explicite (30/09/2026, audit technique — bug révélé en
+    // reconstituant le schéma pour src/lib/types/database.ts) : DEUX
+    // surcharges de `get_shop_best_sellers` coexistent en base, (uuid,
+    // integer) de la migration 0025 — jamais supprimée — et (uuid, integer,
+    // timestamptz default null) recréée en 0049. Appelée avec seulement
+    // `p_shop_id`/`p_limit`, PostgREST trouve deux candidates et répond
+    // PGRST203 ("Could not choose the best candidate function"), erreur
+    // ignorée ici -> "Top produits" vide et tous les produits comptés comme
+    // "jamais vendus". Nommer `p_since` ne laisse qu'une seule candidate, la
+    // version 0049 (celle qui renvoie `revenue`), avec exactement le même
+    // sens que l'omission : `null` = depuis toujours.
+    supabase.rpc("get_shop_best_sellers", { p_shop_id: access.shopId, p_limit: 5, p_since: null }),
     // Limite haute (pas de vrai "top N") : sert uniquement à obtenir
     // l'ensemble complet des produits déjà vendus au moins une fois, pour en
     // déduire par différence les produits jamais vendus ci-dessous.
-    supabase.rpc("get_shop_best_sellers", { p_shop_id: access.shopId, p_limit: 10000 }),
+    // `p_since: null` : même raison que l'appel juste au-dessus.
+    supabase.rpc("get_shop_best_sellers", { p_shop_id: access.shopId, p_limit: 10000, p_since: null }),
     supabase
       .from("products")
       .select("id, title, price, stock, view_count, product_images(url, position)")

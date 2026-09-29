@@ -33,7 +33,12 @@ const STATUSES = ["pending", "paid", "preparing", "delivered", "cancelled"] as c
  * (migration 0030) qui refuse tout avis avant ce statut.
  */
 export async function updateOrderStatus(orderId: string, status: string) {
-  if (!STATUSES.includes(status as (typeof STATUSES)[number])) return;
+  // `find` plutôt que `includes(status as ...)` (30/09/2026, audit technique) :
+  // même validation, mais `nextStatus` ressort typé comme l'un des 5 statuts
+  // de la contrainte `orders.status`, ce qu'exige `.update({ status })` depuis
+  // le typage réel du schéma (src/lib/types/database.ts).
+  const nextStatus = STATUSES.find((s) => s === status);
+  if (!nextStatus) return;
 
   const supabase = await createClient();
   const {
@@ -55,7 +60,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
   await supabase
     .from("orders")
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ status: nextStatus, updated_at: new Date().toISOString() })
     .eq("id", orderId);
 
   revalidatePath("/dashboard/commandes");
@@ -82,12 +87,12 @@ export async function updateOrderStatus(orderId: string, status: string) {
           ? {
               title: "Commande livrée — donne ton avis !",
               body: `Ta commande chez ${shop.name} a été marquée comme livrée. Tu peux maintenant laisser un avis sur les produits reçus.`,
-              kind: "review_ready",
+              kind: "review_ready" as const,
             }
           : ORDER_STATUS_CUSTOMER_MESSAGE[status] && {
               title: ORDER_STATUS_CUSTOMER_MESSAGE[status]!.title,
               body: `${ORDER_STATUS_CUSTOMER_MESSAGE[status]!.body} (${shop.name})`,
-              kind: "status_change",
+              kind: "status_change" as const,
             };
 
       if (notification) {

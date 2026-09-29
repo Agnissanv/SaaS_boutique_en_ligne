@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
+import { ProductImage } from "@/components/product-image";
 
 /**
  * Liste de favoris — page client (localStorage, pas de compte client, voir
@@ -42,16 +43,19 @@ export default function FavorisPage() {
                   ✕
                 </button>
                 <Link href={`/${item.shopSlug}/${item.productSlug}`}>
-                  {item.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- image uploadée par le vendeur, source dynamique
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="mb-2 aspect-square w-full rounded object-cover"
-                    />
-                  ) : (
-                    <div className="mb-2 aspect-square w-full rounded bg-brume" />
-                  )}
+                  {/* `<ProductImage>` (30/09/2026, audit technique — voir
+                      audit-technique-2026-09-29.md) : ce composant est LE
+                      point de rendu unique des photos produit dans tout le
+                      projet (voir son commentaire) — cette page utilisait
+                      encore un `<img>` brut avec son propre repli manuel au
+                      lieu d'en bénéficier, ratant au passage le
+                      redimensionnement responsive, le lazy-loading et le
+                      repli visuel "pas de photo" communs partout ailleurs. */}
+                  <ProductImage
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="mb-2 aspect-square w-full rounded object-cover"
+                  />
                   <p className="text-sm font-medium text-encre">{item.title}</p>
                   <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-vert-actif">
                     {item.price} FCFA

@@ -415,11 +415,11 @@ export function getCategoryDescriptionPlaceholder(category: string | null | unde
   );
 }
 
-/** Libellé lisible pour une clé d'attribut d'une catégorie donnée, ou la clé elle-même en repli. */
-export function getAttributeLabel(category: string | null | undefined, key: string): string {
-  const field = getCategoryAttributeFields(category).find((f) => f.key === key);
-  return field?.label ?? key;
-}
+// `getAttributeLabel` (libellé pour une CLÉ d'attribut) supprimée le
+// 30/09/2026 (audit technique — voir audit-technique-2026-09-29.md) : plus
+// aucun appelant nulle part dans `src` (vérifié par grep) — seule
+// `getAttributeValueLabel` ci-dessous (libellé pour une VALEUR d'attribut,
+// ex. "grasse" -> "Peau grasse") est réellement utilisée sur la fiche produit.
 
 /** Libellé lisible pour une VALEUR d'attribut de type "select" (ex: "grasse" -> "Peau grasse"). */
 export function getAttributeValueLabel(

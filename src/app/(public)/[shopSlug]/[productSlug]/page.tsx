@@ -203,28 +203,33 @@ export default async function ProductPage({
 
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
 
-  const { data: reviews } = await supabase
-    .from("product_reviews")
-    .select("customer_name, rating, comment, created_at, order_id, seller_reply")
-    .eq("product_id", product.id)
-    .order("created_at", { ascending: false });
-
-  const shopRating = await getShopRating(supabase, shop.id);
-
-  // Produits similaires : autres produits actifs de la même boutique,
-  // catégorie identique en priorité — demandé par Isaac le 14/09/2026
-  // (analyse comparative Jumia). Volontairement léger : pas de moteur de
-  // recommandation, juste "le reste du catalogue du même vendeur", trié pour
-  // privilégier la même catégorie quand elle existe.
-  const { data: relatedRaw } = await supabase
-    .from("products")
-    .select("id, slug, title, price, category, product_images(url, position)")
-    .eq("shop_id", shop.id)
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .neq("id", product.id)
-    .order("created_at", { ascending: false })
-    .limit(12);
+  // Regroupées en Promise.all (30/09/2026, audit technique — voir
+  // audit-technique-2026-09-29.md) : avis du produit, note de confiance de la
+  // boutique et produits similaires ne dépendent que de `product.id`/`shop.id`
+  // déjà connus, jamais du résultat l'une de l'autre — elles étaient awaited
+  // l'une après l'autre sans raison.
+  const [{ data: reviews }, shopRating, { data: relatedRaw }] = await Promise.all([
+    supabase
+      .from("product_reviews")
+      .select("customer_name, rating, comment, created_at, order_id, seller_reply")
+      .eq("product_id", product.id)
+      .order("created_at", { ascending: false }),
+    getShopRating(supabase, shop.id),
+    // Produits similaires : autres produits actifs de la même boutique,
+    // catégorie identique en priorité — demandé par Isaac le 14/09/2026
+    // (analyse comparative Jumia). Volontairement léger : pas de moteur de
+    // recommandation, juste "le reste du catalogue du même vendeur", trié pour
+    // privilégier la même catégorie quand elle existe.
+    supabase
+      .from("products")
+      .select("id, slug, title, price, category, product_images(url, position)")
+      .eq("shop_id", shop.id)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .neq("id", product.id)
+      .order("created_at", { ascending: false })
+      .limit(12),
+  ]);
 
   const related = [...(relatedRaw ?? [])]
     .sort((a, b) => {

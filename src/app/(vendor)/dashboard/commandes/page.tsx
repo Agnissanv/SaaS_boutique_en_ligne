@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS } from "@/lib/orders";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS, ORDER_STATUSES, isOrderStatus } from "@/lib/orders";
 import { ProductImage } from "@/components/product-image";
 
 const PAGE_SIZE = 50;
@@ -88,7 +88,11 @@ export default async function OrdersPage({
 }) {
   const { q, statut: statusParam, page: pageParam, du, au } = await searchParams;
   const trimmedQuery = q?.trim() || undefined;
-  const status = statusParam && statusParam in ORDER_STATUS_LABELS ? statusParam : "";
+  // Garde de type plutôt que `statusParam in ORDER_STATUS_LABELS` (30/09/2026,
+  // audit technique) : même filtrage, mais `status` est désormais typé
+  // `OrderStatus | ""`, ce qu'exige `.eq("status", ...)` depuis le typage réel
+  // du schéma (src/lib/types/database.ts).
+  const status = isOrderStatus(statusParam) ? statusParam : "";
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -121,7 +125,10 @@ export default async function OrdersPage({
   // pastilles), commande(s) urgente(s).
   const subscriptionPromise = getShopSubscription(supabase, shopId);
   const statusCountPromises = Promise.all(
-    Object.keys(ORDER_STATUS_LABELS).map((s) =>
+    // `ORDER_STATUSES` (typé) plutôt que `Object.keys(ORDER_STATUS_LABELS)`
+    // (simple `string[]`) — même liste, même ordre ; l'index sert à relire
+    // les comptes plus bas, les deux boucles doivent parcourir la même liste.
+    ORDER_STATUSES.map((s) =>
       supabase.from("orders").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", s)
     )
   );
@@ -228,7 +235,7 @@ export default async function OrdersPage({
   ]);
 
   const statusCounts = new Map<string, number>();
-  Object.keys(ORDER_STATUS_LABELS).forEach((s, i) => {
+  ORDER_STATUSES.forEach((s, i) => {
     statusCounts.set(s, statusCountResults[i].count ?? 0);
   });
   const totalOrdersEver = Array.from(statusCounts.values()).reduce((sum, n) => sum + n, 0);

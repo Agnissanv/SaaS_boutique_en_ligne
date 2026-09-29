@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
+import { isReservedProductSlug } from "@/lib/utils/reserved-slugs";
 import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
 import { SHOP_ASSETS_BUCKET, storagePathFromPublicUrl } from "@/lib/supabase/storage-path";
@@ -358,6 +359,13 @@ export async function saveProduct(
     let slug = baseSlug;
     let attempt = 0;
 
+    // `isReservedProductSlug` (30/09/2026, correctif d'audit) traité comme
+    // une collision en base : "panier" ou "commande" comme slug de produit
+    // rendrait sa fiche invisible en silence, Next.js faisant toujours
+    // passer les routes statiques [shopSlug]/panier et [shopSlug]/commande
+    // avant la route dynamique [shopSlug]/[productSlug] — voir
+    // reserved-slugs.ts. Un produit s'appelant littéralement "Panier" est
+    // rarissime, mais silencieux et confus si ça arrive.
     while (attempt < 8) {
       const { data: existing } = await supabase
         .from("products")
@@ -366,7 +374,7 @@ export async function saveProduct(
         .eq("slug", slug)
         .maybeSingle();
 
-      if (!existing) break;
+      if (!existing && !isReservedProductSlug(slug)) break;
       attempt += 1;
       slug =
         attempt <= 5

@@ -6,6 +6,7 @@ import { maybeGrantReferralReward } from "@/lib/referrals";
 import { maybeCreditCommercialCommission } from "@/lib/commercial-referrals";
 import { resolveNotificationEmail } from "@/lib/subscription-lifecycle";
 import { sendSubscriptionPaymentReceiptEmail } from "@/lib/email/subscription-payment-receipt";
+import type { Json } from "@/lib/types/database";
 
 // Route Handler Node (jamais Edge) — nécessaire pour `node:crypto` utilisé
 // par `verifyNyoleWebhookSignature`. Explicite plutôt que de compter sur le
@@ -86,7 +87,11 @@ export async function POST(request: NextRequest) {
     data?: {
       id?: string;
       status?: string;
-      metadata?: Record<string, unknown>;
+      // `Json` plutôt que `Record<string, unknown>` (30/09/2026, audit
+      // technique) : ce payload sort d'un `JSON.parse`, c'est donc du JSON par
+      // construction — et c'est ce qu'exige `payments.raw_payload` (jsonb)
+      // depuis le typage réel du schéma (src/lib/types/database.ts).
+      metadata?: { [key: string]: Json | undefined };
       order_id?: string;
       amount?: number;
       currency?: string;
@@ -138,8 +143,11 @@ export async function POST(request: NextRequest) {
     if (result) {
       await maybeGrantReferralReward(supabase, payment.shop_id, result.planId);
       // Parrainage commercial : commission en argent réel à chaque paiement
-      // confirmé, voir src/lib/commercial-referrals.ts.
-      await maybeCreditCommercialCommission(supabase, payment.shop_id, result.planCode);
+      // confirmé, voir src/lib/commercial-referrals.ts. `payment.id` transmis
+      // pour le verrou d'idempotence (migration 0050) — Nyole peut rejouer ce
+      // même événement jusqu'à 10 fois, sans lui le webhook pouvait créditer
+      // deux fois la même commission (voir le commentaire du fichier).
+      await maybeCreditCommercialCommission(supabase, payment.shop_id, result.planCode, payment.id);
     }
 
     await supabase
@@ -173,12 +181,20 @@ export async function POST(request: NextRequest) {
 
         if (shop) {
           const email = await resolveNotificationEmail(supabase, shop);
-          if (email) {
+          // Bug révélé par le typage réel du schéma (30/09/2026, audit
+          // technique) : `payments.amount` est nullable en base (0001_init.sql)
+          // et l'ancien code le passait tel quel à l'email, qui fait
+          // `amount.toLocaleString(...)` — un paiement sans montant côté Nyole
+          // ET côté base levait donc un TypeError (avalé par le `catch`
+          // ci-dessous, email perdu avec une erreur trompeuse). Montant
+          // inconnu -> pas d'email, plutôt qu'un reçu faux ou un crash.
+          const receiptAmount = payload?.data?.amount ?? payment.amount;
+          if (email && receiptAmount !== null) {
             await sendSubscriptionPaymentReceiptEmail({
               to: email,
               shopName: shop.name,
               planName: result.planName,
-              amount: payload?.data?.amount ?? payment.amount,
+              amount: receiptAmount,
               currency: payload?.data?.currency ?? payment.currency,
               reference: payload?.data?.order_id ?? sessionId,
               expiresAt: result.expiresAt,
