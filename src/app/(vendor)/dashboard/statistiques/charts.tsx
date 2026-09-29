@@ -135,6 +135,56 @@ export function RankedList({
 }
 
 /**
+ * Mini-courbe (sparkline) sans axes ni graduations — ajoutée le 30/09/2026
+ * (refonte de Statistiques v2, inspiration maquette "Analytiques") pour les
+ * tuiles KPI. `stroke="currentColor"` : hérite la couleur texte posée par le
+ * conteneur (voir `StatTile`/`ComparisonTile` ci-dessous) plutôt que de
+ * prendre une couleur en dur, pour rester réutilisable. Retourne `null`
+ * plutôt qu'un tracé plat quand il n'y a pas assez de points ou que toutes
+ * les valeurs sont identiques (une ligne plate n'apporte aucune information
+ * et serait trompeuse en zoom).
+ */
+export function Sparkline({
+  points,
+  className,
+}: {
+  points: number[];
+  className?: string;
+}) {
+  if (points.length < 2 || points.every((v) => v === points[0])) return null;
+
+  const width = 64;
+  const height = 24;
+  const max = Math.max(1, ...points);
+  const min = Math.min(0, ...points);
+  const range = max - min || 1;
+
+  const coords = points.map((v, i) => {
+    const x = points.length > 1 ? (i / (points.length - 1)) * width : width / 2;
+    const y = height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className={className ?? "h-6 w-16"}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <polyline
+        points={coords.join(" ")}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
  * Tuile chiffre simple (enrichissement du 16/09/2026) — pour les stats qui
  * n'ont pas de comparaison de période ni de classement : panier moyen,
  * valeur du stock, note moyenne, taux d'annulation, compteurs clients...
@@ -151,30 +201,40 @@ export function RankedList({
  * pour la même raison). Branché en deux rendus distincts (pas une classe
  * conditionnelle) pour ne rien changer au DOM des appels existants
  * (`/dashboard/statistiques`) qui ne passent pas d'icône.
+ *
+ * `trend` optionnel ajouté le 30/09/2026 (refonte Statistiques v2) — une
+ * mini-courbe alignée à droite, seulement dans la branche "avec icône" (une
+ * tuile sans icône n'a pas la largeur prévue pour ça). `undefined`/tableau
+ * trop court : `Sparkline` retourne `null`, la tuile garde son rendu actuel.
  */
 export function StatTile({
   label,
   value,
   sublabel,
   icon,
+  trend,
 }: {
   label: string;
   value: string;
   sublabel?: string;
   icon?: React.ReactNode;
+  trend?: number[];
 }) {
   return (
     <div className="rounded-lg border border-ligne bg-white p-4">
       {icon ? (
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif">
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs text-encre/60">{label}</p>
-            <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
-            {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif">
+              {icon}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-encre/60">{label}</p>
+              <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
+              {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+            </div>
           </div>
+          {trend && <Sparkline points={trend} className="mt-1 h-8 w-14 shrink-0 text-vert-actif/45" />}
         </div>
       ) : (
         <>
@@ -271,19 +331,25 @@ export function CountBars({
 }
 
 /** Tuile de comparaison de périodes (Pro) — variation en %, colorée selon le sens. */
-/** `icon` optionnel — même raisonnement que `StatTile` ci-dessus. */
+/**
+ * `icon` optionnel — même raisonnement que `StatTile` ci-dessus. `trend`
+ * optionnel ajouté le 30/09/2026 (refonte Statistiques v2) — même
+ * composant `Sparkline`, mêmes conditions d'affichage que `StatTile`.
+ */
 export function ComparisonTile({
   label,
   current,
   previous,
   format,
   icon,
+  trend,
 }: {
   label: string;
   current: number;
   previous: number;
   format: (n: number) => string;
   icon?: React.ReactNode;
+  trend?: number[];
 }) {
   const hasPrevious = previous > 0;
   const change = hasPrevious ? ((current - previous) / previous) * 100 : null;
@@ -306,15 +372,18 @@ export function ComparisonTile({
   return (
     <div className="rounded-lg border border-ligne bg-white p-4">
       {icon ? (
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif">
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs text-encre/60">{label}</p>
-            <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
-            {changeLabel}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif">
+              {icon}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-encre/60">{label}</p>
+              <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
+              {changeLabel}
+            </div>
           </div>
+          {trend && <Sparkline points={trend} className="mt-1 h-8 w-14 shrink-0 text-vert-actif/45" />}
         </div>
       ) : (
         <>
@@ -323,6 +392,103 @@ export function ComparisonTile({
           {changeLabel}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Donut CA par catégorie — ajouté le 30/09/2026 (refonte Statistiques v2,
+ * inspiration maquette "Analytiques"). Anneau dessiné à la main via
+ * `stroke-dasharray`/`stroke-dashoffset` sur un cercle SVG (pas de
+ * librairie, même raisonnement que le reste de ce fichier). Monochrome
+ * vert-actif à opacité décroissante par tranche plutôt qu'une couleur
+ * différente par catégorie comme sur la maquette : même choix que les tuiles
+ * KPI de l'Aperçu (voir `StatTile` ci-dessus) pour éviter le rendu
+ * "dashboard IA générique". Catégories au-delà du top 5 regroupées sous
+ * "Autres" plutôt que d'empiler des tranches trop fines pour être lisibles.
+ * Les décalages cumulés (`dashOffsets`) sont calculés via une boucle à part,
+ * pas un `.map()` qui muterait une variable pendant le rendu JSX.
+ */
+export function CategoryDonut({
+  rows,
+  emptyLabel,
+}: {
+  rows: { label: string; revenue: number }[];
+  emptyLabel: string;
+}) {
+  const total = rows.reduce((sum, r) => sum + r.revenue, 0);
+
+  if (rows.length === 0 || total <= 0) {
+    return <p className="text-sm text-encre/60">{emptyLabel}</p>;
+  }
+
+  const sorted = [...rows].sort((a, b) => b.revenue - a.revenue);
+  const top = sorted.slice(0, 5);
+  const rest = sorted.slice(5);
+  const restRevenue = rest.reduce((sum, r) => sum + r.revenue, 0);
+  const slices = restRevenue > 0 ? [...top, { label: "Autres", revenue: restRevenue }] : top;
+
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+
+  const withOffsets = slices.map((slice, i) => {
+    const pct = slice.revenue / total;
+    const length = pct * circumference;
+    return {
+      label: slice.label,
+      pct,
+      dash: `${length.toFixed(1)} ${(circumference - length).toFixed(1)}`,
+      opacity: 1 - i * 0.15,
+    };
+  });
+
+  let acc = 0;
+  const dashOffsets: number[] = [];
+  for (const s of withOffsets) {
+    dashOffsets.push(-acc);
+    acc += s.pct * circumference;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-4 sm:flex-row">
+      <svg
+        viewBox="0 0 160 160"
+        className="h-36 w-36 shrink-0"
+        role="img"
+        aria-label="Répartition du chiffre d'affaires par catégorie"
+      >
+        <circle cx="80" cy="80" r={radius} fill="none" stroke="var(--color-brume, #f7f5f1)" strokeWidth="20" />
+        {withOffsets.map((s, i) => (
+          <circle
+            key={s.label + i}
+            cx="80"
+            cy="80"
+            r={radius}
+            fill="none"
+            stroke="var(--color-vert-actif, #1c6b4a)"
+            strokeOpacity={s.opacity}
+            strokeWidth="20"
+            strokeDasharray={s.dash}
+            strokeDashoffset={dashOffsets[i]}
+            transform="rotate(-90 80 80)"
+          />
+        ))}
+        <text x="80" y="77" textAnchor="middle" className="fill-encre font-mono text-[15px] font-semibold">
+          {FMT_FCFA.format(Math.round(total))}
+        </text>
+        <text x="80" y="93" textAnchor="middle" className="fill-encre text-[9px] opacity-50">
+          FCFA total
+        </text>
+      </svg>
+      <ul className="flex w-full min-w-0 flex-col gap-1.5">
+        {withOffsets.map((s) => (
+          <li key={s.label} className="flex items-center gap-2 text-xs">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-vert-actif" style={{ opacity: s.opacity }} />
+            <span className="min-w-0 flex-1 truncate text-encre/70">{s.label}</span>
+            <span className="shrink-0 font-mono text-encre/60">{Math.round(s.pct * 100)}%</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

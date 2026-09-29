@@ -4,15 +4,17 @@ import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
 import { getShopRating } from "@/lib/reviews";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_BAR_CLASS } from "@/lib/orders";
+import { ProductImage } from "@/components/product-image";
 import {
-  RevenueTrendChart,
   StatusBreakdown,
   RankedList,
   ComparisonTile,
   StatTile,
   RevenueBars,
   CountBars,
+  CategoryDonut,
 } from "./charts";
+import { ComboTrendChart } from "./combo-trend-chart";
 import { PeriodSelect } from "./period-select";
 
 type OrderRow = {
@@ -25,8 +27,16 @@ type OrderRow = {
   promo_code_id: string | null;
   discount_amount: number;
 };
-type BestSeller = { product_id: string; title: string; quantity_sold: number };
-type ViewedProduct = { id: string; title: string; view_count: number };
+type BestSeller = { product_id: string; title: string; quantity_sold: number; revenue: number };
+type ProductImageRow = { url: string; position: number };
+type ActiveProduct = {
+  id: string;
+  title: string;
+  price: number;
+  stock: number;
+  view_count: number;
+  product_images: ProductImageRow[];
+};
 type CategoryRow = { category: string; revenue: number; quantity_sold: number };
 type TopCustomerRow = {
   customer_phone: string;
@@ -34,12 +44,9 @@ type TopCustomerRow = {
   total_spent: number;
   order_count: number;
 };
-type CustomerPeriodStats = {
-  unique_customers: number;
-  new_customers: number;
-  returning_customers: number;
-};
+type CustomerSegments = { nouveau: number; occasionnel: number; regulier: number; fidele: number };
 type TrafficSourceRow = { source: string; visits: number };
+type PageViewRow = { created_at: string };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -60,34 +67,44 @@ function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }
 
+function firstThumbnail(images: ProductImageRow[] | undefined): string | undefined {
+  if (!images || images.length === 0) return undefined;
+  return [...images].sort((a, b) => a.position - b.position)[0]?.url;
+}
+
 const FMT_FCFA = new Intl.NumberFormat("fr-FR");
 
 /**
- * "Vraies statistiques" avec graphiques — ajoutée le 16/09/2026 en réponse à
- * un manque qu'Isaac a lui-même identifié en comparant KEVA à un logiciel de
- * gestion concurrent, puis largement enrichie le même jour ("je veux que les
- * stats soit vraiment complet et très riche"). Voir decisions-techniques.md
- * pour l'historique complet des deux tranches.
+ * "Vraies statistiques" avec graphiques — ajoutée le 16/09/2026, enrichie le
+ * même jour, puis refondue en profondeur le 30/09/2026 ("refonte v2") en
+ * s'inspirant d'une seconde maquette générique ("Analytiques") qu'Isaac a
+ * envoyée après la refonte de l'Aperçu. Voir decisions-techniques.md pour
+ * l'historique complet des trois tranches.
  *
- * Accessible à un collaborateur actif (plan Pro), pas seulement au
- * propriétaire — cohérent avec `/dashboard` (Aperçu), qui affiche déjà le CA
- * à un collaborateur. Nuance ajoutée avec l'enrichissement : cette page
- * expose maintenant des données clients nominatives (téléphone, nom,
- * dépense cumulée) et la performance des codes promo, plus sensibles que le
- * CA agrégé déjà visible ailleurs — un choix volontairement laissé tel quel
- * (collaborateur = même périmètre commercial que le propriétaire côté
- * commandes, cf. `src/lib/shop-access.ts`) plutôt que d'introduire une
- * troisième granularité d'accès ad hoc pour cette seule page.
+ * Deux adaptations honnêtes plutôt que de copier la maquette telle quelle
+ * (décisions prises AVANT d'écrire le code, pas des raccourcis découverts en
+ * cours de route) :
+ * - Pas de "taux de rebond" : `shop_page_views` est un journal de vues à
+ *   plat, sans notion de session/visite — impossible de distinguer "reparti
+ *   après une page" de "a navigué longtemps". La 4e tuile KPI de la maquette
+ *   est remplacée par "Clients actifs" (comptage réel, via le nouveau RPC
+ *   `get_shop_customer_segments`).
+ * - Entonnoir à 3 étapes, pas 4 : le panier est 100% local au navigateur
+ *   (`useShopCart.ts`, aucune persistance serveur pour un visiteur anonyme)
+ *   donc "Ajouts panier" est indécidable et abandonné. "Paiements réussis"
+ *   devient "Commandes confirmées" (= commandes non annulées) : KEVA n'a pas
+ *   d'événement "paiement réussi" distinct de la commande elle-même pour le
+ *   paiement à la livraison, qui est le cas majoritaire.
  *
- * Deux niveaux tranchés par Isaac (`subscription.ts`) :
- * - Business (`hasAdvancedStats`) : sélecteur de période (7/30/90 jours),
- *   courbe de CA et de commandes, panier moyen, produits les plus
- *   vendus/vus, répartition par statut/moyen de paiement/catégorie, taux
- *   d'annulation, valeur du stock, produits jamais vendus, note moyenne des
- *   avis.
- * - Pro (`hasFullStats`, en plus) : comparaison de périodes (CA, commandes,
- *   panier moyen), clients uniques/nouveaux/récurrents, meilleurs clients,
- *   statistiques codes promo, taux de conversion par produit.
+ * Deux niveaux tranchés par Isaac (`subscription.ts`), inchangés par cette
+ * refonte :
+ * - Business (`hasAdvancedStats`) : sélecteur de période, courbe CA+vues,
+ *   entonnoir, top produits (sans conversion%), répartition par
+ *   statut/moyen de paiement/catégorie, taux d'annulation, valeur du stock,
+ *   produits jamais vendus, note moyenne des avis.
+ * - Pro (`hasFullStats`, en plus) : comparaison de périodes sur les tuiles
+ *   KPI, taux de conversion et clients actifs, clients par segment,
+ *   meilleurs clients, conversion% par produit, statistiques codes promo.
  */
 export default async function StatistiquesPage({
   searchParams,
@@ -137,17 +154,15 @@ export default async function StatistiquesPage({
 
   // Fenêtre = 2x la période choisie : la moitié récente pour la courbe/les
   // répartitions affichées, l'autre moitié pour la comparaison de périodes
-  // (Pro), sans deuxième requête sur `orders`.
+  // (Pro), sans deuxième requête sur `orders`/`shop_page_views`.
   const since = new Date(previousPeriodStart);
 
   const [
     { data: recentOrders },
-    { count: totalOrdersCount },
+    { data: pageViewsRaw },
     { data: bestSellersRaw },
     { data: neverSoldRaw },
-    { data: viewedProductsRaw },
     { data: allActiveProducts },
-    { data: shop },
     { data: categoryBreakdownRaw },
     { data: trafficSourcesRaw },
     rating,
@@ -159,10 +174,15 @@ export default async function StatistiquesPage({
       )
       .eq("shop_id", access.shopId)
       .gte("created_at", since.toISOString()),
+    // Vues brutes sur la fenêtre 2x période — bucketées ci-dessous par jour,
+    // comme les commandes, pour alimenter à la fois la courbe combinée
+    // CA+vues, le taux de conversion (période courante ET précédente) et
+    // l'entonnoir ("Visiteurs").
     supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("shop_id", access.shopId),
+      .from("shop_page_views")
+      .select("created_at")
+      .eq("shop_id", access.shopId)
+      .gte("created_at", since.toISOString()),
     supabase.rpc("get_shop_best_sellers", { p_shop_id: access.shopId, p_limit: 5 }),
     // Limite haute (pas de vrai "top N") : sert uniquement à obtenir
     // l'ensemble complet des produits déjà vendus au moins une fois, pour en
@@ -170,19 +190,10 @@ export default async function StatistiquesPage({
     supabase.rpc("get_shop_best_sellers", { p_shop_id: access.shopId, p_limit: 10000 }),
     supabase
       .from("products")
-      .select("id, title, view_count")
-      .eq("shop_id", access.shopId)
-      .eq("is_active", true)
-      .is("deleted_at", null)
-      .order("view_count", { ascending: false })
-      .limit(5),
-    supabase
-      .from("products")
-      .select("id, title, price, stock, view_count")
+      .select("id, title, price, stock, view_count, product_images(url, position)")
       .eq("shop_id", access.shopId)
       .eq("is_active", true)
       .is("deleted_at", null),
-    supabase.from("shops").select("view_count").eq("id", access.shopId).maybeSingle(),
     supabase.rpc("get_shop_category_breakdown", {
       p_shop_id: access.shopId,
       p_since: new Date(currentPeriodStart).toISOString(),
@@ -197,34 +208,26 @@ export default async function StatistiquesPage({
   ]);
 
   const orders = (recentOrders ?? []) as OrderRow[];
+  const pageViews = (pageViewsRaw ?? []) as PageViewRow[];
   const bestSellers = (bestSellersRaw ?? []) as BestSeller[];
   // Ventes cumulées depuis toujours, par produit — dérivé du même appel
   // `get_shop_best_sellers` à `p_limit` élevé que pour les produits jamais
-  // vendus ci-dessous, réutilisé aussi pour le taux de conversion par
-  // produit (Pro) plutôt que de refaire une requête.
+  // vendus ci-dessous.
   const lifetimeSales = new Map(
     ((neverSoldRaw ?? []) as BestSeller[]).map((p) => [p.product_id, p.quantity_sold])
   );
   const soldProductIds = new Set(lifetimeSales.keys());
-  const viewedProducts = ((viewedProductsRaw ?? []) as ViewedProduct[]).filter(
-    (p) => p.view_count > 0
-  );
-  const allProducts = (allActiveProducts ?? []) as {
-    id: string;
-    title: string;
-    price: number;
-    stock: number;
-    view_count: number;
-  }[];
+  const allProducts = (allActiveProducts ?? []) as ActiveProduct[];
+  const productById = new Map(allProducts.map((p) => [p.id, p]));
   const categoryBreakdown = (categoryBreakdownRaw ?? []) as CategoryRow[];
   const trafficSourceRows = ((trafficSourcesRaw ?? []) as TrafficSourceRow[]).map((row) => ({
     label: TRAFFIC_SOURCE_LABELS[row.source] ?? row.source,
     count: row.visits,
   }));
 
-  const dayBuckets = new Map<number, { revenue: number; orders: number }>();
+  const dayBuckets = new Map<number, { revenue: number; orders: number; views: number }>();
   for (let i = 0; i < periodDays; i++) {
-    dayBuckets.set(currentPeriodStart + i * DAY_MS, { revenue: 0, orders: 0 });
+    dayBuckets.set(currentPeriodStart + i * DAY_MS, { revenue: 0, orders: 0, views: 0 });
   }
 
   let currentPeriodRevenue = 0;
@@ -277,18 +280,31 @@ export default async function StatistiquesPage({
     }
   }
 
-  const trendPoints = Array.from(dayBuckets.entries())
-    .sort(([a], [b]) => a - b)
-    .map(([ts, v]) => ({
-      label: new Date(ts).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
-      value: v.revenue,
-    }));
-  const orderCountPoints = Array.from(dayBuckets.entries())
-    .sort(([a], [b]) => a - b)
-    .map(([ts, v]) => ({
-      label: new Date(ts).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
-      value: v.orders,
-    }));
+  let currentPeriodViews = 0;
+  let previousPeriodViews = 0;
+  for (const view of pageViews) {
+    const day = startOfDay(new Date(view.created_at));
+    if (day >= currentPeriodStart) {
+      currentPeriodViews += 1;
+      const bucket = dayBuckets.get(day);
+      if (bucket) bucket.views += 1;
+    } else if (day >= previousPeriodStart) {
+      previousPeriodViews += 1;
+    }
+  }
+
+  const sortedBuckets = Array.from(dayBuckets.entries()).sort(([a], [b]) => a - b);
+  const dayLabel = (ts: number) =>
+    new Date(ts).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+
+  const comboPoints = sortedBuckets.map(([ts, v]) => ({
+    label: dayLabel(ts),
+    revenue: v.revenue,
+    views: v.views,
+  }));
+  const revenueTrend = sortedBuckets.map(([, v]) => v.revenue);
+  const avgOrderTrend = sortedBuckets.map(([, v]) => (v.orders > 0 ? v.revenue / v.orders : 0));
+  const conversionTrend = sortedBuckets.map(([, v]) => (v.views > 0 ? (v.orders / v.views) * 100 : 0));
 
   const statusRows = Object.keys(ORDER_STATUS_LABELS)
     .map((status) => ({
@@ -305,11 +321,7 @@ export default async function StatistiquesPage({
     }))
     .sort((a, b) => b.revenue - a.revenue);
 
-  const categoryRows = categoryBreakdown.map((c) => ({
-    label: c.category,
-    revenue: c.revenue,
-    sublabel: `${c.quantity_sold} vendu(s)`,
-  }));
+  const categoryRows = categoryBreakdown.map((c) => ({ label: c.category, revenue: c.revenue }));
 
   const currentAvgOrderValue = currentPeriodOrders > 0 ? currentPeriodRevenue / currentPeriodOrders : 0;
   const previousAvgOrderValue = previousPeriodOrders > 0 ? previousPeriodRevenue / previousPeriodOrders : 0;
@@ -318,44 +330,62 @@ export default async function StatistiquesPage({
   const stockValue = allProducts.reduce((sum, p) => sum + p.price * p.stock, 0);
   const neverSoldProducts = allProducts.filter((p) => !soldProductIds.has(p.id));
 
-  // Taux de conversion global : approximatif et assumé comme tel (pas de
-  // déduplication de vues, `shops.view_count` est un compteur brut depuis le
-  // début — migration 0005). Calculé sur la durée de vie de la boutique, pas
-  // sur la période choisie, pour rester cohérent avec ce même compteur
-  // cumulatif.
-  const conversionRate =
-    shop?.view_count && shop.view_count > 0
-      ? ((totalOrdersCount ?? 0) / shop.view_count) * 100
-      : null;
+  // Taux de conversion — période courante ET précédente, même définition que
+  // sur l'Aperçu (commandes / vues) : remplace l'ancien calcul "depuis
+  // toujours" (`shops.view_count` / nombre total de commandes), abandonné
+  // avec cette refonte au profit d'un chiffre borné à la période choisie,
+  // cohérent avec la tuile KPI équivalente de l'Aperçu.
+  const currentConversionRate = currentPeriodViews > 0 ? (currentPeriodOrders / currentPeriodViews) * 100 : 0;
+  const previousConversionRate = previousPeriodViews > 0 ? (previousPeriodOrders / previousPeriodViews) * 100 : 0;
 
-  // Taux de conversion PAR PRODUIT (Pro) : quantité vendue (toute la durée
-  // de vie, via le RPC `p_limit` élevé ci-dessus) rapportée aux vues du
-  // produit. Filtre `view_count >= 3` : sous ce seuil, un seul achat donne
-  // un taux à 50-100% qui n'a aucune signification statistique — bruit
-  // écarté plutôt qu'affiché comme un vrai signal.
-  const productConversion = allProducts
-    .filter((p) => p.view_count >= 3)
-    .map((p) => ({
+  // "Top produits" (Business+) : fusionne les anciennes listes séparées
+  // "les plus vendus" / "les plus vus" / "meilleurs taux de conversion" en
+  // une seule, triée par revenu (depuis toujours — même périmètre que
+  // l'ancienne liste "les plus vendus" qu'elle remplace). Filtre
+  // `view_count >= 3` sur la conversion% (Pro) : sous ce seuil un seul achat
+  // donne un taux de 50-100% qui n'a aucune signification statistique.
+  const topProducts = bestSellers.map((p) => {
+    const info = productById.get(p.product_id);
+    return {
+      id: p.product_id,
       title: p.title,
-      rate: ((lifetimeSales.get(p.id) ?? 0) / p.view_count) * 100,
-    }))
-    .sort((a, b) => b.rate - a.rate)
-    .slice(0, 5);
+      thumbnail: firstThumbnail(info?.product_images),
+      views: info?.view_count ?? 0,
+      quantitySold: p.quantity_sold,
+      revenue: p.revenue,
+      conversion: info && info.view_count >= 3 ? (p.quantity_sold / info.view_count) * 100 : null,
+    };
+  });
 
   let topCustomers: TopCustomerRow[] = [];
-  let customerPeriodStats: CustomerPeriodStats | null = null;
+  let customerSegments: CustomerSegments | null = null;
 
   if (subscription.features.hasFullStats) {
-    const [{ data: topCustomersRaw }, { data: customerStatsRaw }] = await Promise.all([
+    const [{ data: topCustomersRaw }, { data: customerSegmentsRaw }] = await Promise.all([
       supabase.rpc("get_shop_top_customers", { p_shop_id: access.shopId, p_limit: 5 }),
-      supabase.rpc("get_shop_customer_period_stats", {
+      supabase.rpc("get_shop_customer_segments", {
         p_shop_id: access.shopId,
         p_since: new Date(currentPeriodStart).toISOString(),
       }),
     ]);
     topCustomers = (topCustomersRaw ?? []) as TopCustomerRow[];
-    customerPeriodStats = (customerStatsRaw?.[0] ?? null) as CustomerPeriodStats | null;
+    customerSegments = (customerSegmentsRaw?.[0] ?? null) as CustomerSegments | null;
   }
+
+  const activeCustomersCount = customerSegments
+    ? customerSegments.nouveau + customerSegments.occasionnel + customerSegments.regulier + customerSegments.fidele
+    : 0;
+
+  // Entonnoir simplifié à 3 étapes — voir le commentaire en tête de fichier
+  // pour le raisonnement (panier local au navigateur, pas d'événement
+  // "paiement réussi" distinct de la commande pour le paiement à la
+  // livraison).
+  const funnelStages = [
+    { label: "Visiteurs", count: currentPeriodViews },
+    { label: "Commandes", count: currentPeriodTotal },
+    { label: "Commandes confirmées", count: currentPeriodOrders },
+  ];
+  const funnelMax = Math.max(1, funnelStages[0].count);
 
   const periodLabel = `${periodDays} derniers jours`;
 
@@ -369,94 +399,149 @@ export default async function StatistiquesPage({
         <PeriodSelect current={String(periodDays)} />
       </div>
 
-      <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
-        <h2 className="font-display text-sm font-semibold text-encre">Chiffre d&apos;affaires</h2>
-        <div className="mt-3">
-          <RevenueTrendChart points={trendPoints} />
-        </div>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {subscription.features.hasFullStats ? (
+          <>
+            <ComparisonTile
+              label="Chiffre d'affaires"
+              current={currentPeriodRevenue}
+              previous={previousPeriodRevenue}
+              format={(n) => `${FMT_FCFA.format(n)} FCFA`}
+              icon={<IconRevenue className="h-4.5 w-4.5" />}
+              trend={revenueTrend}
+            />
+            <ComparisonTile
+              label="Panier moyen"
+              current={currentAvgOrderValue}
+              previous={previousAvgOrderValue}
+              format={(n) => `${FMT_FCFA.format(Math.round(n))} FCFA`}
+              icon={<IconBasket className="h-4.5 w-4.5" />}
+              trend={avgOrderTrend}
+            />
+            <ComparisonTile
+              label="Taux de conversion"
+              current={currentConversionRate}
+              previous={previousConversionRate}
+              format={(n) => `${n.toFixed(1)}%`}
+              icon={<IconTarget className="h-4.5 w-4.5" />}
+              trend={conversionTrend}
+            />
+            <StatTile
+              label="Clients actifs"
+              value={String(activeCustomersCount)}
+              sublabel={periodLabel}
+              icon={<IconUsersActive className="h-4.5 w-4.5" />}
+            />
+          </>
+        ) : (
+          <>
+            <StatTile
+              label="Chiffre d'affaires"
+              value={`${FMT_FCFA.format(currentPeriodRevenue)} FCFA`}
+              sublabel={periodLabel}
+              icon={<IconRevenue className="h-4.5 w-4.5" />}
+              trend={revenueTrend}
+            />
+            <StatTile
+              label="Panier moyen"
+              value={`${FMT_FCFA.format(Math.round(currentAvgOrderValue))} FCFA`}
+              sublabel={periodLabel}
+              icon={<IconBasket className="h-4.5 w-4.5" />}
+              trend={avgOrderTrend}
+            />
+            <div className="col-span-2 flex items-center rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60 sm:col-span-2">
+              Le taux de conversion et les clients actifs sont disponibles avec
+              le plan Pro.
+            </div>
+          </>
+        )}
       </div>
 
       <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
-        <h2 className="font-display text-sm font-semibold text-encre">Nombre de commandes</h2>
+        <h2 className="font-display text-sm font-semibold text-encre">
+          Ventes &amp; vues ({periodLabel})
+        </h2>
         <div className="mt-3">
-          <RevenueTrendChart
-            points={orderCountPoints}
-            format={(n) => `${n} commande(s)`}
-            totalLabel="Total sur la période"
-            ariaLabel="Évolution du nombre de commandes"
-          />
+          <ComboTrendChart points={comboPoints} />
         </div>
-      </div>
-
-      {subscription.features.hasFullStats && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <ComparisonTile
-            label={`CA (${periodLabel})`}
-            current={currentPeriodRevenue}
-            previous={previousPeriodRevenue}
-            format={(n) => `${FMT_FCFA.format(n)} FCFA`}
-          />
-          <ComparisonTile
-            label={`Commandes (${periodLabel})`}
-            current={currentPeriodOrders}
-            previous={previousPeriodOrders}
-            format={(n) => String(n)}
-          />
-          <ComparisonTile
-            label="Panier moyen"
-            current={currentAvgOrderValue}
-            previous={previousAvgOrderValue}
-            format={(n) => `${FMT_FCFA.format(Math.round(n))} FCFA`}
-          />
-        </div>
-      )}
-
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatTile
-          label="Panier moyen"
-          value={`${FMT_FCFA.format(Math.round(currentAvgOrderValue))} FCFA`}
-          sublabel={periodLabel}
-        />
-        <StatTile
-          label="Valeur du stock"
-          value={`${FMT_FCFA.format(Math.round(stockValue))} FCFA`}
-          sublabel={`${allProducts.length} produit(s) actif(s)`}
-        />
-        <StatTile
-          label="Note moyenne des avis"
-          value={rating ? `${rating.average.toFixed(1)} / 5` : "—"}
-          sublabel={rating ? `${rating.count} avis` : "Pas encore d'avis"}
-        />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-ligne bg-white p-4">
           <h2 className="font-display text-sm font-semibold text-encre">
-            Produits les plus vendus
+            Entonnoir de conversion ({periodLabel})
           </h2>
-          <div className="mt-3">
-            <RankedList
-              items={bestSellers.map((p) => ({
-                label: p.title,
-                value: `${p.quantity_sold} vendu(s)`,
-              }))}
-              emptyLabel="Aucune vente pour l'instant."
-            />
+          <p className="mt-1 text-xs text-encre/50">
+            Simplifié à 3 étapes : KEVA ne peut pas suivre les ajouts au
+            panier (panier local au navigateur), et &quot;Commandes
+            confirmées&quot; remplace &quot;Paiements réussis&quot; — pas
+            d&apos;étape de paiement distincte pour une commande à la
+            livraison.
+          </p>
+          <div className="mt-4 flex flex-col gap-3">
+            {funnelStages.map((stage, i) => {
+              const widthPct = Math.max(4, (stage.count / funnelMax) * 100);
+              const previous = i > 0 ? funnelStages[i - 1].count : null;
+              const dropOff =
+                previous !== null && previous > 0 ? ((previous - stage.count) / previous) * 100 : null;
+              return (
+                <div key={stage.label}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-encre/70">{stage.label}</span>
+                    <span className="font-mono text-encre">{stage.count}</span>
+                  </div>
+                  <div className="mt-1 h-3 overflow-hidden rounded-full bg-brume">
+                    <div className="h-full rounded-full bg-vert-actif" style={{ width: `${widthPct}%` }} />
+                  </div>
+                  {dropOff !== null && (
+                    <p className="mt-1 text-[11px] text-encre/45">
+                      {dropOff <= 0 ? "Aucune perte" : `-${dropOff.toFixed(0)}% vs étape précédente`}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <h2 className="font-display text-sm font-semibold text-encre">Produits les plus vus</h2>
+          <h2 className="font-display text-sm font-semibold text-encre">
+            CA par catégorie ({periodLabel})
+          </h2>
           <div className="mt-3">
-            <RankedList
-              items={viewedProducts.map((p) => ({
-                label: p.title,
-                value: `${p.view_count} vue(s)`,
-              }))}
-              emptyLabel="Pas encore de vues enregistrées."
-            />
+            <CategoryDonut rows={categoryRows} emptyLabel="Aucune vente sur cette période." />
           </div>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-display text-sm font-semibold text-encre">Top produits</h2>
+          <p className="text-xs text-encre/50">Depuis toujours</p>
+        </div>
+        {topProducts.length === 0 ? (
+          <p className="mt-3 text-sm text-encre/60">Aucune vente pour l&apos;instant.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-ligne">
+            {topProducts.map((p) => (
+              <li key={p.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                <ProductImage src={p.thumbnail} alt={p.title} className="h-10 w-10 shrink-0 rounded-md" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-encre">{p.title}</p>
+                  <p className="text-xs text-encre/50">
+                    {p.views} vue(s) · {p.quantitySold} vendu(s)
+                    {subscription.features.hasFullStats && p.conversion !== null && (
+                      <> · {p.conversion.toFixed(1)}% conversion</>
+                    )}
+                  </p>
+                </div>
+                <p className="shrink-0 font-mono text-sm text-vert-actif">
+                  {FMT_FCFA.format(p.revenue)} FCFA
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
@@ -502,12 +587,22 @@ export default async function StatistiquesPage({
         </div>
       </div>
 
-      <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
-        <h2 className="font-display text-sm font-semibold text-encre">
-          CA par catégorie ({periodLabel})
-        </h2>
-        <div className="mt-3">
-          <RevenueBars rows={categoryRows} emptyLabel="Aucune vente sur cette période." />
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <h2 className="font-display text-sm font-semibold text-encre">Valeur du stock</h2>
+          <p className="mt-1 font-mono text-lg font-semibold text-encre">
+            {FMT_FCFA.format(Math.round(stockValue))} FCFA
+          </p>
+          <p className="mt-0.5 text-xs text-encre/50">{allProducts.length} produit(s) actif(s)</p>
+        </div>
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <h2 className="font-display text-sm font-semibold text-encre">Note moyenne des avis</h2>
+          <p className="mt-1 font-mono text-lg font-semibold text-encre">
+            {rating ? `${rating.average.toFixed(1)} / 5` : "—"}
+          </p>
+          <p className="mt-0.5 text-xs text-encre/50">
+            {rating ? `${rating.count} avis` : "Pas encore d'avis"}
+          </p>
         </div>
       </div>
 
@@ -531,57 +626,35 @@ export default async function StatistiquesPage({
 
       {subscription.features.hasFullStats && (
         <>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <StatTile
-              label="Clients uniques"
-              value={String(customerPeriodStats?.unique_customers ?? 0)}
-              sublabel={periodLabel}
-            />
-            <StatTile
-              label="Nouveaux clients"
-              value={String(customerPeriodStats?.new_customers ?? 0)}
-              sublabel={periodLabel}
-            />
-            <StatTile
-              label="Clients récurrents"
-              value={String(customerPeriodStats?.returning_customers ?? 0)}
-              sublabel={periodLabel}
-            />
+          <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
+            <h2 className="font-display text-sm font-semibold text-encre">
+              Clients par segment
+            </h2>
+            <p className="mt-1 text-xs text-encre/50">
+              Parmi les clients ayant commandé sur la période, selon leur
+              nombre de commandes cumulé depuis toujours.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <StatTile label="Nouveaux" value={String(customerSegments?.nouveau ?? 0)} />
+              <StatTile label="Occasionnels" value={String(customerSegments?.occasionnel ?? 0)} />
+              <StatTile label="Réguliers" value={String(customerSegments?.regulier ?? 0)} />
+              <StatTile label="Fidèles" value={String(customerSegments?.fidele ?? 0)} />
+            </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-ligne bg-white p-4">
-              <h2 className="font-display text-sm font-semibold text-encre">
-                Meilleurs clients
-              </h2>
-              <p className="mt-1 text-xs text-encre/50">Par dépense cumulée, depuis toujours.</p>
-              <div className="mt-3">
-                <RankedList
-                  items={topCustomers.map((c) => ({
-                    label: `${c.customer_name} (${c.customer_phone})`,
-                    value: `${FMT_FCFA.format(c.total_spent)} FCFA · ${c.order_count} commande(s)`,
-                  }))}
-                  emptyLabel="Pas encore de commande."
-                />
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-ligne bg-white p-4">
-              <h2 className="font-display text-sm font-semibold text-encre">
-                Meilleurs taux de conversion par produit
-              </h2>
-              <p className="mt-1 text-xs text-encre/50">
-                Vues → ventes, produits avec au moins 3 vues.
-              </p>
-              <div className="mt-3">
-                <RankedList
-                  items={productConversion.map((p) => ({
-                    label: p.title,
-                    value: `${p.rate.toFixed(1)}%`,
-                  }))}
-                  emptyLabel="Pas encore assez de données."
-                />
-              </div>
+          <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
+            <h2 className="font-display text-sm font-semibold text-encre">
+              Meilleurs clients
+            </h2>
+            <p className="mt-1 text-xs text-encre/50">Par dépense cumulée, depuis toujours.</p>
+            <div className="mt-3">
+              <RankedList
+                items={topCustomers.map((c) => ({
+                  label: `${c.customer_name} (${c.customer_phone})`,
+                  value: `${FMT_FCFA.format(c.total_spent)} FCFA · ${c.order_count} commande(s)`,
+                }))}
+                emptyLabel="Pas encore de commande."
+              />
             </div>
           </div>
 
@@ -597,29 +670,47 @@ export default async function StatistiquesPage({
               />
             </div>
           </div>
-
-          <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
-            <h2 className="font-display text-sm font-semibold text-encre">
-              Taux de conversion global
-            </h2>
-            {conversionRate === null ? (
-              <p className="mt-2 text-sm text-encre/60">
-                Pas encore assez de vues pour calculer un taux de conversion.
-              </p>
-            ) : (
-              <>
-                <p className="mt-1 font-mono text-lg font-semibold text-vert-actif">
-                  {conversionRate.toFixed(1)}%
-                </p>
-                <p className="mt-1 text-xs text-encre/50">
-                  {totalOrdersCount ?? 0} commande(s) pour {shop?.view_count ?? 0} vue(s) de la
-                  boutique, depuis le début.
-                </p>
-              </>
-            )}
-          </div>
         </>
       )}
     </div>
+  );
+}
+
+function IconRevenue(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5v9M14.5 9.8c0-1-1-1.8-2.5-1.8s-2.5.8-2.5 1.8 1 1.5 2.5 1.8 2.5.8 2.5 1.9-1 1.8-2.5 1.8-2.5-.7-2.5-1.7" />
+    </svg>
+  );
+}
+
+function IconBasket(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 9.5h16l-1.4 9.3a2 2 0 0 1-2 1.7H7.4a2 2 0 0 1-2-1.7L4 9.5Z" />
+      <path d="M8 9.5V8a4 4 0 0 1 8 0v1.5" />
+    </svg>
+  );
+}
+
+function IconTarget(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconUsersActive(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5" />
+      <circle cx="17" cy="8.5" r="2.3" />
+      <path d="M15.7 14.7c2.4.5 4.3 2.5 4.3 5.3" />
+    </svg>
   );
 }
