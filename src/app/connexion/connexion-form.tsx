@@ -54,6 +54,21 @@ import { GoogleAuthButton } from "@/components/google-auth-button";
  * pour les deux templates exacts à coller (remplacent le lien, ne le gardent
  * pas en plus — Isaac ne veut plus que ce lien soit envoyé du tout).
  *
+ * **Longueur du code (29/09/2026, bug remonté par Isaac)** : `{{ .Token }}`
+ * n'est PAS toujours un code à 6 chiffres — sa longueur dépend du réglage
+ * serveur `GOTRUE_MAILER_OTP_LENGTH` du projet Supabase (Authentication >
+ * Email, section fournisseur email), qui varie selon quand/comment le projet
+ * a été provisionné (6 chez certains, 8 chez d'autres — voir la discussion
+ * Supabase "Magic Link OTP 8 numbers long"). Le projet KEVA envoie des codes
+ * à 8 chiffres alors que les champs ci-dessous plafonnaient l'saisie à 6
+ * caractères (`maxLength`) : un vendeur ne pouvait tout simplement PAS saisir
+ * le code reçu en entier, `verifyOtp` échouait à chaque tentative. Corrigé en
+ * ne présumant plus une longueur fixe côté champ (Supabase recommande la même
+ * chose : ne jamais coder en dur la longueur de l'OTP côté client, la faire
+ * vérifier par le serveur). Réduire ce réglage à 6 dans le dashboard Supabase
+ * reste possible pour un code plus court à taper, mais n'est plus nécessaire
+ * au bon fonctionnement.
+ *
  * "Oublié / pas encore défini ?" reste un seul et même mécanisme
  * (`resetPasswordForEmail`) pour "mot de passe oublié" ET la première
  * définition d'un mot de passe par un compte créé jusqu'ici uniquement par
@@ -350,7 +365,7 @@ export function ConnexionForm() {
               pas après quelques minutes.
             </p>
             <label className="text-sm font-medium text-encre" htmlFor="login-otp">
-              Code à 6 chiffres
+              Code reçu par email
             </label>
             <input
               id="login-otp"
@@ -358,13 +373,13 @@ export function ConnexionForm() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={10}
               required
               autoFocus
               autoComplete="one-time-code"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
+              placeholder="Ex. 12345678"
               className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
             />
 
@@ -408,7 +423,7 @@ export function ConnexionForm() {
               n&apos;arrive pas après quelques minutes.
             </p>
             <label className="text-sm font-medium text-encre" htmlFor="reset-otp">
-              Code à 6 chiffres
+              Code reçu par email
             </label>
             <input
               id="reset-otp"
@@ -416,13 +431,13 @@ export function ConnexionForm() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={10}
               required
               autoFocus
               autoComplete="one-time-code"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
+              placeholder="Ex. 12345678"
               className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
             />
 

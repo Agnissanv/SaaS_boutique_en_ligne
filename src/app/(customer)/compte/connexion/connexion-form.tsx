@@ -30,6 +30,12 @@ import { GoogleAuthButton } from "@/components/google-auth-button";
  * code par email + mot de passe oublié — le code par email est même plus
  * adapté ici, beaucoup de clients WhatsApp/Instagram préférant ne rien
  * retenir.
+ *
+ * **Longueur du code (29/09/2026, bug remonté par Isaac)** : même correctif
+ * qu'sur connexion-form.tsx (vendeur), voir ce fichier pour le détail complet
+ * — le code Supabase n'est pas toujours 6 chiffres (dépend du réglage projet
+ * `GOTRUE_MAILER_OTP_LENGTH`, ici 8 chez KEVA), les champs ci-dessous ne
+ * plafonnent donc plus la saisie à 6 caractères.
  */
 export function ConnexionClientForm() {
   const searchParams = useSearchParams();
@@ -316,7 +322,7 @@ export function ConnexionClientForm() {
               pas après quelques minutes.
             </p>
             <label className="text-sm font-medium text-encre" htmlFor="login-otp">
-              Code à 6 chiffres
+              Code reçu par email
             </label>
             <input
               id="login-otp"
@@ -324,13 +330,13 @@ export function ConnexionClientForm() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={10}
               required
               autoFocus
               autoComplete="one-time-code"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
+              placeholder="Ex. 12345678"
               className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
             />
 
@@ -374,7 +380,7 @@ export function ConnexionClientForm() {
               n&apos;arrive pas après quelques minutes.
             </p>
             <label className="text-sm font-medium text-encre" htmlFor="reset-otp">
-              Code à 6 chiffres
+              Code reçu par email
             </label>
             <input
               id="reset-otp"
@@ -382,13 +388,13 @@ export function ConnexionClientForm() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={10}
               required
               autoFocus
               autoComplete="one-time-code"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
+              placeholder="Ex. 12345678"
               className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
             />
 
