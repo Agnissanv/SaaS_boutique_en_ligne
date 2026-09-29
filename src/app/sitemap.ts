@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { BLOG_POSTS } from "@/lib/blog-posts";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -73,7 +74,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${siteUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
+
+  // Articles de blog (29/09/2026, chantier SEO — voir blog-posts.ts) : ajoutés
+  // ici pour la même raison que le reste de ce fichier, indexation par
+  // Google, but explicite de ce chantier.
+  const blogEntries: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+    url: `${siteUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.publishedAt),
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
 
   const shopEntries: MetadataRoute.Sitemap = shops.map((shop) => ({
     url: `${siteUrl}/${shop.slug}`,
@@ -95,5 +112,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
-  return [...staticEntries, ...shopEntries, ...productEntries];
+  return [...staticEntries, ...blogEntries, ...shopEntries, ...productEntries];
 }

@@ -8,11 +8,13 @@ import { ProductCard, type MarketplaceCardProduct } from "@/components/product-c
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
-import { HeroBannerCarousel } from "@/components/hero-banner-carousel";
+import { HeroFeaturedSlideshow } from "@/components/hero-featured-slideshow";
 import { HeroHeadline } from "@/components/hero-headline";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
+import { PromotionsSection } from "@/components/promotions-section";
+import { BlogTeaser } from "@/components/blog-teaser";
 import {
   buildMarketplaceHref,
   parseAttrsFromSearchParams,
@@ -54,6 +56,7 @@ import { boostByPlanWithinDay } from "@/lib/marketplace/ranking";
 const PAGE_SIZE = 24;
 const NEW_ARRIVALS_SIZE = 10;
 const FEATURED_SHOPS_SIZE = 10;
+const NEWEST_SHOPS_SIZE = 4;
 const BEST_SELLERS_SIZE = 12;
 const CATEGORY_ROW_SIZE = 12;
 // Nombre de produits actifs les plus récents considérés pour regrouper les
@@ -298,6 +301,19 @@ export default async function Home({
     .order("view_count", { ascending: false })
     .limit(FEATURED_SHOPS_SIZE);
 
+  // "Nouveaux vendeurs de la semaine" (section Promotions, 29/09/2026) — tri
+  // par date de création plutôt que par `view_count` comme la bande
+  // ci-dessus : l'objectif ici est de donner de la visibilité aux boutiques
+  // qui viennent d'arriver (encore aucune vue), pas de remontrer les plus
+  // populaires. Limite volontairement petite (voir NEWEST_SHOPS_SIZE) : un
+  // encart, pas une bande de défilement complète.
+  const newestShopsQuery = supabase
+    .from("shops")
+    .select("id, slug, name, logo_url, category, is_verified")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(NEWEST_SHOPS_SIZE);
+
   // Chiffres réels de la plateforme, affichés dans le hero. `head: true` :
   // on ne veut que le compte, jamais les lignes elles-mêmes. Jamais une
   // valeur inventée pour "faire plein" (même principe que la barre de santé
@@ -392,6 +408,7 @@ export default async function Home({
   const [
     { data: newArrivals },
     { data: featuredShopsRaw },
+    { data: newestShopsRaw },
     { count: shopsCount },
     { count: productsCount },
     { data: availableCategoriesRaw },
@@ -401,6 +418,7 @@ export default async function Home({
   ] = await Promise.all([
     newArrivalsQuery,
     featuredShopsQuery,
+    newestShopsQuery,
     shopsCountQuery,
     productsCountQuery,
     availableCategoriesQuery,
@@ -593,6 +611,21 @@ export default async function Home({
     }))
   );
 
+  // Même mise en forme que `featuredShops` ci-dessus, pour la section
+  // Promotions ("Nouveaux vendeurs de la semaine") — fan-out limité à
+  // NEWEST_SHOPS_SIZE (4), négligeable à côté de celui déjà fait pour les
+  // boutiques en vedette.
+  const newestShops: MarketplaceShop[] = await Promise.all(
+    (newestShopsRaw ?? []).map(async (shop) => ({
+      slug: shop.slug as string,
+      name: shop.name as string,
+      logoUrl: shop.logo_url as string | null,
+      category: shop.category as string | null,
+      isVerified: shop.is_verified as boolean,
+      rating: await getShopRating(supabase, shop.id as string),
+    }))
+  );
+
   // Résumé des filtres actifs + compteur de résultats, affiché au-dessus de
   // la grille filtrée.
   const resultLabel = `${count ?? 0} article${(count ?? 0) === 1 ? "" : "s"}`;
@@ -720,12 +753,20 @@ export default async function Home({
                   <HeroMobileSlideshow products={heroSlideshowProducts} />
                 </div>
 
-                {/* Carrousel de bannières — remplace le nuage de photos le
-                    29/09/2026 (demande d'Isaac), voir
-                    hero-banner-carousel.tsx pour le détail complet (mix
-                    bannières vendeur / vitrines produit, navigation
-                    manuelle, gestion du reduced-motion). */}
-                <HeroBannerCarousel productSlides={heroSlideshowProducts} />
+                {/* Simplifié le 29/09/2026 (retour d'Isaac : "Simplifier vers
+                    l'exemple", après un premier passage en carrousel de
+                    bannières mêlant vitrines produit et bannières vendeur,
+                    jugé trop chargé). Redevient une vraie photo produit qui
+                    tourne, sans navigation manuelle — même composant que la
+                    case avant du collage d'origine (`HeroFeaturedSlideshow`,
+                    orpheline depuis le passage au carrousel, réutilisée ici
+                    à l'identique plutôt que dupliquée). Le message vendeur
+                    ("0% commission cachée") retiré d'ici est relogé dans la
+                    nouvelle section Promotions, juste sous le hero. */}
+                <HeroFeaturedSlideshow
+                  products={heroSlideshowProducts}
+                  className="hidden h-96 w-80 shrink-0 sm:block lg:h-[26rem] lg:w-[22rem]"
+                />
               </div>
             </div>
           </section>
@@ -920,6 +961,20 @@ export default async function Home({
               )}
             </div>
           </main>
+
+          {/* ========== PROMOTIONS + BLOG (adaptation de la référence
+              d'Isaac, 29/09/2026) ==========
+              Occupe, dans l'ordre de la page de référence (Promotions puis
+              Newsletter juste avant le footer), les deux positions
+              "Promotions" et "Newsletter" — voir promotions-section.tsx et
+              blog-teaser.tsx pour le détail de chaque adaptation (jamais de
+              fausse réduction ni de collecte d'email, les deux partis pris
+              de la référence écartés par Isaac/Claude avant de coder). Le
+              footer, lui, est global (voir layout.tsx), pas répété ici. */}
+          <div className="mx-auto w-full max-w-6xl px-4">
+            <PromotionsSection newestShops={newestShops} />
+            <BlogTeaser />
+          </div>
         </>
       </ViewTransition>
     </ViewTransition>

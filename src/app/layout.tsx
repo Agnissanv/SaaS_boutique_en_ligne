@@ -3,6 +3,7 @@ import { Archivo, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 // Typographie KEVA — révisée le 22/09/2026 (voir decisions-techniques.md,
@@ -206,6 +207,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         <OrganizationJsonLd siteUrl={siteUrl} />
         {children}
+        {/* Pied de page global (29/09/2026) — rendu une seule fois ici pour
+            apparaître sur toutes les pages publiques, jamais construit
+            jusque-là (vérifié par grep avant d'ajouter quoi que ce soit) ;
+            voir site-footer.tsx. `mt-auto` (sur un `body` déjà `flex
+            flex-col`) le pousse en bas de l'écran sur les pages courtes,
+            sans l'empêcher de suivre un contenu plus long. */}
+        <SiteFooter />
         {/* Barre de navigation basse mobile (chantier responsive design,
             15/09/2026) : rendue une seule fois ici, masquée elle-même sur les
             portails d'authentification et les espaces internes vendeur/admin
