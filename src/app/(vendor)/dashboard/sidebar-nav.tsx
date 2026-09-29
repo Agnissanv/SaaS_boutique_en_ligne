@@ -14,6 +14,15 @@ type NavItem = {
    * propriétaire. Voir src/lib/shop-access.ts pour le raisonnement complet.
    */
   ownerOnly?: boolean;
+  /**
+   * Préfixes de route supplémentaires qui comptent comme "actif" pour ce
+   * lien — ajouté le 30/09/2026 pour "Paramètres" : son `href` pointe vers
+   * `/dashboard/profil` (seule page accessible à tout le monde), mais le
+   * lien doit aussi rester surligné sur les autres onglets de l'espace
+   * Paramètres (Sécurité, Boutique, Notifications, Paiements, Abonnement,
+   * Collaborateurs — voir settings-tabs.tsx).
+   */
+  activePrefixes?: string[];
 };
 type NavSection = { label?: string; items: NavItem[] };
 
@@ -29,20 +38,32 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Boutique",
     items: [
-      { href: "/dashboard/boutique", label: "Ma boutique", icon: IconStorefront, ownerOnly: true },
       { href: "/dashboard/codes-promo", label: "Codes promo", icon: IconTag, ownerOnly: true },
-      { href: "/dashboard/collaborateurs", label: "Collaborateurs", icon: IconUsers, ownerOnly: true },
-      { href: "/dashboard/paiements", label: "Paiements", icon: IconWallet, ownerOnly: true },
-      { href: "/dashboard/abonnement", label: "Abonnement", icon: IconBadge, ownerOnly: true },
       { href: "/dashboard/parrainage", label: "Parrainage", icon: IconGift, ownerOnly: true },
     ],
   },
   {
-    label: "Compte",
     items: [
-      { href: "/dashboard/profil", label: "Profil", icon: IconUser },
+      // Un seul lien vers l'espace Paramètres à onglets (Profil, Sécurité,
+      // Boutique, Notifications, Paiements, Abonnement, Collaborateurs — voir
+      // settings-tabs.tsx) plutôt que les 5 liens séparés d'avant le
+      // 30/09/2026 ("sidebar désordonnée et trop affichée", retour d'Isaac) :
+      // pointe vers Profil, la seule page accessible à tout le monde
+      // (propriétaire ET collaborateur), pas vers une page réservée au
+      // propriétaire.
+      {
+        href: "/dashboard/profil",
+        label: "Paramètres",
+        icon: IconSettings,
+        activePrefixes: [
+          "/dashboard/parametres",
+          "/dashboard/boutique",
+          "/dashboard/paiements",
+          "/dashboard/abonnement",
+          "/dashboard/collaborateurs",
+        ],
+      },
       { href: "/dashboard/aide", label: "Aide", icon: IconHelp },
     ],
   },
@@ -78,7 +99,9 @@ export function SidebarNav({ isOwner }: { isOwner: boolean }) {
             )}
             <ul className="flex flex-col gap-0.5">
               {items.map((item) => {
-                const active = pathname === item.href;
+                const active =
+                  pathname === item.href ||
+                  Boolean(item.activePrefixes?.some((prefix) => pathname.startsWith(prefix)));
                 const Icon = item.icon;
                 return (
                   <li key={item.href}>
@@ -164,36 +187,6 @@ function IconStar(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function IconStorefront(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M4 9l1-5h14l1 5" />
-      <path d="M4 9a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0" />
-      <path d="M5 9v10h14V9" />
-      <path d="M10 19v-5h4v5" />
-    </svg>
-  );
-}
-
-function IconWallet(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="3" y="7" width="18" height="12" rx="2" />
-      <path d="M3 9h13a2 2 0 0 0 2-2" />
-      <path d="M16 13h2" />
-    </svg>
-  );
-}
-
-function IconBadge(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="9" r="6" />
-      <path d="M8.5 14.5 7 21l5-2.5 5 2.5-1.5-6.5" />
-    </svg>
-  );
-}
-
 /** Ajoutée le 23/09/2026 pour "Parrainage" (système de parrainage vendeur). */
 function IconGift(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -217,23 +210,19 @@ function IconTag(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Ajoutée le 16/09/2026 pour "Collaborateurs" (plan Pro, can_multi_user). */
-function IconUsers(props: React.SVGProps<SVGSVGElement>) {
+/**
+ * Ajoutée le 30/09/2026 pour "Paramètres" (regroupe Profil, Sécurité,
+ * Boutique, Notifications, Paiements, Abonnement, Collaborateurs — refonte
+ * de la sidebar, voir settings-tabs.tsx). Remplace les icônes dédiées
+ * (Boutique, Paiements, Abonnement, Collaborateurs, Profil) qui vivaient
+ * jusqu'ici dans ce fichier, retirées puisque ces liens ne sont plus dans la
+ * sidebar elle-même.
+ */
+function IconSettings(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5" />
-      <circle cx="17" cy="8.5" r="2.3" />
-      <path d="M15.7 14.7c2.4.5 4.3 2.5 4.3 5.3" />
-    </svg>
-  );
-}
-
-function IconUser(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.6V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.6 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1Z" />
     </svg>
   );
 }

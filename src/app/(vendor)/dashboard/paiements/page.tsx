@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { SettingsTabs } from "../settings-tabs";
 
 const PAGE_SIZE = 50;
 
@@ -118,7 +119,11 @@ export default async function PaymentsPage({
 
   return (
     <div>
-      <h1 className="font-display text-lg font-semibold text-encre">Paiements</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Paramètres</h1>
+      <p className="mt-2 text-sm text-encre/70">Gère ton profil, ta boutique et ton compte.</p>
+      <SettingsTabs isOwner />
+
+      <h2 className="mt-6 font-display text-sm font-semibold text-encre">Paiements</h2>
       <p className="mt-2 text-sm text-encre/70">
         Le paiement en ligne (Mobile Money) n&apos;est pas disponible via
         KEVA : ce relevé se base sur le paiement à la livraison, seul mode

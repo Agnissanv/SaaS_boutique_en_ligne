@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
 import { CollaboratorList } from "./collaborator-list";
 import { InviteForm } from "./invite-form";
+import { SettingsTabs } from "../settings-tabs";
 
 export type Collaborator = {
   id: string;
@@ -49,7 +50,11 @@ export default async function CollaborateursPage() {
 
   return (
     <div>
-      <h1 className="font-display text-lg font-semibold text-encre">Collaborateurs</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Paramètres</h1>
+      <p className="mt-2 text-sm text-encre/70">Gère ton profil, ta boutique et ton compte.</p>
+      <SettingsTabs isOwner />
+
+      <h2 className="mt-6 font-display text-sm font-semibold text-encre">Collaborateurs</h2>
       <p className="mt-2 max-w-md text-sm text-encre/70">
         Invite une personne à gérer tes produits et commandes avec toi. Elle
         se connecte avec son propre compte et n&apos;a pas accès aux

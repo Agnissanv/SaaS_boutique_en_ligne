@@ -4,6 +4,7 @@ import { getShopSubscription, parseFeatureFlags } from "@/lib/subscription";
 import { ShopForm } from "./shop-form";
 import { ShareShopLinks } from "./share-shop-links";
 import { acceptCollaboratorInvite } from "./actions";
+import { SettingsTabs } from "../settings-tabs";
 
 // Réglages boutique : nom, description, catégorie, logo, couverture, lien
 // public (slug). cf. cahier des charges §3.1.A.2.
@@ -20,7 +21,7 @@ export default async function ShopSettingsPage() {
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "id, name, slug, description, category, logo_url, cover_url, accent_color, delivery_fee, whatsapp_number, mobile_money_number, mobile_money_operator, notification_email"
+      "id, name, slug, description, category, logo_url, cover_url, accent_color, delivery_fee, whatsapp_number, mobile_money_number, mobile_money_operator"
     )
     .eq("owner_id", user?.id ?? "")
     .maybeSingle();
@@ -117,12 +118,20 @@ export default async function ShopSettingsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-lg font-semibold text-encre">Ma boutique</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">
+        {shop ? "Paramètres" : "Ma boutique"}
+      </h1>
       <p className="mt-2 text-sm text-encre/70">
         {shop
-          ? "Modifie les informations de ta boutique."
+          ? "Gère ton profil, ta boutique et ton compte."
           : "Crée ta boutique pour commencer à ajouter des produits."}
       </p>
+      {shop && (
+        <>
+          <SettingsTabs isOwner />
+          <h2 className="mt-6 font-display text-sm font-semibold text-encre">Ma boutique</h2>
+        </>
+      )}
       <ShopForm shop={shop ?? null} canCustomizeBranding={canCustomizeBranding} />
 
       {shop ? (

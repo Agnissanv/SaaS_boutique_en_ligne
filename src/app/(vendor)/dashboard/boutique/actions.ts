@@ -45,13 +45,18 @@ export async function saveShop(
   // Frais de livraison : optionnel, null si laissé vide (le client verra
   // alors "à confirmer avec le vendeur" — voir migration 0012).
   const deliveryFeeRaw = String(formData.get("deliveryFee") ?? "").trim();
-  // Contact WhatsApp + email de notification — ajoutés le 15/09/2026 (voir
-  // migration 0013). Tous deux optionnels, aucune validation de format
-  // stricte : un numéro WhatsApp peut avoir des formats variés selon le
-  // pays, et une adresse mal formée échouera simplement silencieusement à
-  // l'envoi plutôt que de bloquer l'enregistrement de la boutique.
+  // Contact WhatsApp — ajouté le 15/09/2026 (voir migration 0013).
+  // Optionnel, aucune validation de format stricte : un numéro WhatsApp peut
+  // avoir des formats variés selon le pays.
+  //
+  // L'email de notification (`notification_email`, même migration 0013)
+  // vivait aussi dans ce formulaire jusqu'au 30/09/2026 — déplacé dans le
+  // nouvel onglet "Notifications" (`/dashboard/parametres/notifications`,
+  // voir `updateNotificationEmail` dans ce même fichier) lors de la refonte
+  // de l'espace Paramètres, pour rassembler tout ce qui concerne les
+  // notifications au même endroit plutôt que de le laisser mélangé aux
+  // informations de boutique.
   const whatsappNumber = String(formData.get("whatsappNumber") ?? "").trim();
-  const notificationEmail = String(formData.get("notificationEmail") ?? "").trim();
   // Numéro Mobile Money du vendeur — ajouté le 29/09/2026 (voir migration
   // 0047 et decisions-techniques.md). Purement informatif comme
   // `whatsappNumber` juste au-dessus : KEVA ne traite jamais ce paiement,
@@ -124,7 +129,6 @@ export async function saveShop(
         whatsapp_number: whatsappNumber || null,
         mobile_money_number: mobileMoneyNumber || null,
         mobile_money_operator: mobileMoneyOperator || null,
-        notification_email: notificationEmail || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", shopId)
@@ -171,7 +175,6 @@ export async function saveShop(
         whatsapp_number: whatsappNumber || null,
         mobile_money_number: mobileMoneyNumber || null,
         mobile_money_operator: mobileMoneyOperator || null,
-        notification_email: notificationEmail || null,
       })
       .select("id")
       .single();
@@ -232,6 +235,52 @@ export async function saveShop(
   }
 
   revalidatePath("/dashboard/boutique");
+  return { success: true };
+}
+
+export type NotificationEmailState = {
+  error?: string;
+  success?: boolean;
+};
+
+/**
+ * Met à jour `shops.notification_email` — extrait de `saveShop` le
+ * 30/09/2026 (refonte de l'espace Paramètres) dans sa propre action pour le
+ * nouvel onglet "Notifications" (`/dashboard/parametres/notifications`).
+ * Vérifie la propriété directement (même garde que les autres réglages
+ * réservés au propriétaire) plutôt que de réutiliser `getAccessibleShop` —
+ * un collaborateur n'a délibérément aucun accès à ce réglage.
+ */
+export async function updateNotificationEmail(
+  _prevState: NotificationEmailState,
+  formData: FormData
+): Promise<NotificationEmailState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Session expirée, reconnecte-toi." };
+  }
+
+  const enabled = formData.get("enabled") === "on";
+  const email = String(formData.get("notificationEmail") ?? "").trim();
+
+  if (enabled && !email) {
+    return { error: "Renseigne une adresse email pour activer les notifications." };
+  }
+
+  const { error } = await supabase
+    .from("shops")
+    .update({ notification_email: enabled ? email : null, updated_at: new Date().toISOString() })
+    .eq("owner_id", user.id);
+
+  if (error) {
+    return { error: "Échec de l'enregistrement. Réessaie." };
+  }
+
+  revalidatePath("/dashboard/parametres/notifications");
   return { success: true };
 }
 

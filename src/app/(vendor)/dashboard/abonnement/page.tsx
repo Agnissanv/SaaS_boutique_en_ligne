@@ -7,6 +7,7 @@ import {
 } from "@/lib/subscription";
 import { isNyolePaymentsEnabled } from "@/lib/nyole";
 import { UpgradeButton } from "./upgrade-button";
+import { SettingsTabs } from "../settings-tabs";
 
 type Plan = {
   id: string;
@@ -153,7 +154,11 @@ export default async function SubscriptionPage() {
 
   return (
     <div>
-      <h1 className="font-display text-lg font-semibold text-encre">Mon abonnement</h1>
+      <h1 className="font-display text-lg font-semibold text-encre">Paramètres</h1>
+      <p className="mt-2 text-sm text-encre/70">Gère ton profil, ta boutique et ton compte.</p>
+      <SettingsTabs isOwner />
+
+      <h2 className="mt-6 font-display text-sm font-semibold text-encre">Mon abonnement</h2>
 
       <div className="mt-4 max-w-md rounded-lg border border-ligne bg-white p-4">
         <p className="text-sm text-encre/60">Plan actuel</p>

@@ -25,7 +25,6 @@ type Shop = {
   whatsapp_number?: string | null;
   mobile_money_number?: string | null;
   mobile_money_operator?: string | null;
-  notification_email?: string | null;
 };
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -349,25 +348,6 @@ export function ShopForm({
           Mobile Money directement avec toi — KEVA ne s&apos;occupe pas de ce
           paiement, c&apos;est entre toi et le client. Laisse vide pour ne
           pas l&apos;afficher.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="notificationEmail" className="text-sm font-medium text-encre">
-          Email pour les notifications de commande{" "}
-          <span className="text-encre/50">(optionnel)</span>
-        </label>
-        <input
-          id="notificationEmail"
-          name="notificationEmail"
-          type="email"
-          placeholder="Laisse vide pour ne recevoir aucun email"
-          defaultValue={shop?.notification_email ?? ""}
-          className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
-        />
-        <p className="text-xs text-encre/50">
-          Reçois un email à chaque nouvelle commande. Peut être différent de
-          ton email de connexion.
         </p>
       </div>
 
