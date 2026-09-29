@@ -8,7 +8,7 @@ import { ProductCard, type MarketplaceCardProduct } from "@/components/product-c
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
-import { HeroPhotoCloud } from "@/components/hero-photo-cloud";
+import { HeroBannerCarousel } from "@/components/hero-banner-carousel";
 import { HeroHeadline } from "@/components/hero-headline";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { MarketplaceSearch } from "@/components/marketplace-search";
@@ -63,11 +63,6 @@ const CATEGORY_ROW_SIZE = 12;
 // consultable via "Voir tout" (grille filtrée par catégorie, non plafonnée)
 // et via la recherche — seule la bande d'aperçu peut le manquer.
 const CATEGORY_FEED_LIMIT = 400;
-// Nombre de photos du nuage du hero (28/09/2026, voir hero-photo-cloud.tsx)
-// — 3 cases en diagonale + la vedette rotative à part (`heroSlideshowProducts`,
-// pas comptée ici). Toujours puisé dans `newArrivalsProducts`, déjà chargé
-// plus haut — aucune requête de plus.
-const HERO_CLOUD_SIZE = 3;
 // Échantillon borné pour le calcul des facettes de filtre (valeurs
 // d'attribut réellement présentes + bornes de prix) — même pragmatisme et
 // même ordre de grandeur que `CATEGORY_FEED_LIMIT` ci-dessus : un compromis
@@ -558,15 +553,6 @@ export default async function Home({
     for (const row of categoryRows) applyRatings(row.products);
   }
 
-  // Nuage de photos du hero (hero-photo-cloud.tsx) : les vignettes des
-  // toutes dernières nouveautés, déjà chargées ci-dessus — pas de requête
-  // supplémentaire. De vraies photos envoyées par de vrais vendeurs, jamais
-  // une image de stock générique.
-  const heroThumbnails = newArrivalsProducts
-    .map((p) => p.thumbnail)
-    .filter((url): url is string => Boolean(url))
-    .slice(0, HERO_CLOUD_SIZE);
-
   // Diaporama mobile du hero (16/09/2026, retour d'Isaac : sur mobile, les
   // chiffres "Boutiques actives"/"Produits en vente" prennent de la place
   // sans donner vraiment envie de cliquer — remplacés par un aperçu visuel
@@ -580,12 +566,10 @@ export default async function Home({
   // images du carrousel sont cassées") — en réalité pas des images cassées,
   // mais un vrai produit sans aucune photo uploadée, qui tombait sur la case
   // vedette du collage (`HeroFeaturedSlideshow`, la plus visible des trois) et
-  // affichait donc l'icône de repli de `ProductImage`. `heroThumbnails`
-  // (les deux vignettes statiques juste au-dessus) filtrait déjà les
-  // produits sans photo pour cette même raison ("jamais une image de stock
-  // générique") — le même filtre manquait ici, sur la case la plus en avant
-  // des trois. Repli vers les nouveautés si aucune meilleure vente n'a de
-  // photo, plutôt que vers une liste vide.
+  // affichait donc l'icône de repli de `ProductImage` — le même filtre
+  // manquait ici, sur la case la plus en avant des trois ("jamais une image
+  // de stock générique"). Repli vers les nouveautés si aucune meilleure
+  // vente n'a de photo, plutôt que vers une liste vide.
   const withThumbnail = (products: typeof bestSellingProducts) =>
     products.filter((p) => Boolean(p.thumbnail));
   const heroSlideshowPool =
@@ -736,10 +720,12 @@ export default async function Home({
                   <HeroMobileSlideshow products={heroSlideshowProducts} />
                 </div>
 
-                {/* Nuage de photos — remplace le collage fixe à 3 cases le
-                    28/09/2026, voir hero-photo-cloud.tsx pour le détail
-                    complet (dérive au scroll, gestion du reduced-motion). */}
-                <HeroPhotoCloud photos={heroThumbnails} slideshowProducts={heroSlideshowProducts} />
+                {/* Carrousel de bannières — remplace le nuage de photos le
+                    29/09/2026 (demande d'Isaac), voir
+                    hero-banner-carousel.tsx pour le détail complet (mix
+                    bannières vendeur / vitrines produit, navigation
+                    manuelle, gestion du reduced-motion). */}
+                <HeroBannerCarousel productSlides={heroSlideshowProducts} />
               </div>
             </div>
           </section>
