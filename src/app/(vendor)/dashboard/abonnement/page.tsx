@@ -6,6 +6,7 @@ import {
   SUBSCRIPTION_STATE_LABELS,
 } from "@/lib/subscription";
 import { isNyolePaymentsEnabled } from "@/lib/nyole";
+import { getPlanFeatureList } from "@/lib/plan-features";
 import { UpgradeButton } from "./upgrade-button";
 import { SettingsTabs } from "../settings-tabs";
 
@@ -19,61 +20,6 @@ type Plan = {
 };
 
 /**
- * Libellés lisibles pour les clés connues de `features` (jsonb, forme libre
- * en base). Une clé absente de cette table retombe sur un libellé généré
- * (préfixe can_/has_ retiré, underscores → espaces) plutôt que de planter, au
- * cas où un nouveau flag serait ajouté en base sans être documenté ici.
- */
-const FEATURE_LABELS: Record<string, string> = {
-  can_multi_user: "Multi-utilisateurs",
-  can_export_stats: "Export des statistiques",
-  can_manage_stock: "Gestion du stock",
-  can_use_variants: "Variantes produits (taille, couleur...)",
-  can_use_promo_codes: "Codes promo",
-  has_order_notifications: "Notifications de commande",
-  has_advanced_stock_alerts: "Alertes de stock avancées",
-  has_advanced_stats: "Statistiques avec graphiques",
-  has_full_stats: "Statistiques complètes (conversion, comparaisons)",
-  // Badge affiché sur la marketplace publique (carte produit, carte
-  // boutique, fiche boutique) — voir migration 0042 et VerifiedBadge.
-  has_verified_badge: "Badge « Boutique vérifiée » sur la marketplace",
-  // Pas de "can_remove_branding" ici : retiré du modèle le 16/09/2026, le
-  // badge KEVA reste visible sur toutes les boutiques quel que soit le plan
-  // (voir supabase/migrations/0019_drop_can_remove_branding.sql).
-};
-
-function humanizeKey(key: string) {
-  return key.replace(/^can_|^has_/, "").replace(/_/g, " ");
-}
-
-/**
- * Met en forme une seule entrée de `features` pour un vendeur — jamais la clé
- * brute. Renvoie `null` quand la valeur ne représente pas un avantage à
- * afficher (booléen à `false`, 0 collaborateur, personnalisation "none"...).
- */
-function formatFeature(key: string, value: unknown): string | null {
-  if (key === "max_products") {
-    return value === null || value === undefined
-      ? "Produits illimités"
-      : `${value} produits max`;
-  }
-  if (key === "max_collaborators") {
-    const n = Number(value);
-    if (!n) return null;
-    return `${n} collaborateur${n > 1 ? "s" : ""}`;
-  }
-  if (key === "can_customize_branding") {
-    if (value === "complete") return "Personnalisation complète de la marque";
-    if (value === "basic") return "Personnalisation basique de la marque";
-    return null; // "none" — pas un avantage à afficher
-  }
-  if (typeof value === "boolean") {
-    return value ? (FEATURE_LABELS[key] ?? humanizeKey(key)) : null;
-  }
-  return `${FEATURE_LABELS[key] ?? humanizeKey(key)} : ${value}`;
-}
-
-/**
  * Affiche `features` de façon lisible pour un vendeur — jamais les clés
  * brutes de la base (`can_manage_stock`, `max_products : null`...).
  *
@@ -82,18 +28,16 @@ function formatFeature(key: string, value: unknown): string | null {
  * trois plans (repéré par Isaac à l'œil). Une fois ce filtre ajouté, les clés
  * elles-mêmes restaient affichées telles quelles ("can_manage_stock",
  * "max_products : null") — repéré aussitôt par Isaac comme illisible pour un
- * client final. Corrigé le jour même avec `FEATURE_LABELS`/`formatFeature`
- * ci-dessus : chaque clé connue a un libellé français, et les valeurs qui ne
- * sont pas un avantage réel (0 collaborateur, personnalisation "none") sont
- * omises plutôt qu'affichées littéralement.
+ * client final. Corrigé le jour même avec une table de libellés français,
+ * qui omet les valeurs qui ne sont pas un avantage réel (0 collaborateur,
+ * personnalisation "none") plutôt que de les afficher littéralement.
+ *
+ * Logique de formatage extraite le 29/09/2026 dans `@/lib/plan-features`
+ * (voir ce fichier) pour être réutilisée telle quelle par la nouvelle page
+ * publique `/tarifs`.
  */
 function renderFeatures(features: Plan["features"]) {
-  if (!features) return null;
-  const items = Array.isArray(features)
-    ? features.map((f) => String(f))
-    : Object.entries(features)
-        .map(([key, value]) => formatFeature(key, value))
-        .filter((item): item is string => item !== null);
+  const items = getPlanFeatureList(features);
 
   if (items.length === 0) return null;
 

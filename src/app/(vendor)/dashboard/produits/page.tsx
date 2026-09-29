@@ -89,7 +89,16 @@ export default async function ProductsPage({
   const sort = SORTS[tri] ?? SORTS[""];
   query = query.order(sort.column, { ascending: sort.ascending }).range(from, to);
 
-  const { data: products, count } = await query;
+  // `shop.slug` ajouté le 29/09/2026 (retour d'Isaac : "les vendeurs ne
+  // peuvent pas partager leurs fiches produits") — nécessaire pour
+  // construire le lien public de chaque produit (`/${slug}/${product.slug}`),
+  // voir `<ShareProductButton>` dans product-list.tsx. Requête séparée plutôt
+  // qu'ajoutée à la sélection produits : indépendante des filtres/pagination
+  // ci-dessus, lancée en parallèle.
+  const [{ data: products, count }, { data: shop }] = await Promise.all([
+    query,
+    supabase.from("shops").select("slug").eq("id", access.shopId).maybeSingle(),
+  ]);
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
 
   const currentFilters: ProductFiltersValue = { q, categorie, statut, tri };
@@ -116,7 +125,7 @@ export default async function ProductsPage({
 
       <ProductFilters current={currentFilters} />
 
-      <ProductList products={(products as Product[]) ?? []} />
+      <ProductList products={(products as Product[]) ?? []} shopSlug={shop?.slug ?? ""} />
 
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-center gap-2 text-sm">

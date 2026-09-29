@@ -8,6 +8,24 @@ import { getAccessibleShop } from "@/lib/shop-access";
 // notification client (/compte/notifications, voir ce dossier), avec un
 // badge du nombre de non-lues, même principe que la cloche du dashboard
 // vendeur (dashboard/layout.tsx).
+//
+// Retouché le 29/09/2026 (retour d'Isaac : des utilisateurs "confus" par
+// cette page, "en face de jongler entre les différents espaces") — deux
+// problèmes réels identifiés avant de toucher au code :
+// 1. "Informations personnelles" et "Sécurité & connexion" étaient deux
+//    entrées de menu DIFFÉRENTES pointant vers EXACTEMENT LA MÊME URL
+//    (/compte/profil, qui contient déjà identité + email + mot de passe) —
+//    un utilisateur cliquant sur la deuxième après la première retombait
+//    sur la page qu'il venait de quitter. Fusionnées en une seule entrée
+//    "Profil & sécurité".
+// 2. "Espace vendeur" et "Espace commercial" étaient deux sections du même
+//    style visuel que "Notifications" ou "Conditions d'utilisation" —
+//    rien ne les distinguait comme un CHANGEMENT D'ESPACE plutôt qu'un
+//    réglage parmi d'autres. Regroupées dans un bandeau "Changer d'espace"
+//    visuellement distinct (bordure + fond teintés), placé tout en haut,
+//    juste sous l'identité — avant même "Commandes" — pour que basculer
+//    vers le dashboard vendeur ou l'espace commercial soit une action
+//    évidente et jamais un lien perdu au milieu des réglages de compte.
 export default async function ComptePage() {
   const supabase = await createClient();
   const {
@@ -55,6 +73,33 @@ export default async function ComptePage() {
         </div>
       </div>
 
+      {/* ========== CHANGER D'ESPACE ==========
+          Voir la note du 29/09/2026 en tête de fichier : bandeau
+          délibérément différent des sections ci-dessous (fond et bordure
+          teintés vert, plutôt que le blanc/gris neutre des réglages) pour
+          se lire comme un changement de contexte, pas comme un réglage.
+          N'affiche jamais une invitation à créer une boutique ou à
+          devenir commercial — uniquement les espaces réellement possédés
+          par ce compte (mêmes gardes qu'avant : `access` via
+          `getAccessibleShop`, rôle `commercial` en base). */}
+      {(access || profile?.role === "commercial") && (
+        <section className="overflow-hidden rounded-xl border border-vert-sapin/20 bg-vert-sapin/[0.04]">
+          <p className="border-b border-vert-sapin/10 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-vert-sapin/70">
+            Changer d’espace
+          </p>
+          {access && (
+            <AccountLink
+              href="/dashboard"
+              label="Espace vendeur — gérer ma boutique"
+              last={!(profile?.role === "commercial")}
+            />
+          )}
+          {profile?.role === "commercial" && (
+            <AccountLink href="/commercial" label="Espace commercial" last />
+          )}
+        </section>
+      )}
+
       {/* ========== MES COMMANDES ========== */}
       <section>
         <h2 className="mb-2 font-display text-base font-semibold text-encre">
@@ -71,8 +116,7 @@ export default async function ComptePage() {
           Mon compte
         </h2>
         <div className="overflow-hidden rounded-xl border border-ligne bg-white">
-          <AccountLink href="/compte/profil" label="Informations personnelles" />
-          <AccountLink href="/compte/profil" label="Sécurité & connexion" />
+          <AccountLink href="/compte/profil" label="Profil & sécurité" />
           <AccountLink
             href="/compte/notifications"
             label="Notifications"
@@ -81,41 +125,6 @@ export default async function ComptePage() {
           />
         </div>
       </section>
-
-      {/* ========== ESPACE VENDEUR ==========
-          Ajouté le 21/09/2026 : un compte peut posséder une boutique tout en
-          restant enregistré côté "client" (voir `resolveHomePath`,
-          `auth-constants.ts`) — n'affiché que si c'est réellement le cas ici
-          (`getAccessibleShop`), jamais une invitation à en créer une. */}
-      {access && (
-        <section>
-          <h2 className="mb-2 font-display text-base font-semibold text-encre">
-            Espace vendeur
-          </h2>
-          <div className="overflow-hidden rounded-xl border border-ligne bg-white">
-            <AccountLink href="/dashboard" label="Gérer ma boutique" last />
-          </div>
-        </section>
-      )}
-
-      {/* ========== ESPACE COMMERCIAL ==========
-          Ajouté le 23/09/2026 : même raisonnement que "Espace vendeur"
-          ci-dessus (un commercial peut aussi acheter sur KEVA avec son
-          compte) — Isaac est tombé sur une impasse en testant : depuis
-          /commercial rien n'empêchait d'arriver ici via "Mon espace
-          client", mais rien ne permettait de revenir. Affiché uniquement
-          si le rôle est bien 'commercial' (voir migration 0046), jamais
-          une invitation à le devenir. */}
-      {profile?.role === "commercial" && (
-        <section>
-          <h2 className="mb-2 font-display text-base font-semibold text-encre">
-            Espace commercial
-          </h2>
-          <div className="overflow-hidden rounded-xl border border-ligne bg-white">
-            <AccountLink href="/commercial" label="Voir mon espace commercial" last />
-          </div>
-        </section>
-      )}
 
       {/* ========== AIDE ==========
           Liens branchés le 22/09/2026 (étaient des stubs "#") : "Centre

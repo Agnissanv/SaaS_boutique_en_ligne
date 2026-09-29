@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toggleProductActive, deleteProduct, bulkToggleActive } from "./actions";
+import { ShareProductButton } from "./share-product-button";
 import { categoryLabel } from "@/lib/categories";
 import {
   LOW_STOCK_THRESHOLD,
@@ -43,7 +44,7 @@ type ViewMode = "table" | "grid";
  * serveur via `startTransition` (comme les actions groupées) plutôt qu'un
  * `<form>` classique, pour l'animation immédiate sans rechargement.
  */
-export function ProductList({ products }: { products: Product[] }) {
+export function ProductList({ products, shopSlug }: { products: Product[]; shopSlug: string }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [view, setView] = useState<ViewMode>("table");
   const [isPending, startTransition] = useTransition();
@@ -161,6 +162,7 @@ export function ProductList({ products }: { products: Product[] }) {
       {view === "table" ? (
         <ProductTable
           products={products}
+          shopSlug={shopSlug}
           selected={selected}
           onToggleSelected={toggleSelected}
           onToggleActive={handleToggleActive}
@@ -169,6 +171,7 @@ export function ProductList({ products }: { products: Product[] }) {
       ) : (
         <ProductGrid
           products={products}
+          shopSlug={shopSlug}
           selected={selected}
           onToggleSelected={toggleSelected}
           onToggleActive={handleToggleActive}
@@ -185,13 +188,14 @@ function thumbnailOf(product: Product) {
 
 type ListProps = {
   products: Product[];
+  shopSlug: string;
   selected: Set<string>;
   onToggleSelected: (id: string) => void;
   onToggleActive: (product: Product) => void;
   pendingToggleId: string | null;
 };
 
-function ProductTable({ products, selected, onToggleSelected, onToggleActive, pendingToggleId }: ListProps) {
+function ProductTable({ products, shopSlug, selected, onToggleSelected, onToggleActive, pendingToggleId }: ListProps) {
   return (
     <div className="mt-3 overflow-x-auto rounded-md border border-ligne bg-white">
       <table className="w-full min-w-[720px] text-left text-sm">
@@ -251,6 +255,7 @@ function ProductTable({ products, selected, onToggleSelected, onToggleActive, pe
                     <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
                       Dupliquer
                     </Link>
+                    <ShareProductButton shopSlug={shopSlug} slug={product.slug} title={product.title} />
                     <form action={deleteProduct.bind(null, product.id)}>
                       <button type="submit" className="text-erreur underline">
                         Supprimer
@@ -267,7 +272,7 @@ function ProductTable({ products, selected, onToggleSelected, onToggleActive, pe
   );
 }
 
-function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pendingToggleId }: ListProps) {
+function ProductGrid({ products, shopSlug, selected, onToggleSelected, onToggleActive, pendingToggleId }: ListProps) {
   return (
     <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((product) => {
@@ -306,6 +311,7 @@ function ProductGrid({ products, selected, onToggleSelected, onToggleActive, pen
               <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
                 Dupliquer
               </Link>
+              <ShareProductButton shopSlug={shopSlug} slug={product.slug} title={product.title} />
               <form action={deleteProduct.bind(null, product.id)} className="ml-auto">
                 <button type="submit" className="text-erreur underline">
                   Supprimer

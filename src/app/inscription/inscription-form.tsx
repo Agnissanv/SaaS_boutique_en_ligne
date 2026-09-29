@@ -156,7 +156,16 @@ export function InscriptionForm() {
         {view === "form" && (
           <>
             <p className="mt-1 text-sm text-encre/70">
-              Ton nom, ton email et un mot de passe suffisent pour commencer.
+              Ton nom, ton email et un mot de passe suffisent pour commencer.{" "}
+              {/* Ajouté le 29/09/2026, même chantier que /tarifs (voir ce
+                  fichier) : quelqu'un qui arrive directement sur cette page
+                  (lien direct, pub...) sans passer par la marketplace n'a
+                  toujours aucun moyen d'y voir les tarifs avant de créer un
+                  compte. */}
+              <Link href="/tarifs" className="text-vert-actif underline">
+                Voir les tarifs
+              </Link>
+              .
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
