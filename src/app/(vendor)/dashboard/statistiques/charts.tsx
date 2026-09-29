@@ -139,20 +139,50 @@ export function RankedList({
  * n'ont pas de comparaison de période ni de classement : panier moyen,
  * valeur du stock, note moyenne, taux d'annulation, compteurs clients...
  */
+/**
+ * `icon` optionnel ajouté le 29/09/2026 (refonte de l'Aperçu dashboard,
+ * inspiration d'une maquette envoyée par Isaac) — une puce circulaire
+ * `bg-brume`/`text-vert-actif`, même traitement que les icônes de
+ * l'argumentaire de confiance sur la page d'accueil publique (`TRUST_ITEMS`,
+ * `src/app/page.tsx`), plutôt qu'une icône par couleur différente par tuile
+ * comme sur la maquette de référence — jugé trop proche du look "dashboard
+ * IA générique" qu'Isaac a justement fait corriger ailleurs sur le site
+ * (voir affiches-et-posts-lancement.md, palette cuivre/ivoire abandonnée
+ * pour la même raison). Branché en deux rendus distincts (pas une classe
+ * conditionnelle) pour ne rien changer au DOM des appels existants
+ * (`/dashboard/statistiques`) qui ne passent pas d'icône.
+ */
 export function StatTile({
   label,
   value,
   sublabel,
+  icon,
 }: {
   label: string;
   value: string;
   sublabel?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <div className="rounded-lg border border-ligne bg-white p-4">
-      <p className="text-xs text-encre/60">{label}</p>
-      <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
-      {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+      {icon ? (
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs text-encre/60">{label}</p>
+            <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
+            {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="text-xs text-encre/60">{label}</p>
+          <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
+          {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+        </>
+      )}
     </div>
   );
 }
@@ -241,16 +271,19 @@ export function CountBars({
 }
 
 /** Tuile de comparaison de périodes (Pro) — variation en %, colorée selon le sens. */
+/** `icon` optionnel — même raisonnement que `StatTile` ci-dessus. */
 export function ComparisonTile({
   label,
   current,
   previous,
   format,
+  icon,
 }: {
   label: string;
   current: number;
   previous: number;
   format: (n: number) => string;
+  icon?: React.ReactNode;
 }) {
   const hasPrevious = previous > 0;
   const change = hasPrevious ? ((current - previous) / previous) * 100 : null;
@@ -262,16 +295,34 @@ export function ComparisonTile({
         : change < 0
           ? "text-erreur"
           : "text-encre/50";
+  const changeLabel = (
+    <p className={`mt-0.5 text-xs ${colorClass}`}>
+      {change === null
+        ? "Pas de données sur la période précédente"
+        : `${change > 0 ? "+" : ""}${change.toFixed(0)}% vs période précédente`}
+    </p>
+  );
 
   return (
     <div className="rounded-lg border border-ligne bg-white p-4">
-      <p className="text-xs text-encre/60">{label}</p>
-      <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
-      <p className={`mt-0.5 text-xs ${colorClass}`}>
-        {change === null
-          ? "Pas de données sur la période précédente"
-          : `${change > 0 ? "+" : ""}${change.toFixed(0)}% vs période précédente`}
-      </p>
+      {icon ? (
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brume text-vert-actif">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs text-encre/60">{label}</p>
+            <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
+            {changeLabel}
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="text-xs text-encre/60">{label}</p>
+          <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
+          {changeLabel}
+        </>
+      )}
     </div>
   );
 }
