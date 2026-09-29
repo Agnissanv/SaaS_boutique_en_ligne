@@ -7,9 +7,10 @@ import { CategoryNav } from "@/components/category-nav";
 import { ProductCard, type MarketplaceCardProduct } from "@/components/product-card";
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
-import { ProductImage } from "@/components/product-image";
 import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
-import { HeroFeaturedSlideshow } from "@/components/hero-featured-slideshow";
+import { HeroPhotoCloud } from "@/components/hero-photo-cloud";
+import { HeroHeadline } from "@/components/hero-headline";
+import { AnimatedCounter } from "@/components/animated-counter";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import {
@@ -62,7 +63,11 @@ const CATEGORY_ROW_SIZE = 12;
 // consultable via "Voir tout" (grille filtrée par catégorie, non plafonnée)
 // et via la recherche — seule la bande d'aperçu peut le manquer.
 const CATEGORY_FEED_LIMIT = 400;
-const HERO_COLLAGE_SIZE = 3;
+// Nombre de photos du nuage du hero (28/09/2026, voir hero-photo-cloud.tsx)
+// — 3 cases en diagonale + la vedette rotative à part (`heroSlideshowProducts`,
+// pas comptée ici). Toujours puisé dans `newArrivalsProducts`, déjà chargé
+// plus haut — aucune requête de plus.
+const HERO_CLOUD_SIZE = 3;
 // Échantillon borné pour le calcul des facettes de filtre (valeurs
 // d'attribut réellement présentes + bornes de prix) — même pragmatisme et
 // même ordre de grandeur que `CATEGORY_FEED_LIMIT` ci-dessus : un compromis
@@ -92,17 +97,6 @@ type SortValue = (typeof SORTS)[number]["value"];
 // la troisième (la plus au premier plan) est désormais le carrousel de
 // meilleures ventes (`HeroFeaturedSlideshow`, voir plus bas).
 //
-// Agrandi le 22/09/2026 (retour d'Isaac : "je trouve que se carrousel est un
-// peu trop petit... mais ne le rend pas envahissant, le site doit être
-// aéré") — augmentation modérée (~15%) plutôt qu'un doublement, et un cran
-// de plus sur grand écran (`lg:`, hero desktop large) où l'espace libre du
-// cadre du hero le permet sans tasser le texte à côté.
-const HERO_COLLAGE_POSITIONS = [
-  "absolute left-0 top-6 h-36 w-36 -rotate-6 shadow-[0_18px_36px_rgba(14,59,44,0.16)] lg:h-40 lg:w-40",
-  "absolute right-2 top-0 z-10 h-32 w-32 rotate-3 shadow-[0_18px_36px_rgba(14,59,44,0.16)] lg:h-36 lg:w-36",
-  "absolute bottom-0 left-16 z-20 h-32 w-32 rotate-2 shadow-[0_18px_36px_rgba(14,59,44,0.16)] lg:h-36 lg:w-36",
-];
-
 // Icônes de l'argumentaire de confiance — dessinées à la main en SVG inline,
 // même parti pris que les icônes de la sidebar du dashboard vendeur
 // (15/09/2026) : pas de dépendance à une librairie d'icônes.
@@ -564,13 +558,14 @@ export default async function Home({
     for (const row of categoryRows) applyRatings(row.products);
   }
 
-  // Collage du hero : les vignettes des toutes dernières nouveautés, déjà
-  // chargées ci-dessus — pas de requête supplémentaire. De vraies photos
-  // envoyées par de vrais vendeurs, jamais une image de stock générique.
+  // Nuage de photos du hero (hero-photo-cloud.tsx) : les vignettes des
+  // toutes dernières nouveautés, déjà chargées ci-dessus — pas de requête
+  // supplémentaire. De vraies photos envoyées par de vrais vendeurs, jamais
+  // une image de stock générique.
   const heroThumbnails = newArrivalsProducts
     .map((p) => p.thumbnail)
     .filter((url): url is string => Boolean(url))
-    .slice(0, HERO_COLLAGE_SIZE);
+    .slice(0, HERO_CLOUD_SIZE);
 
   // Diaporama mobile du hero (16/09/2026, retour d'Isaac : sur mobile, les
   // chiffres "Boutiques actives"/"Produits en vente" prennent de la place
@@ -691,20 +686,13 @@ export default async function Home({
                     Vendez · Encaissez · Grandissez
                   </p>
 
-                  {/* Espace explicite ajouté le 23/09/2026 (bug SEO/visuel
-                      signalé via un audit externe transmis par Isaac, vérifié
-                      en relisant ce fichier) : le `<br>` masqué sous `sm`
-                      (`hidden sm:block`) ne laissait plus aucun caractère
-                      entre les deux `<span>` sur mobile, collant les deux
-                      moitiés du H1 ("Toutes les boutiquesen un seul
-                      endroit"). Le `{" "}` comble ce vide sur mobile sans
-                      rien changer au-dessus de `sm`, où le `<br>` redevient
-                      visible et l'espace se réduit avant le saut de ligne. */}
-                  <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.4rem]">
-                    <span className="text-encre">Toutes les boutiques</span>{" "}
-                    <br className="hidden sm:block" />
-                    <span className="text-vert-actif">en un seul endroit</span>
-                  </h1>
+                  {/* Titre mis en scène en deux temps depuis le 28/09/2026
+                      (voir hero-headline.tsx) — ce composant reproduit
+                      exactement les mêmes classes/texte/`{" "}` que le <h1>
+                      d'origine (dont le correctif d'espace mobile du
+                      23/09/2026), la seule différence est l'apparition en
+                      deux temps plutôt qu'en bloc. */}
+                  <HeroHeadline line1="Toutes les boutiques" line2="en un seul endroit" />
 
                   <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
                     Des vendeurs indépendants partout en Côte d’Ivoire.
@@ -731,14 +719,14 @@ export default async function Home({
                     <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
                       <div>
                         <p className="font-mono text-xl font-semibold text-encre">
-                          {shopsCount ?? 0}
+                          <AnimatedCounter value={shopsCount ?? 0} />
                         </p>
                         <p className="mt-0.5 text-xs text-encre/50">boutiques</p>
                       </div>
                       <div className="h-8 w-px bg-ligne" />
                       <div>
                         <p className="font-mono text-xl font-semibold text-encre">
-                          {productsCount ?? 0}
+                          <AnimatedCounter value={productsCount ?? 0} />
                         </p>
                         <p className="mt-0.5 text-xs text-encre/50">produits</p>
                       </div>
@@ -748,39 +736,10 @@ export default async function Home({
                   <HeroMobileSlideshow products={heroSlideshowProducts} />
                 </div>
 
-                {heroThumbnails.length > 0 ? (
-                  <div
-                    className="relative hidden h-64 w-64 shrink-0 sm:block lg:h-72 lg:w-72"
-                    aria-hidden="true"
-                  >
-                    {heroThumbnails.slice(0, 2).map((url, index) => (
-                      <div
-                        key={url}
-                        className={`rounded-xl ${HERO_COLLAGE_POSITIONS[index]}`}
-                      >
-                        <ProductImage
-                          src={url}
-                          alt=""
-                          className="h-full w-full rounded-lg object-cover"
-                        />
-                      </div>
-                    ))}
-                    {/* Case avant du collage : carrousel de vraies meilleures
-                        ventes plutôt qu'une 3e vignette statique — voir
-                        hero-featured-slideshow.tsx. `aria-hidden` retiré sur
-                        cette seule case : contrairement aux deux autres, elle
-                        est cliquable (lien vers le produit). */}
-                    <div
-                      className={HERO_COLLAGE_POSITIONS[2].replace("rounded-xl", "")}
-                      aria-hidden={false}
-                    >
-                      <HeroFeaturedSlideshow
-                        products={heroSlideshowProducts}
-                        className="h-full w-full"
-                      />
-                    </div>
-                  </div>
-                ) : null}
+                {/* Nuage de photos — remplace le collage fixe à 3 cases le
+                    28/09/2026, voir hero-photo-cloud.tsx pour le détail
+                    complet (dérive au scroll, gestion du reduced-motion). */}
+                <HeroPhotoCloud photos={heroThumbnails} slideshowProducts={heroSlideshowProducts} />
               </div>
             </div>
           </section>
