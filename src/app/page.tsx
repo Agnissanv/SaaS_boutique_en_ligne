@@ -134,6 +134,13 @@ function IconMobileMoney() {
   );
 }
 
+// Seuil à partir duquel le hero affiche le vrai compteur "X boutiques /
+// Y produits" plutôt qu'un message de croissance sans chiffre (demande
+// d'Isaac du 01/10/2026, voir le JSX du hero et la requête shopsCountQuery
+// plus bas) — pas de recoupement entre vendeurs/produits, un petit nombre de
+// boutiques "non pro" visuellement reste le signal qui compte le plus.
+const HERO_STATS_MIN_SHOPS = 50;
+
 const TRUST_ITEMS = [
   {
     title: "Paiement à la livraison",
@@ -347,11 +354,17 @@ export default async function Home({
     .order("created_at", { ascending: false })
     .limit(NEWEST_SHOPS_SIZE);
 
-  // Chiffres réels de la plateforme, affichés dans le hero. `head: true` :
-  // on ne veut que le compte, jamais les lignes elles-mêmes. Jamais une
-  // valeur inventée pour "faire plein" (même principe que la barre de santé
-  // du stock ou le badge "vendeur vérifié" écarté ailleurs) : si la
-  // plateforme est encore petite, le chiffre réel s'affiche tel quel.
+  // Chiffres réels de la plateforme — `head: true` : on ne veut que le
+  // compte, jamais les lignes elles-mêmes. Jamais une valeur inventée pour
+  // "faire plein" (même principe que la barre de santé du stock ou le badge
+  // "vendeur vérifié" écarté ailleurs) : le compte reste toujours réel.
+  //
+  // Affiché dans le hero SEULEMENT à partir de 50 boutiques (demande d'Isaac
+  // du 01/10/2026) : en dessous de ce seuil, un petit chiffre réel donne une
+  // impression amateur plutôt qu'un gage de confiance — on bascule alors sur
+  // un message de croissance sans chiffre (voir le JSX du hero, même
+  // condition `shopsCount >= HERO_STATS_MIN_SHOPS`). Seul le SEUIL D'AFFICHAGE
+  // change, jamais le chiffre lui-même.
   const shopsCountQuery = supabase
     .from("shops")
     .select("id", { count: "exact", head: true })
@@ -771,7 +784,7 @@ export default async function Home({
                     </Link>
                   </div>
 
-                  {(shopsCount ?? 0) > 0 || (productsCount ?? 0) > 0 ? (
+                  {(shopsCount ?? 0) >= HERO_STATS_MIN_SHOPS ? (
                     <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
                       <div>
                         <p className="font-mono text-xl font-semibold text-encre">
@@ -787,7 +800,18 @@ export default async function Home({
                         <p className="mt-0.5 text-xs text-encre/50">produits</p>
                       </div>
                     </div>
-                  ) : null}
+                  ) : (
+                    // Sous le seuil (voir HERO_STATS_MIN_SHOPS) : pas de
+                    // chiffre réel (donnerait une impression amateur), pas de
+                    // chiffre inventé non plus — un message de croissance qui
+                    // reste vrai à n'importe quelle taille de plateforme.
+                    <div className="mt-10 hidden items-center gap-2 sm:flex lg:justify-start">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-vert-actif" />
+                      <p className="text-xs font-medium text-encre/60">
+                        Marketplace ivoirienne en pleine croissance
+                      </p>
+                    </div>
+                  )}
 
                   <HeroMobileSlideshow products={heroSlideshowProducts} />
                 </div>
