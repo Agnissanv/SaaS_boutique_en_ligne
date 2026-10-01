@@ -130,8 +130,19 @@ export function PushNotificationToggle({ vapidPublicKey }: { vapidPublicKey: str
   );
 }
 
-/** Conversion standard base64url -> Uint8Array pour `applicationServerKey`. */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+/**
+ * Conversion standard base64url -> Uint8Array pour `applicationServerKey`.
+ *
+ * Retour explicitement typé `Uint8Array<ArrayBuffer>` (01/10/2026, build
+ * Vercel cassé) : sans ce paramètre, l'annotation `: Uint8Array` résout au
+ * générique par défaut `Uint8Array<ArrayBufferLike>` (TypeScript 5.7+,
+ * `Uint8Array` devenu générique) — qui inclut `SharedArrayBuffer` et n'est
+ * donc plus assignable à `BufferSource`/`applicationServerKey` sur
+ * `PushSubscriptionOptionsInit`. `new Uint8Array(n)` est déjà backé par un
+ * vrai `ArrayBuffer`, seule l'annotation de retour avait besoin d'être
+ * précisée.
+ */
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
