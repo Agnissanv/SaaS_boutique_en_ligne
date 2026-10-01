@@ -1402,6 +1402,45 @@ export type Database = {
         };
         Relationships: [];
       };
+
+      // 0053 — historique des envois admin groupés (une ligne par ENVOI, pas
+      // par boutique destinataire — voir `notifications` pour ça).
+      admin_notification_campaigns: {
+        Row: {
+          id: string;
+          title: string;
+          body: string | null;
+          link: string | null;
+          target: string;
+          target_label: string;
+          recipient_count: number;
+          sent_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          body?: string | null;
+          link?: string | null;
+          target: string;
+          target_label: string;
+          recipient_count: number;
+          sent_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          body?: string | null;
+          link?: string | null;
+          target?: string;
+          target_label?: string;
+          recipient_count?: number;
+          sent_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

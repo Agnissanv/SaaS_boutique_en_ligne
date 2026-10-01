@@ -149,3 +149,14 @@ export function GiftIcon({ className = "h-5 w-5" }: { className?: string }) {
     </svg>
   );
 }
+
+/** Ajoutée le 01/10/2026 pour "Notifications" (envoi de messages admin aux boutiques). */
+export function MegaphoneIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M3.2 8.6v2.8a1 1 0 0 0 1 1h.9l1.3 3.9a.9.9 0 0 0 .85.6h.5a.9.9 0 0 0 .86-1.17L7.6 12.4" />
+      <path d="M5.1 8.6h1.3L13 5a.8.8 0 0 1 1.15.72v8.56A.8.8 0 0 1 13 15l-6.6-3.6H5.1a1 1 0 0 1-1-1V9.6a1 1 0 0 1 1-1Z" />
+      <path d="M16.3 8.9a2.7 2.7 0 0 1 0 3.4" />
+    </svg>
+  );
+}

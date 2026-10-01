@@ -8,6 +8,7 @@ import {
   GiftIcon,
   GridIcon,
   MailIcon,
+  MegaphoneIcon,
   PackageIcon,
   StorefrontIcon,
   TagIcon,
@@ -37,6 +38,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/paiements", label: "Paiements", icon: CoinsIcon },
   { href: "/admin/codes-promo", label: "Codes promo", icon: TagIcon },
   { href: "/admin/messages", label: "Messages", icon: MailIcon },
+  { href: "/admin/notifications", label: "Notifications", icon: MegaphoneIcon },
   { href: "/admin/transactions", label: "Transactions", icon: ClipboardIcon },
 ];
 

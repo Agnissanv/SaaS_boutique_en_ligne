@@ -5,6 +5,7 @@ import { LocationDetector } from "@/components/location-detector";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { SiteFooter } from "@/components/site-footer";
+import { AdminQuickAccess } from "@/components/admin-quick-access";
 import "./globals.css";
 
 // Typographie KEVA — révisée le 22/09/2026 (voir decisions-techniques.md,
@@ -228,6 +229,10 @@ export default function RootLayout({
         {/* Détection silencieuse de la position pour le tri par proximité de
             la marketplace (01/10/2026) — voir location-detector.tsx. */}
         <LocationDetector />
+        {/* Raccourci "Espace admin" sur les pages publiques (01/10/2026,
+            retour d'Isaac — voir admin-quick-access.tsx) : se cache tout
+            seul pour un visiteur non-admin ou déjà dans /admin. */}
+        <AdminQuickAccess />
       </body>
     </html>
   );

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/subscription-lifecycle",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/purge-old-messages",
+      "schedule": "0 4 * * *"
     }
   ]
 }

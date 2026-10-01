@@ -13,7 +13,11 @@ import { useLastVisitedShop } from "@/lib/shop/useLastVisitedShop";
 // barre en pastilles). "favoris" et "compte" ne sont volontairement PAS
 // listés ici : ce sont des surfaces client à part entière, la barre y reste
 // visible.
-const HIDDEN_ROOTS = new Set([
+//
+// Exportée depuis le 01/10/2026 pour `admin-quick-access.tsx` — même liste
+// de racines "espace interne, pas besoin de la nav publique" réutilisée là-bas
+// pour ne pas proposer "retourner à l'admin" alors qu'on y est déjà.
+export const HIDDEN_ROOTS = new Set([
   "connexion",
   "inscription",
   "admin",

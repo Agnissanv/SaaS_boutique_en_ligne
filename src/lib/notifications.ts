@@ -8,11 +8,14 @@
  *
  * Isaac : "je veux un vrai espace notification qui concerne tout" — nouvelle
  * commande, annulation, changement de statut, avis possible après livraison.
- * Les messages admin → vendeur ("admin_message") ne sont pas encore émis
- * nulle part dans le code (aucune UI pour qu'un admin en envoie un pour
- * l'instant — prochaine étape si Isaac le souhaite), mais le type existe déjà
- * en base et ici pour ne pas avoir à retoucher ces deux pages le jour où
- * cette UI sera ajoutée.
+ *
+ * Messages admin → vendeur ("admin_message") : composés et envoyés depuis
+ * `/admin/notifications` (01/10/2026) — rappels, infos de parrainage,
+ * annonces de fonctionnalité, piqûre de rappel sur une fonctionnalité sous-
+ * utilisée, etc. Un simple insert dans `notifications` (une ligne par
+ * boutique ciblée) suffit aussi à déclencher la notification push (trigger
+ * pg_net, migration 0052) — une boutique la reçoit donc même si elle n'est
+ * pas sur KEVA au moment de l'envoi.
  */
 export type NotificationKind =
   | "new_order"
