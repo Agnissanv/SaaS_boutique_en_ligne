@@ -14,12 +14,26 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
  * ailleurs. iOS/Safari : fonctionne par le même protocole depuis iOS 16.4,
  * MAIS seulement si le vendeur a installé KEVA sur son écran d'accueil
  * (limite d'Apple, pas de KEVA — déjà signalée par Isaac lui-même).
+ *
+ * Appel gardé par un `if` (01/10/2026, build Vercel cassé) : `web-push`
+ * valide ses clés immédiatement et LÈVE si la clé publique est vide —
+ * `setVapidDetails` tournait ici à l'IMPORT du module (donc dès que Next
+ * charge /api/push/trigger, y compris pendant `next build` qui "collecte" la
+ * route), sans attendre `sendPushToProfile`. Tant que les variables VAPID_*
+ * ne sont pas encore renseignées sur Vercel (Paramètres du projet >
+ * Environment Variables — `.env.local` seul ne suffit pas, il ne vaut que
+ * pour la machine d'Isaac), ça faisait planter le build en entier plutôt que
+ * de juste désactiver le push. Le garde-fou de `sendPushToProfile` plus bas
+ * (clés manquantes → abandon silencieux) ne protégeait pas de ça : il
+ * s'exécute après, à l'appel de la fonction, jamais à l'import du module.
  */
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT ?? "mailto:contact@shopkeva.com",
-  process.env.VAPID_PUBLIC_KEY ?? "",
-  process.env.VAPID_PRIVATE_KEY ?? ""
-);
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT ?? "mailto:contact@shopkeva.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 export type PushPayload = {
   title: string;
