@@ -375,10 +375,16 @@ export default async function ShopPage({
           next/image le 16/09/2026 (enrichissement performance) : c'est
           l'image la plus lourde de toute la page boutique, la première que
           le navigateur doit charger — voir `product-image.tsx` pour le même
-          raisonnement appliqué aux vignettes produit. */}
+          raisonnement appliqué aux vignettes produit.
+          Agrandie le 01/10/2026 (retour d'Isaac : en h-40/h-56, `object-cover`
+          rognait trop la photo des vendeurs — le cadrage d'origine, visages
+          compris, disparaissait). Progression par palier jusqu'à lg plutôt
+          qu'un seul saut sm, pour garder un ratio largeur/hauteur raisonnable
+          à chaque taille d'écran (le conteneur fait max-w-6xl, voir plus
+          haut). */}
       <div className="overflow-hidden rounded-2xl">
         {shop.cover_url ? (
-          <div className="relative h-40 w-full sm:h-56">
+          <div className="relative h-56 w-full sm:h-72 md:h-80 lg:h-96">
             <Image
               src={shop.cover_url}
               alt=""
@@ -391,7 +397,11 @@ export default async function ShopPage({
         ) : (
           <div
             style={shop.accent_color ? { backgroundColor: shop.accent_color } : undefined}
-            className={shop.accent_color ? "h-24 w-full sm:h-32" : "h-24 w-full bg-vert-profond sm:h-32"}
+            className={
+              shop.accent_color
+                ? "h-32 w-full sm:h-40 md:h-48"
+                : "h-32 w-full bg-vert-profond sm:h-40 md:h-48"
+            }
           />
         )}
       </div>
