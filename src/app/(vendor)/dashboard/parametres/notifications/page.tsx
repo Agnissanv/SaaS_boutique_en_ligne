@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
 import { SettingsTabs } from "../../settings-tabs";
 import { NotificationEmailForm } from "./notification-email-form";
+import { PushNotificationToggle } from "./push-toggle";
 
 /**
  * Onglet "Notifications" — ajouté le 30/09/2026 (refonte de l'espace
@@ -41,6 +42,15 @@ export default async function NotificationsSettingsPage() {
       <SettingsTabs isOwner />
 
       <h2 className="mt-6 font-display text-sm font-semibold text-encre">Notifications</h2>
+
+      {/* Notifications push (01/10/2026) — disponible sur TOUS les plans,
+          contrairement à l'email ci-dessous (voir push-toggle.tsx) : gratuit
+          à l'usage, aucun quota à ménager. */}
+      <PushNotificationToggle vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
+
+      <h2 className="mt-6 font-display text-sm font-semibold text-encre">
+        Notifications par email
+      </h2>
 
       {subscription.features.hasOrderNotifications ? (
         <>

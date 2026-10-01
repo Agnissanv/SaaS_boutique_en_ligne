@@ -250,6 +250,8 @@ export type Database = {
           is_verified: boolean;
           mobile_money_number: string | null;
           mobile_money_operator: MobileMoneyOperator | null;
+          ville: string | null;
+          commune: string | null;
         };
         Insert: {
           id?: string;
@@ -273,6 +275,8 @@ export type Database = {
           is_verified?: boolean;
           mobile_money_number?: string | null;
           mobile_money_operator?: MobileMoneyOperator | null;
+          ville?: string | null;
+          commune?: string | null;
         };
         Update: {
           id?: string;
@@ -296,6 +300,8 @@ export type Database = {
           is_verified?: boolean;
           mobile_money_number?: string | null;
           mobile_money_operator?: MobileMoneyOperator | null;
+          ville?: string | null;
+          commune?: string | null;
         };
         Relationships: [
           {
@@ -1363,6 +1369,36 @@ export type Database = {
           identifier?: string;
           window_started_at?: string;
           attempt_count?: number;
+        };
+        Relationships: [];
+      };
+
+      // 0052 — un profil peut avoir plusieurs abonnements (un par
+      // appareil/navigateur où il a activé les notifications push).
+      push_subscriptions: {
+        Row: {
+          id: string;
+          profile_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          created_at?: string;
         };
         Relationships: [];
       };

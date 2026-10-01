@@ -71,3 +71,74 @@ export function boostByPlanWithinDay<T>(
     return createdA > createdB ? -1 : 1;
   });
 }
+
+/**
+ * Localisation du visiteur, résolue côté client (position du navigateur,
+ * gratuite — voir src/components/location-detector.tsx et
+ * src/lib/geo/ci-locations.ts) puis transmise au serveur via un simple
+ * cookie, lu dans src/app/page.tsx.
+ */
+export type VisitorLocation = { ville: string; commune: string | null };
+
+/**
+ * Priorité de proximité d'une boutique par rapport au visiteur — demande
+ * d'Isaac du 01/10/2026 ("les produits doivent s'afficher par rapport à la
+ * position de la personne la plus proche", façon Facebook Marketplace) :
+ *
+ *   0 = même commune (uniquement comparable pour Abidjan — `commune` est
+ *       toujours `null` ailleurs, voir ci-locations.ts)
+ *   1 = même ville, commune différente ou non comparable
+ *   2 = ville différente, ou position du visiteur/boutique inconnue
+ *
+ * Ne masque JAMAIS une boutique plus éloignée (exigence explicite d'Isaac :
+ * "dans le cas où c'est pas possible... les autres s'affichent sans
+ * problème") — sert uniquement de clé de tri, jamais de filtre.
+ */
+export function locationTierOf(
+  shopVille: string | null | undefined,
+  shopCommune: string | null | undefined,
+  visitor: VisitorLocation | null
+): number {
+  if (!visitor || !shopVille) return 2;
+  if (shopVille !== visitor.ville) return 2;
+  if (visitor.commune && shopCommune && shopCommune === visitor.commune) return 0;
+  return 1;
+}
+
+/**
+ * Même tri que `boostByPlanWithinDay`, avec la proximité du visiteur comme
+ * clé PRIMAIRE (avant même le jour de publication) : c'est la demande
+ * explicite d'Isaac ("en premier... les produits les plus proches"), le
+ * palier d'abonnement ne doit pas pouvoir faire remonter une boutique
+ * lointaine devant une boutique proche. À l'intérieur d'un même niveau de
+ * proximité, l'algorithme jour/palier existant s'applique tel quel — voir
+ * son commentaire ci-dessus pour le détail.
+ */
+export function boostByLocationThenPlanWithinDay<T>(
+  items: T[],
+  getLocationTier: (item: T) => number,
+  getCreatedAt: (item: T) => string,
+  getPlanRank: (item: T) => number
+): T[] {
+  const dayKey = (iso: string) => iso.slice(0, 10);
+
+  return [...items].sort((a, b) => {
+    const tierA = getLocationTier(a);
+    const tierB = getLocationTier(b);
+    if (tierA !== tierB) return tierA - tierB;
+
+    const createdA = getCreatedAt(a);
+    const createdB = getCreatedAt(b);
+
+    const dayA = dayKey(createdA);
+    const dayB = dayKey(createdB);
+    if (dayA !== dayB) return dayA > dayB ? -1 : 1;
+
+    const rankA = getPlanRank(a);
+    const rankB = getPlanRank(b);
+    if (rankA !== rankB) return rankA - rankB;
+
+    if (createdA === createdB) return 0;
+    return createdA > createdB ? -1 : 1;
+  });
+}

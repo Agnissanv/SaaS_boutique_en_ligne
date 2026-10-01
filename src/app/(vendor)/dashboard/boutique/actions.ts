@@ -8,6 +8,7 @@ import { isReservedShopSlug } from "@/lib/utils/reserved-slugs";
 import { isValidCategory } from "@/lib/categories";
 import { getShopSubscription } from "@/lib/subscription";
 import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
+import { CI_VILLES, ABIDJAN_COMMUNES } from "@/lib/geo/ci-locations";
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -64,6 +65,16 @@ export async function saveShop(
   // donc aucune validation de format stricte ici non plus.
   const mobileMoneyNumber = String(formData.get("mobileMoneyNumber") ?? "").trim();
   const mobileMoneyOperatorRaw = String(formData.get("mobileMoneyOperator") ?? "").trim();
+  // Localisation — ajoutée le 01/10/2026 (voir migration 0052 et
+  // src/lib/geo/ci-locations.ts). Optionnelle : une boutique qui ne la
+  // renseigne pas continue de s'afficher normalement, juste sans priorité de
+  // proximité (voir src/lib/marketplace/ranking.ts). `commune` n'a de sens
+  // que pour Abidjan — forcée à `null` sinon, même si le formulaire masque
+  // déjà ce champ pour toute autre ville (re-vérifié ici côté serveur,
+  // au cas où le champ caché serait resté rempli après un changement de
+  // ville côté client).
+  const ville = String(formData.get("ville") ?? "").trim();
+  const communeRaw = String(formData.get("commune") ?? "").trim();
 
   if (!name || name.length < 2) {
     return { error: "Le nom de la boutique est trop court." };
@@ -92,6 +103,16 @@ export async function saveShop(
   if (!isValidCategory(category)) {
     return { error: "Choisis une catégorie valide." };
   }
+  if (ville && !(CI_VILLES as string[]).includes(ville)) {
+    return { error: "Choisis une ville valide." };
+  }
+  if (communeRaw && ville !== "Abidjan") {
+    return { error: "La commune ne s'applique qu'aux boutiques d'Abidjan." };
+  }
+  if (communeRaw && !(ABIDJAN_COMMUNES as readonly string[]).includes(communeRaw)) {
+    return { error: "Choisis une commune valide." };
+  }
+  const commune = ville === "Abidjan" ? communeRaw || null : null;
 
   let deliveryFee: number | null = null;
   if (deliveryFeeRaw) {
@@ -138,6 +159,8 @@ export async function saveShop(
         whatsapp_number: whatsappNumber || null,
         mobile_money_number: mobileMoneyNumber || null,
         mobile_money_operator: mobileMoneyOperator,
+        ville: ville || null,
+        commune,
         updated_at: new Date().toISOString(),
       })
       .eq("id", shopId)
@@ -196,6 +219,8 @@ export async function saveShop(
         whatsapp_number: whatsappNumber || null,
         mobile_money_number: mobileMoneyNumber || null,
         mobile_money_operator: mobileMoneyOperator,
+        ville: ville || null,
+        commune,
       })
       .select("id")
       .single();

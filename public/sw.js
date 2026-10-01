@@ -138,3 +138,50 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// ============================================================================
+// Notifications push (01/10/2026) — demande d'Isaac : les vendeurs doivent
+// recevoir une notification même quand ils ne sont pas sur le site/l'app.
+// Voir src/lib/push/send-push.ts pour l'envoi côté serveur (Web Push API,
+// gratuite, sans clé tierce payante) et decisions-techniques.md pour le
+// raisonnement complet. Portée volontairement minimale, comme le reste de ce
+// fichier (voir commentaire d'en-tête) : affiche la notification système,
+// ouvre/focus KEVA au clic — rien de plus (pas d'actions personnalisées,
+// pas de badge de compteur).
+// ============================================================================
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    // Payload non-JSON (ne devrait jamais arriver, voir send-push.ts) —
+    // notification générique plutôt qu'un échec silencieux.
+  }
+
+  const title = data.title || "KEVA";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { link: data.link || "/dashboard/notifications" },
+    })
+  );
+});
+
+// Clic sur la notification système : focus un onglet KEVA déjà ouvert sur la
+// bonne page si possible, sinon en ouvre un nouveau — motif standard Web
+// Push, évite d'empiler des onglets KEVA à chaque notification cliquée.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const link = event.notification.data?.link || "/dashboard/notifications";
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientsList) => {
+      for (const client of clientsList) {
+        if (client.url.includes(link) && "focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(link);
+    })
+  );
+});

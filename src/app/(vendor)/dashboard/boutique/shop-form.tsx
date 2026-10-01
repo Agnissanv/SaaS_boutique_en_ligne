@@ -11,6 +11,7 @@ import {
 import { CATEGORIES } from "@/lib/categories";
 import { NativeSelect } from "@/components/native-select";
 import { MOBILE_MONEY_OPERATORS, MOBILE_MONEY_OPERATOR_LABELS } from "@/lib/utils/mobile-money";
+import { CI_VILLES, ABIDJAN_COMMUNES } from "@/lib/geo/ci-locations";
 
 type Shop = {
   id: string;
@@ -25,6 +26,8 @@ type Shop = {
   whatsapp_number?: string | null;
   mobile_money_number?: string | null;
   mobile_money_operator?: string | null;
+  ville?: string | null;
+  commune?: string | null;
 };
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -186,6 +189,12 @@ export function ShopForm({
 }) {
   const initialState: ShopFormState = {};
   const [state, formAction] = useActionState(saveShop, initialState);
+  // Localisation (01/10/2026, voir src/lib/geo/ci-locations.ts et migration
+  // 0052) : la commune n'a de sens que pour Abidjan — champ affiché
+  // seulement quand "Abidjan" est choisi, piloté par ce state plutôt que par
+  // la valeur déjà enregistrée en base (un vendeur qui change de ville doit
+  // voir le champ Commune apparaître/disparaître immédiatement).
+  const [ville, setVille] = useState(shop?.ville ?? "");
 
   return (
     <form action={formAction} className="mt-6 flex max-w-md flex-col gap-4">
@@ -235,6 +244,46 @@ export function ShopForm({
           options={CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
         />
       </div>
+
+      {/* Localisation (01/10/2026, voir decisions-techniques.md) : affichée
+          aux visiteurs pour prioriser les boutiques les plus proches
+          d'eux sur la marketplace — jamais pour masquer les autres, voir
+          src/lib/marketplace/ranking.ts. Commune affichée seulement pour
+          Abidjan (seule ville avec ce découpage parmi celles listées). */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="ville" className="text-sm font-medium text-encre">
+          Ville
+        </label>
+        <NativeSelect
+          id="ville"
+          name="ville"
+          label="Ville"
+          placeholder="Choisir une ville"
+          defaultValue={shop?.ville ?? ""}
+          onChange={setVille}
+          options={CI_VILLES.map((v) => ({ value: v, label: v }))}
+        />
+        <p className="text-xs text-encre/50">
+          Les visiteurs proches de ta ville voient ta boutique en priorité sur
+          la page d&apos;accueil.
+        </p>
+      </div>
+
+      {ville === "Abidjan" ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="commune" className="text-sm font-medium text-encre">
+            Commune
+          </label>
+          <NativeSelect
+            id="commune"
+            name="commune"
+            label="Commune"
+            placeholder="Choisir une commune"
+            defaultValue={shop?.commune ?? ""}
+            options={ABIDJAN_COMMUNES.map((c) => ({ value: c, label: c }))}
+          />
+        </div>
+      ) : null}
 
       {canCustomizeBranding !== "none" ? (
         <ImageField

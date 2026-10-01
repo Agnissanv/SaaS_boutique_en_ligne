@@ -21,7 +21,7 @@ export default async function ShopSettingsPage() {
   const { data: shop } = await supabase
     .from("shops")
     .select(
-      "id, name, slug, description, category, logo_url, cover_url, accent_color, delivery_fee, whatsapp_number, mobile_money_number, mobile_money_operator"
+      "id, name, slug, description, category, logo_url, cover_url, accent_color, delivery_fee, whatsapp_number, mobile_money_number, mobile_money_operator, ville, commune"
     )
     .eq("owner_id", user?.id ?? "")
     .maybeSingle();

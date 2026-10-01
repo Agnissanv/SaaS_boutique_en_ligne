@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, categoryLabel } from "@/lib/categories";
@@ -26,7 +27,12 @@ import { getCategoryAttributeFields } from "@/lib/category-attributes";
 import { ProductFilterPanel } from "@/components/product-filter-panel";
 import { getShopRating } from "@/lib/reviews";
 import { getEffectivePrice } from "@/lib/products";
-import { boostByPlanWithinDay } from "@/lib/marketplace/ranking";
+import {
+  boostByLocationThenPlanWithinDay,
+  locationTierOf,
+  type VisitorLocation,
+} from "@/lib/marketplace/ranking";
+import { VISITOR_LOCATION_COOKIE, parseVisitorLocationCookie } from "@/lib/geo/visitor-location";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -154,6 +160,10 @@ type RawMarketplaceShopEmbed = {
   // `boostByPlanWithinDay` (src/lib/marketplace/ranking.ts).
   plan_rank: number;
   is_verified: boolean;
+  // Localisation — ajoutée le 01/10/2026 (migration 0052). Voir
+  // `locationTierOf` (src/lib/marketplace/ranking.ts).
+  ville: string | null;
+  commune: string | null;
 };
 
 type RawMarketplaceProduct = {
@@ -182,6 +192,16 @@ type RawMarketplaceProduct = {
 function planRankOf(product: RawMarketplaceProduct): number {
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
   return shop?.plan_rank ?? 3;
+}
+
+// Même normalisation que `planRankOf` ci-dessus, pour le tri par proximité
+// (voir `locationTierOf`, src/lib/marketplace/ranking.ts).
+function locationTierOfProduct(
+  product: RawMarketplaceProduct,
+  visitor: VisitorLocation | null
+): number {
+  const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
+  return locationTierOf(shop?.ville, shop?.commune, visitor);
 }
 
 // Normalise la forme `shop` renvoyée par Supabase (objet ou tableau selon le
@@ -237,7 +257,7 @@ function shuffle<T>(items: T[]): T[] {
 const HERO_SLIDESHOW_SIZE = 6;
 
 const PRODUCT_CARD_COLUMNS =
-  "id, slug, title, price, compare_at_price, category, created_at, product_images(url, position), shop:shops!inner(slug, name, status, plan_rank, is_verified), sale_price, sale_starts_at, sale_ends_at";
+  "id, slug, title, price, compare_at_price, category, created_at, product_images(url, position), shop:shops!inner(slug, name, status, plan_rank, is_verified, ville, commune), sale_price, sale_starts_at, sale_ends_at";
 
 export default async function Home({
   searchParams,
@@ -275,6 +295,19 @@ export default async function Home({
   // sont mutuellement exclusifs : jamais de grille de "tout le catalogue"
   // affichée d'un coup.
   const hasFilter = Boolean(q || categorie || prixMin || prixMax || Object.keys(attrs).length > 0);
+
+  // Localisation du visiteur (01/10/2026, voir decisions-techniques.md) —
+  // posée côté client par `LocationDetector` (position du navigateur,
+  // résolue vers la ville/commune connue la plus proche, jamais envoyée à un
+  // service tiers). Absente pour un premier chargement (avant que le
+  // composant client n'ait eu le temps de poser le cookie et de rafraîchir
+  // la page) ou si le visiteur refuse/ne supporte pas la géolocalisation —
+  // dans ces cas, `locationTierOf` retombe sur le tri jour/palier existant,
+  // jamais une page cassée ou des produits masqués.
+  const cookieStore = await cookies();
+  const visitorLocation = parseVisitorLocationCookie(
+    cookieStore.get(VISITOR_LOCATION_COOKIE)?.value
+  );
 
   const supabase = await createClient();
 
@@ -452,7 +485,12 @@ export default async function Home({
   const rawCatalogueProducts = (products ?? []) as RawMarketplaceProduct[];
   const orderedCatalogueProducts =
     sort === "recent"
-      ? boostByPlanWithinDay(rawCatalogueProducts, (p) => p.created_at, planRankOf)
+      ? boostByLocationThenPlanWithinDay(
+          rawCatalogueProducts,
+          (p) => locationTierOfProduct(p, visitorLocation),
+          (p) => p.created_at,
+          planRankOf
+        )
       : rawCatalogueProducts;
   const catalogueProducts = orderedCatalogueProducts
     .map(toCardProduct)
@@ -513,8 +551,9 @@ export default async function Home({
     // que le catalogue filtré (voir plus haut) : `CATEGORY_FEED_LIMIT` fixe
     // déjà la fenêtre de produits considérée, le boost ne fait que réordonner
     // à l'intérieur de cette fenêtre.
-    const boostedFeed = boostByPlanWithinDay(
+    const boostedFeed = boostByLocationThenPlanWithinDay(
       (categoryFeedResult.data ?? []) as RawMarketplaceProduct[],
+      (p) => locationTierOfProduct(p, visitorLocation),
       (p) => p.created_at,
       planRankOf
     );
@@ -798,6 +837,18 @@ export default async function Home({
 
           {/* ========== CONTENU (limité en largeur) ========== */}
           <main className="mx-auto w-full max-w-6xl px-4 pb-10">
+            {/* Indicateur de proximité (01/10/2026) — visible uniquement en
+                mode par défaut (pas de recherche/filtre explicite) : confirme
+                au visiteur que ce qu'il voit est influencé par sa position,
+                sans jamais annoncer "près de toi" sur une grille de résultats
+                de recherche qui n'a rien à voir avec la proximité. */}
+            {!hasFilter && visitorLocation ? (
+              <p className="mt-6 flex items-center gap-1.5 text-xs font-medium text-vert-sapin">
+                <span aria-hidden="true">📍</span>
+                Produits proches de toi d&apos;abord — {visitorLocation.commune ?? visitorLocation.ville}
+              </p>
+            ) : null}
+
             {/* Catégories */}
             <div id="categories" className="mt-8 scroll-mt-20">
               <div className="mb-3 flex items-center justify-between px-1">

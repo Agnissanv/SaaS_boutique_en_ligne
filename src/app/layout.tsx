@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
+import { LocationDetector } from "@/components/location-detector";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { SiteFooter } from "@/components/site-footer";
@@ -224,6 +225,9 @@ export default function RootLayout({
             scroll-to-top-button.tsx. */}
         <ScrollToTopButton />
         <RegisterServiceWorker />
+        {/* Détection silencieuse de la position pour le tri par proximité de
+            la marketplace (01/10/2026) — voir location-detector.tsx. */}
+        <LocationDetector />
       </body>
     </html>
   );
