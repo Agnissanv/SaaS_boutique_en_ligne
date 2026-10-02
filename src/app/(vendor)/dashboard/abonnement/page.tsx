@@ -148,9 +148,21 @@ export default async function SubscriptionPage() {
         Plans disponibles
       </h2>
       {nyoleEnabled ? (
+        // Phrase complétée le 02/10/2026 (retour d'Isaac) : un vendeur
+        // payant est redirigé KEVA → Nyole → son opérateur Mobile Money
+        // (Wave, Orange Money...) pour la confirmation finale, et cette
+        // DERNIÈRE étape affiche le nom du compte marchand réel de Nyole
+        // chez l'opérateur, pas "KEVA" — rien que le code KEVA ne contrôle
+        // (seul `merchant_name` envoyé à Nyole, qui ne s'applique qu'à SA
+        // propre page hébergée, voir decisions-techniques.md). Sans
+        // prévenir, ce changement de nom en fin de parcours peut faire
+        // croire à un vendeur attentif qu'il s'est trompé de chemin.
         <p className="mt-1 text-xs text-encre/60">
-          Paiement Mobile Money/carte sécurisé via Nyole — le plan est activé
-          dès confirmation du paiement.
+          Paiement Mobile Money/carte sécurisé via Nyole, notre partenaire de
+          paiement — le plan est activé dès confirmation. Dernière étape : la
+          confirmation sur ton opérateur Mobile Money affichera un nom
+          différent de KEVA, c&apos;est normal, c&apos;est le circuit
+          d&apos;encaissement de Nyole.
         </p>
       ) : (
         <p className="mt-1 rounded-md bg-brume px-2 py-1.5 text-xs text-encre/70">
