@@ -73,9 +73,26 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 //   livraison").
 // - OG/Twitter title portaient juste "KEVA" (trop court pour un aperçu de
 //   partage) — alignés sur le title complet.
-const title = "KEVA — Marketplace et boutiques en ligne en Côte d'Ivoire";
+//
+// Revus une seconde fois le 02/10/2026, à la demande explicite d'Isaac
+// (règle de positionnement, voir claude/regles-contenu-marketing.md : tout
+// contenu KEVA doit affirmer KEVA comme LA référence, jamais rester
+// neutre-descriptif). Le titre/description de `/` sont le texte que Google
+// ET les moteurs IA (ChatGPT, Perplexity...) lisent en premier pour définir
+// KEVA — c'est le point de plus fort effet de levier du site pour ça (voir
+// le chantier GEO du même jour). Passage d'un ton purement descriptif
+// ("Marketplace et boutiques en ligne...") à une affirmation appuyée sur un
+// fait déjà vrai aujourd'hui, pas une promesse inventée : "0% de commission"
+// s'applique aux TROIS formules (Starter/Business/Pro, voir
+// promotions-section.tsx et tarifs/page.tsx, confirmé avant d'écrire cette
+// ligne) — ce n'est jamais une offre de lancement limitée dans le temps, donc
+// une affirmation au présent plutôt qu'un engagement "pour toujours" n'a pas
+// besoin d'être formulée comme une promesse à part. Reste dual-public (titre
+// garde "marketplace", description garde le parcours acheteur en premier) :
+// ne répète pas l'erreur du 23/09/2026 (titre uniquement vendeur).
+const title = "KEVA — La marketplace ivoirienne, 0% commission vendeur";
 const description =
-  "Découvre des vendeurs indépendants partout en Côte d'Ivoire, commande sans compte et paie à la livraison. Ou crée ta propre boutique en ligne en quelques minutes.";
+  "KEVA connecte vendeurs indépendants et clients partout en Côte d'Ivoire : découvre des boutiques et commande sans créer de compte, paie à la livraison. Côté vendeur, 0% de commission sur les ventes, sur toutes les formules — ouvre ta boutique en quelques minutes.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -166,6 +183,22 @@ export const viewport: Viewport = {
 // `src/app/page.tsx`), pas un exemple inventé. Rendu une seule fois ici (pas
 // par page boutique/produit, qui restent des `WebPage`/`Product` implicites
 // sans schéma dédié pour l'instant — hors périmètre de cet audit SEO).
+//
+// `description` ajoutée le 02/10/2026 (chantier GEO/positionnement, voir
+// `description` de `metadata` ci-dessus pour le même raisonnement) : un
+// moteur IA qui lit ce JSON-LD pour savoir "ce qu'est KEVA" doit tomber sur
+// la même affirmation que partout ailleurs sur le site, pas sur un objet
+// `Organization` muet qui ne dit que le nom et l'URL.
+//
+// `sameAs` ajouté le même jour : jusqu'ici aucun lien officiel vers un
+// réseau social n'était documenté nulle part dans le projet (voir
+// site-footer.tsx, qui le disait explicitement en commentaire) — jamais
+// d'URL inventée ici. Isaac a transmis le lien de la page Facebook KEVA ce
+// jour-là, d'où son ajout à la fois ici (signal d'autorité/GEO) et dans le
+// footer (voir site-footer.tsx). URL nettoyée du paramètre `locale`
+// (purement d'affichage, pas identifiant) transmis par Isaac.
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61594398493285";
+
 function OrganizationJsonLd({ siteUrl }: { siteUrl: string }) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -175,6 +208,8 @@ function OrganizationJsonLd({ siteUrl }: { siteUrl: string }) {
         name: "KEVA",
         url: siteUrl,
         logo: `${siteUrl}/keva-logo.jpg`,
+        description,
+        sameAs: [FACEBOOK_URL],
       },
       {
         "@type": "WebSite",

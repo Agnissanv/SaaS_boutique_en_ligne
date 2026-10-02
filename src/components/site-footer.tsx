@@ -23,9 +23,18 @@ import { usePathname } from "next/navigation";
  * `/politique-confidentialite`, `/blog`, `/faq` depuis le 02/10/2026) et la
  * vraie adresse de contact
  * (`contact@shopkeva.com`, voir `politique-confidentialite/page.tsx`) —
- * aucune icône de réseau social : aucun lien officiel (Facebook/Instagram/
- * TikTok) n'est encore documenté quelque part dans le projet à ce jour,
+ * aucune icône de réseau social à l'origine : aucun lien officiel
+ * (Facebook/Instagram/TikTok) n'était documenté quelque part dans le projet,
  * jamais d'URL inventée ici.
+ *
+ * Lien Facebook ajouté le 02/10/2026 — Isaac a transmis le lien de la page
+ * officielle KEVA ce jour-là (voir aussi `FACEBOOK_URL` dans `layout.tsx`,
+ * repris dans le `sameAs` du JSON-LD `Organization` pour le même lien, pas
+ * dupliqué depuis un fichier partagé pour éviter d'importer tout
+ * `layout.tsx` — polices Google Fonts incluses — juste pour une URL).
+ * Icône dessinée à la main en SVG inline, même parti pris que les icônes de
+ * confiance du hero (`src/app/page.tsx`) : pas de dépendance à une
+ * librairie d'icônes pour un seul logo.
  *
  * `bg-vert-profond` (le vert le plus sombre de la charte) plutôt que
  * `bg-white`/`bg-brume` du reste du site : un footer sombre referme
@@ -57,6 +66,16 @@ const FOOTER_LINK_GROUPS: { title: string; links: { label: string; href: string 
     ],
   },
 ];
+
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61594398493285";
+
+function IconFacebook() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path d="M11.5 19v-7.2h2.4l.4-2.8h-2.8V7.2c0-.8.2-1.3 1.4-1.3h1.5V3.4C13.9 3.3 13 3.2 12 3.2c-2.1 0-3.5 1.3-3.5 3.6V9H6.1v2.8h2.4V19h3Z" />
+    </svg>
+  );
+}
 
 const HIDDEN_ROOTS = new Set([
   "connexion",
@@ -116,11 +135,22 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col gap-2 border-t border-ivoire/15 pt-6 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-4 border-t border-ivoire/15 pt-6 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} KEVA. Tous droits réservés.</p>
-          <a href="mailto:contact@shopkeva.com" className="transition hover:text-ivoire/80">
-            contact@shopkeva.com
-          </a>
+          <div className="flex items-center gap-4">
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="KEVA sur Facebook"
+              className="transition hover:text-ivoire/80"
+            >
+              <IconFacebook />
+            </a>
+            <a href="mailto:contact@shopkeva.com" className="transition hover:text-ivoire/80">
+              contact@shopkeva.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>
