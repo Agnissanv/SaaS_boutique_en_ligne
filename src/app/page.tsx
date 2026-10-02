@@ -757,11 +757,31 @@ export default async function Home({
 
                   {/* Titre mis en scène en deux temps depuis le 28/09/2026
                       (voir hero-headline.tsx) — ce composant reproduit
-                      exactement les mêmes classes/texte/`{" "}` que le <h1>
+                      exactement les mêmes classes/`{" "}` que le <h1>
                       d'origine (dont le correctif d'espace mobile du
                       23/09/2026), la seule différence est l'apparition en
-                      deux temps plutôt qu'en bloc. */}
-                  <HeroHeadline line1="Toutes les boutiques" line2="en un seul endroit" />
+                      deux temps plutôt qu'en bloc.
+
+                      Texte changé le 02/10/2026, à la demande explicite
+                      d'Isaac ("le hero doit porter aussi une affirmation
+                      plus appuyée" — voir claude/regles-contenu-marketing.md).
+                      "Toutes les boutiques en un seul endroit" décrivait un
+                      inventaire (vrai pour n'importe quel annuaire), sans
+                      jamais affirmer la position de KEVA. Remplacé par les
+                      deux mots exacts de la règle d'Isaac ("la plus simple")
+                      plutôt qu'une formulation inventée — reste un H1
+                      acheteur (pas uniquement vendeur, erreur déjà corrigée
+                      le 23/09/2026), la preuve vient juste en dessous dans le
+                      paragraphe (aucun compte requis, paiement à la
+                      livraison) : l'affirmation est appuyée sur du vrai, pas
+                      sur un chiffre inventé. PAS de comparaison chiffrée
+                      avec un nombre de boutiques/produits : le seuil
+                      d'affichage du compteur plus bas sur cette même page
+                      (`HERO_STATS_MIN_SHOPS`) existe justement parce qu'un
+                      petit chiffre réel ferait amateur — une affirmation de
+                      simplicité reste vraie à n'importe quelle taille de
+                      plateforme, un chiffre de volume non. */}
+                  <HeroHeadline line1="La marketplace" line2="la plus simple de Côte d’Ivoire" />
 
                   <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
                     Des vendeurs indépendants partout en Côte d’Ivoire.
