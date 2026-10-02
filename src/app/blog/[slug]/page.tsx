@@ -25,6 +25,13 @@ export async function generateMetadata({
  * chantier. Contenu stocké en dur, rendu simple (une section = un titre
  * optionnel + des paragraphes) : pas de rendu markdown, inutile tant que le
  * contenu est écrit directement ici plutôt qu'édité par Isaac dans un CMS.
+ *
+ * Tableau de comparaison (`section.table`, 02/10/2026, chantier GEO) rendu en
+ * HTML natif (`<table>`), pas un composant partagé : un seul usage pour
+ * l'instant (les deux articles comparatifs), pas encore de deuxième endroit
+ * sur le site qui justifierait de l'extraire. `overflow-x-auto` sur le
+ * conteneur plutôt que de rétrécir le texte : les libellés de critères
+ * restent lisibles même sur petit écran, quitte à scroller horizontalement.
  */
 export default async function BlogPostPage({
   params,
@@ -81,6 +88,40 @@ export default async function BlogPostPage({
                   {paragraph}
                 </p>
               ))}
+              {section.table && (
+                <div className="mt-3 overflow-x-auto rounded-lg border border-ligne">
+                  <table className="w-full min-w-[480px] border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-brume">
+                        {section.table.headers.map((header, h) => (
+                          <th
+                            key={h}
+                            className="border-b border-ligne px-3 py-2 text-left font-display font-semibold text-encre"
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {section.table.rows.map((row, r) => (
+                        <tr key={r} className={r % 2 === 1 ? "bg-brume/40" : undefined}>
+                          {row.map((cell, c) => (
+                            <td
+                              key={c}
+                              className={`border-b border-ligne px-3 py-2 align-top text-encre/80 ${
+                                c === 0 ? "font-medium text-encre" : ""
+                              }`}
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -19,6 +19,8 @@ de déploiement.
 - [Marketplace](https://shopkeva.com/) : catalogue de toutes les boutiques et produits, par catégorie
 - [Catégories](https://shopkeva.com/categories) : liste complète des catégories de produits
 - [Ouvrir une boutique](https://shopkeva.com/inscription) : inscription vendeur
+- [Questions fréquentes](https://shopkeva.com/faq) : paiement, création de boutique, frais, contact vendeur
+- [Blog](https://shopkeva.com/blog) : conseils pour vendre en ligne, dont des comparatifs (KEVA vs vendre uniquement sur WhatsApp/Instagram, KEVA vs Jumia)
 - [Politique de confidentialité](https://shopkeva.com/politique-confidentialite)
 - [Conditions d'utilisation](https://shopkeva.com/conditions-utilisation)
 

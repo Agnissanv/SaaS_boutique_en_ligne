@@ -20,7 +20,8 @@ import { usePathname } from "next/navigation";
  *
  * Uniquement de vrais liens internes déjà existants (`/categories`,
  * `/inscription`, `/charte-vendeur`, `/contact`, `/conditions-utilisation`,
- * `/politique-confidentialite`, `/blog`) et la vraie adresse de contact
+ * `/politique-confidentialite`, `/blog`, `/faq` depuis le 02/10/2026) et la
+ * vraie adresse de contact
  * (`contact@shopkeva.com`, voir `politique-confidentialite/page.tsx`) —
  * aucune icône de réseau social : aucun lien officiel (Facebook/Instagram/
  * TikTok) n'est encore documenté quelque part dans le projet à ce jour,
@@ -49,6 +50,7 @@ const FOOTER_LINK_GROUPS: { title: string; links: { label: string; href: string 
   {
     title: "Aide",
     links: [
+      { label: "Questions fréquentes", href: "/faq" },
       { label: "Nous contacter", href: "/contact" },
       { label: "Conditions d'utilisation", href: "/conditions-utilisation" },
       { label: "Politique de confidentialité", href: "/politique-confidentialite" },

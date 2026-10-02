@@ -26,10 +26,11 @@ type ProductRow = {
  * et produits `is_active = true`).
  *
  * Périmètre volontairement limité aux pages qui ont une vraie valeur SEO :
- * l'accueil, `/categories`, `/blog` et ses articles, les pages
- * marketing/légales (`/tarifs`, `/contact`, `/charte-vendeur`,
- * `/conditions-utilisation`, `/politique-confidentialite`), chaque boutique
- * active et chaque produit actif non supprimé d'une boutique active.
+ * l'accueil, `/categories`, `/blog` et ses articles, `/faq` (ajoutée le
+ * 02/10/2026, chantier GEO), les pages marketing/légales (`/tarifs`,
+ * `/contact`, `/charte-vendeur`, `/conditions-utilisation`,
+ * `/politique-confidentialite`), chaque boutique active et chaque produit
+ * actif non supprimé d'une boutique active.
  * Commentaire mis à jour le 30/09/2026 (audit technique) pour refléter les
  * pages marketing/légales ajoutées ce jour-là (trou depuis leur création) et
  * le blog (29/09/2026), oublié ici au moment de son ajout. Tout le reste
@@ -84,6 +85,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.6,
+    },
+    {
+      url: `${siteUrl}/faq`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
     // Pages marketing/légales (30/09/2026, audit technique — voir
     // audit-technique-2026-09-29.md) : oubliées ici depuis leur création,
