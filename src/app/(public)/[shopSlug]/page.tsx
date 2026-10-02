@@ -145,6 +145,55 @@ export async function generateMetadata({
 }
 
 /**
+ * JSON-LD `Organization` — ajouté le 02/10/2026 (chantier GEO/SEO, voir
+ * decisions-techniques.md). `Organization` plutôt que `Store`/`LocalBusiness`
+ * : ces deux derniers types schema.org impliquent une adresse physique
+ * (`address`), une donnée que KEVA ne collecte pas pour une boutique en
+ * ligne — les utiliser sans ce champ aurait été un balisage incomplet/
+ * trompeur. `aggregateRating` est une propriété valide sur n'importe quel
+ * `Thing` (dont `Organization` hérite), omise si `rating` est `null` (aucun
+ * avis) pour la même raison que sur la fiche produit.
+ */
+function ShopJsonLd({
+  name,
+  description,
+  logoUrl,
+  canonicalUrl,
+  rating,
+}: {
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  canonicalUrl: string;
+  rating: { average: number; count: number } | null;
+}) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name,
+    url: canonicalUrl,
+    description: description ?? undefined,
+    logo: logoUrl ?? undefined,
+    ...(rating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(rating.average.toFixed(1)),
+            reviewCount: rating.count,
+          },
+        }
+      : {}),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+/**
  * Page boutique publique — catalogue produits d'un vendeur, lien que chaque
  * commerçant partage à ses clients (WhatsApp, Instagram, bio...).
  * Route : /[shopSlug]  (ex: /boutique-de-fatou)
@@ -329,6 +378,9 @@ export default async function ShopPage({
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
   const current: MarketplaceFilters = { q, categorie, tri, page: pageParam, prixMin, prixMax, attrs };
+  // Même construction que `generateMetadata` ci-dessus — nécessaire ici aussi
+  // pour l'`url` du JSON-LD `Organization` (02/10/2026).
+  const canonicalUrl = `${siteUrl}/${shopSlug}`;
 
   return (
     <ViewTransition
@@ -338,6 +390,13 @@ export default async function ShopPage({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 py-6 sm:py-8">
+      <ShopJsonLd
+        name={shop.name}
+        description={shop.description}
+        logoUrl={shop.logo_url}
+        canonicalUrl={canonicalUrl}
+        rating={rating}
+      />
       {/* Lien retour marketplace ajouté le 16/09/2026 (retour d'Isaac : "étant
           sur une boutique le visiteur ne peut pas aller sur la marketplace")
           — sur mobile, la barre de navigation basse (bottom-nav.tsx) permet
