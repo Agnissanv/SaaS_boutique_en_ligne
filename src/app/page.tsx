@@ -10,6 +10,7 @@ import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
 import { HeroFeaturedSlideshow } from "@/components/hero-featured-slideshow";
+import { HeroShopSpotlight } from "@/components/hero-shop-spotlight";
 import { HeroHeadline } from "@/components/hero-headline";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { MarketplaceSearch } from "@/components/marketplace-search";
@@ -336,7 +337,7 @@ export default async function Home({
   // recherche), contrairement aux bandes de catalogue ci-dessous.
   const featuredShopsQuery = supabase
     .from("shops")
-    .select("id, slug, name, logo_url, category, is_verified")
+    .select("id, slug, name, logo_url, category, is_verified, ville")
     .eq("status", "active")
     .order("view_count", { ascending: false })
     .limit(FEATURED_SHOPS_SIZE);
@@ -557,6 +558,10 @@ export default async function Home({
   // Une catégorie sans aucun produit actif n'apparaît simplement pas — même
   // principe que les autres bandes de découverte, jamais de bande vide.
   const categoryRows: { value: string; label: string; products: MarketplaceCardProduct[] }[] = [];
+  // Produits récents de toute la fenêtre `CATEGORY_FEED_LIMIT` (avant
+  // plafonnement par bande) — sert aussi à choisir la "boutique à la une" du
+  // hero (voir `heroSpotlight` plus bas).
+  let feedPoolProducts: MarketplaceCardProduct[] = [];
   if (!hasFilter) {
     // Boost par palier d'abonnement (ranking.ts) appliqué AVANT le
     // regroupement par catégorie ci-dessous, pour que le tri boosté soit
@@ -573,6 +578,7 @@ export default async function Home({
     const feedProducts = boostedFeed
       .map(toCardProduct)
       .filter((p): p is MarketplaceCardProduct => p !== null);
+    feedPoolProducts = feedProducts;
     const byCategory = new Map<string, MarketplaceCardProduct[]>();
     for (const product of feedProducts) {
       if (!product.category) continue;
@@ -663,6 +669,29 @@ export default async function Home({
     }))
   );
 
+  // "Boutique à la une" du hero (06/10/2026) : parmi les boutiques déjà
+  // chargées (les plus visitées), celle qui a le plus de produits AVEC photo
+  // dans le flux récent — 3 photos max, 2 minimum. Rien d'inventé : sans
+  // boutique éligible, le hero retombe sur le carrousel de produits.
+  const featuredShopVilles = new Map(
+    (featuredShopsRaw ?? []).map((s) => [s.slug as string, (s.ville as string | null) ?? null])
+  );
+  let heroSpotlight: {
+    shop: MarketplaceShop;
+    ville: string | null;
+    photos: MarketplaceCardProduct[];
+  } | null = null;
+  if (!hasFilter) {
+    for (const shop of featuredShops) {
+      const photos = feedPoolProducts
+        .filter((p) => p.shopSlug === shop.slug && p.thumbnail)
+        .slice(0, 3);
+      if (photos.length >= 2 && (!heroSpotlight || photos.length > heroSpotlight.photos.length)) {
+        heroSpotlight = { shop, ville: featuredShopVilles.get(shop.slug) ?? null, photos };
+      }
+    }
+  }
+
   // Même mise en forme que `featuredShops` ci-dessus, pour la section
   // Promotions ("Nouveaux vendeurs de la semaine") — fan-out limité à
   // NEWEST_SHOPS_SIZE (4), négligeable à côté de celui déjà fait pour les
@@ -747,14 +776,20 @@ export default async function Home({
               nuance très pâle du vert de marque). Le dégradé est en valeurs
               arbitraires (pas de token dédié) : usage ponctuel, propre au
               cadre du hero, pas une nouvelle surface réutilisée ailleurs. */}
-          <section className="w-full bg-white px-3 pb-6 pt-2 sm:px-6 sm:pb-10">
-            <div className="mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-gradient-to-br from-[#f2f8f4] to-[#e8f2ec] px-5 py-12 sm:px-10 sm:py-16">
+          {/* Refonte du 06/10/2026 (retour de pros du métier : le hero
+              "sentait l'IA") : plus de grande carte arrondie en dégradé
+              menthe ni d'étiquette "Vendez · Encaissez · Grandissez" — le
+              hero est un bandeau pleine largeur sur fond `brume`, et sa
+              partie droite montre une VRAIE boutique (`HeroShopSpotlight`)
+              plutôt qu'un carrousel de produits anonymes. Le titre reste
+              celui voulu par Isaac (règle de positionnement du 02/10/2026,
+              voir plus bas). Le message vendeur n'a plus de bouton à égalité
+              avec l'action acheteur : simple lien discret, le bloc Promotions
+              juste dessous porte déjà l'argument "0 % de commission". */}
+          <section className="w-full border-b border-ligne bg-brume px-4 py-10 sm:px-6 sm:py-14">
+            <div className="mx-auto max-w-6xl">
               <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
                 <div className="max-w-xl text-center lg:text-left">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-vert-actif">
-                    Vendez · Encaissez · Grandissez
-                  </p>
-
                   {/* Titre mis en scène en deux temps depuis le 28/09/2026
                       (voir hero-headline.tsx) — ce composant reproduit
                       exactement les mêmes classes/`{" "}` que le <h1>
@@ -788,19 +823,19 @@ export default async function Home({
                     Commande sans compte, paie à la livraison.
                   </p>
 
-                  <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
                     <a
                       href="#catalogue"
-                      className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(28,107,74,0.28)] transition hover:bg-vert-sapin"
+                      className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white transition hover:bg-vert-sapin"
                     >
                       Voir le catalogue
                       <span aria-hidden="true">→</span>
                     </a>
                     <Link
                       href="/inscription"
-                      className="rounded-lg border border-vert-sapin/25 bg-white/50 px-6 py-3 text-sm font-medium text-vert-sapin transition hover:border-vert-actif hover:text-vert-actif"
+                      className="text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif"
                     >
-                      Ouvrir ma boutique
+                      Tu vends ? Ouvre ta boutique
                     </Link>
                   </div>
 
@@ -846,10 +881,19 @@ export default async function Home({
                     à l'identique plutôt que dupliquée). Le message vendeur
                     ("0% commission cachée") retiré d'ici est relogé dans la
                     nouvelle section Promotions, juste sous le hero. */}
-                <HeroFeaturedSlideshow
-                  products={heroSlideshowProducts}
-                  className="hidden h-96 w-80 shrink-0 sm:block lg:h-[26rem] lg:w-[22rem]"
-                />
+                {heroSpotlight ? (
+                  <HeroShopSpotlight
+                    shop={heroSpotlight.shop}
+                    ville={heroSpotlight.ville}
+                    photos={heroSpotlight.photos}
+                    className="hidden w-80 shrink-0 sm:block lg:w-[22rem]"
+                  />
+                ) : (
+                  <HeroFeaturedSlideshow
+                    products={heroSlideshowProducts}
+                    className="hidden h-96 w-80 shrink-0 sm:block lg:h-[26rem] lg:w-[22rem]"
+                  />
+                )}
               </div>
             </div>
           </section>

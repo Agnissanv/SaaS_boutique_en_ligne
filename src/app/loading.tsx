@@ -30,12 +30,6 @@ import { Skeleton } from "@/components/skeleton";
  * réel ne l'est plus.
  */
 
-const HERO_COLLAGE_POSITIONS = [
-  "absolute left-0 top-6 h-36 w-36 -rotate-6 lg:h-40 lg:w-40",
-  "absolute right-2 top-0 z-10 h-32 w-32 rotate-3 lg:h-36 lg:w-36",
-  "absolute bottom-0 left-16 z-20 h-32 w-32 rotate-2 lg:h-36 lg:w-36",
-];
-
 function IconDelivery() {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
@@ -124,18 +118,14 @@ export default function HomeLoading() {
         {/* Hero — réel pour tout le texte et les deux boutons (déjà
             cliquables pendant le chargement) ; seuls les deux chiffres et les
             photos du collage dépendent de Supabase. */}
-        <section className="w-full bg-white px-3 pb-6 pt-2 sm:px-6 sm:pb-10">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-gradient-to-br from-[#f2f8f4] to-[#e8f2ec] px-5 py-12 sm:px-10 sm:py-16">
+        <section className="w-full border-b border-ligne bg-brume px-4 py-10 sm:px-6 sm:py-14">
+          <div className="mx-auto max-w-6xl">
             <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-xl text-center lg:text-left">
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-vert-actif">
-                  Vendez · Encaissez · Grandissez
-                </p>
-
-                <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.4rem]">
-                  <span className="text-encre">Toutes les boutiques</span>{" "}
+                <h1 className="font-display text-4xl font-black leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+                  <span className="text-encre">La marketplace</span>{" "}
                   <br className="hidden sm:block" />
-                  <span className="text-vert-actif">en un seul endroit</span>
+                  <span className="text-vert-actif">la plus simple de Côte d’Ivoire</span>
                 </h1>
 
                 <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
@@ -143,19 +133,19 @@ export default function HomeLoading() {
                   Commande sans compte, paie à la livraison.
                 </p>
 
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
                   <a
                     href="#catalogue"
-                    className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(28,107,74,0.28)] transition hover:bg-vert-sapin"
+                    className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white transition hover:bg-vert-sapin"
                   >
                     Voir le catalogue
                     <span aria-hidden="true">→</span>
                   </a>
                   <Link
                     href="/inscription"
-                    className="rounded-lg border border-vert-sapin/25 bg-white/50 px-6 py-3 text-sm font-medium text-vert-sapin transition hover:border-vert-actif hover:text-vert-actif"
+                    className="text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif"
                   >
-                    Ouvrir ma boutique
+                    Tu vends ? Ouvre ta boutique
                   </Link>
                 </div>
 
@@ -172,16 +162,23 @@ export default function HomeLoading() {
                 </div>
               </div>
 
-              {/* Collage photo — mêmes positions/rotations que le vrai
-                  (`HERO_COLLAGE_POSITIONS` dans page.tsx), en squelette plutôt
-                  qu'en vraies photos puisqu'elles viennent de Supabase. */}
+              {/* Carte "boutique à la une" (`HeroShopSpotlight`) en squelette :
+                  en-tête boutique + mosaïque de photos, puisque tout vient de
+                  Supabase. */}
               <div
-                className="relative hidden h-64 w-64 shrink-0 sm:block lg:h-72 lg:w-72"
+                className="hidden w-80 shrink-0 overflow-hidden rounded-lg border border-ligne bg-white sm:block lg:w-[22rem]"
                 aria-hidden="true"
               >
-                {HERO_COLLAGE_POSITIONS.map((position, i) => (
-                  <Skeleton key={i} className={`rounded-xl ${position}`} />
-                ))}
+                <div className="flex items-center gap-3 border-b border-ligne px-4 py-3">
+                  <Skeleton className="h-11 w-11 rounded-full" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <div className="grid grid-cols-2 gap-1 p-1">
+                  <Skeleton className="row-span-2 min-h-72 rounded-md" />
+                  <Skeleton className="aspect-square rounded-md" />
+                  <Skeleton className="aspect-square rounded-md" />
+                </div>
+                <Skeleton className="m-3 mt-2 h-10 rounded-md" />
               </div>
             </div>
           </div>
