@@ -115,71 +115,20 @@ export default function HomeLoading() {
           </div>
         </header>
 
-        {/* Hero — réel pour tout le texte et les deux boutons (déjà
-            cliquables pendant le chargement) ; seuls les deux chiffres et les
-            photos du collage dépendent de Supabase. */}
-        <section className="w-full border-b border-ligne bg-brume px-4 py-10 sm:px-6 sm:py-14">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-xl text-center lg:text-left">
-                <h1 className="font-display text-4xl font-black leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.4rem]">
-                  <span className="text-encre">La marketplace</span>{" "}
-                  <br className="hidden sm:block" />
-                  <span className="text-vert-actif">la plus simple de Côte d’Ivoire</span>
-                </h1>
-
-                <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
-                  Des vendeurs indépendants partout en Côte d’Ivoire.
-                  Commande sans compte, paie à la livraison.
-                </p>
-
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-                  <a
-                    href="#catalogue"
-                    className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white transition hover:bg-vert-sapin"
-                  >
-                    Voir le catalogue
-                    <span aria-hidden="true">→</span>
-                  </a>
-                  <Link
-                    href="/inscription"
-                    className="text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif"
-                  >
-                    Tu vends ? Ouvre ta boutique
-                  </Link>
-                </div>
-
-                <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
-                  <div>
-                    <Skeleton className="h-6 w-10" />
-                    <p className="mt-1 text-xs text-encre/50">boutiques</p>
-                  </div>
-                  <div className="h-8 w-px bg-ligne" />
-                  <div>
-                    <Skeleton className="h-6 w-10" />
-                    <p className="mt-1 text-xs text-encre/50">produits</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Carte "boutique à la une" (`HeroShopSpotlight`) en squelette :
-                  en-tête boutique + mosaïque de photos, puisque tout vient de
-                  Supabase. */}
-              <div
-                className="hidden w-80 shrink-0 overflow-hidden rounded-lg border border-ligne bg-white sm:block lg:w-[22rem]"
-                aria-hidden="true"
-              >
-                <div className="flex items-center gap-3 border-b border-ligne px-4 py-3">
-                  <Skeleton className="h-11 w-11 rounded-full" />
-                  <Skeleton className="h-4 w-32" />
-                </div>
-                <div className="grid grid-cols-2 gap-1 p-1">
-                  <Skeleton className="row-span-2 min-h-72 rounded-md" />
-                  <Skeleton className="aspect-square rounded-md" />
-                  <Skeleton className="aspect-square rounded-md" />
-                </div>
-                <Skeleton className="m-3 mt-2 h-10 rounded-md" />
-              </div>
+        {/* Hero "grande marketplace" (06/10/2026) en squelette : menu de
+            catégories à gauche, bannière au centre, deux cartes à droite —
+            mêmes proportions que `HeroMarketplace`, tout vient de Supabase. */}
+        <section className="mx-auto w-full max-w-6xl px-3 pb-2 pt-3 sm:px-4">
+          <div className="grid gap-3 lg:grid-cols-[14rem_minmax(0,1fr)_15rem]">
+            <div className="hidden h-[24rem] flex-col gap-3 rounded-lg border border-ligne bg-white p-4 lg:flex" aria-hidden="true">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-full" />
+              ))}
+            </div>
+            <Skeleton className="h-80 rounded-lg sm:h-[22rem] lg:h-[24rem]" />
+            <div className="grid grid-cols-2 gap-3 lg:h-[24rem] lg:grid-cols-1 lg:grid-rows-2" aria-hidden="true">
+              <Skeleton className="min-h-32 rounded-lg" />
+              <Skeleton className="min-h-32 rounded-lg" />
             </div>
           </div>
         </section>

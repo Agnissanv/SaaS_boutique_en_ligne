@@ -8,11 +8,8 @@ import { CategoryNav } from "@/components/category-nav";
 import { ProductCard, type MarketplaceCardProduct } from "@/components/product-card";
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
-import { HeroMobileSlideshow } from "@/components/hero-mobile-slideshow";
-import { HeroFeaturedSlideshow } from "@/components/hero-featured-slideshow";
-import { HeroShopSpotlight } from "@/components/hero-shop-spotlight";
-import { HeroHeadline } from "@/components/hero-headline";
-import { AnimatedCounter } from "@/components/animated-counter";
+import { HeroMarketplace } from "@/components/hero-marketplace";
+import type { HeroSlide } from "@/components/hero-banner-carousel";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { PromotionsSection } from "@/components/promotions-section";
@@ -134,13 +131,6 @@ function IconMobileMoney() {
     </svg>
   );
 }
-
-// Seuil à partir duquel le hero affiche le vrai compteur "X boutiques /
-// Y produits" plutôt qu'un message de croissance sans chiffre (demande
-// d'Isaac du 01/10/2026, voir le JSX du hero et la requête shopsCountQuery
-// plus bas) — pas de recoupement entre vendeurs/produits, un petit nombre de
-// boutiques "non pro" visuellement reste le signal qui compte le plus.
-const HERO_STATS_MIN_SHOPS = 50;
 
 const TRUST_ITEMS = [
   {
@@ -355,27 +345,6 @@ export default async function Home({
     .order("created_at", { ascending: false })
     .limit(NEWEST_SHOPS_SIZE);
 
-  // Chiffres réels de la plateforme — `head: true` : on ne veut que le
-  // compte, jamais les lignes elles-mêmes. Jamais une valeur inventée pour
-  // "faire plein" (même principe que la barre de santé du stock ou le badge
-  // "vendeur vérifié" écarté ailleurs) : le compte reste toujours réel.
-  //
-  // Affiché dans le hero SEULEMENT à partir de 50 boutiques (demande d'Isaac
-  // du 01/10/2026) : en dessous de ce seuil, un petit chiffre réel donne une
-  // impression amateur plutôt qu'un gage de confiance — on bascule alors sur
-  // un message de croissance sans chiffre (voir le JSX du hero, même
-  // condition `shopsCount >= HERO_STATS_MIN_SHOPS`). Seul le SEUIL D'AFFICHAGE
-  // change, jamais le chiffre lui-même.
-  const shopsCountQuery = supabase
-    .from("shops")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "active");
-  const productsCountQuery = supabase
-    .from("products")
-    .select("id", { count: "exact", head: true })
-    .eq("is_active", true)
-    .is("deleted_at", null);
-
   // Catégories réellement disponibles sur la marketplace (16/09/2026, retour
   // d'Isaac : la bande de catégories affichait les 24 valeurs possibles, y
   // compris celles sans aucun produit actif — un visiteur tombait sur un
@@ -456,8 +425,6 @@ export default async function Home({
     { data: newArrivals },
     { data: featuredShopsRaw },
     { data: newestShopsRaw },
-    { count: shopsCount },
-    { count: productsCount },
     { data: availableCategoriesRaw },
     catalogueResult,
     categoryFeedResult,
@@ -466,8 +433,6 @@ export default async function Home({
     newArrivalsQuery,
     featuredShopsQuery,
     newestShopsQuery,
-    shopsCountQuery,
-    productsCountQuery,
     availableCategoriesQuery,
     hasFilter ? catalogueQuery : Promise.resolve({ data: [] as RawMarketplaceProduct[], count: 0 }),
     hasFilter ? Promise.resolve({ data: [] as RawMarketplaceProduct[] }) : categoryFeedQuery,
@@ -707,6 +672,90 @@ export default async function Home({
     }))
   );
 
+  // Hero "grande marketplace" (06/10/2026) : diapos de la bannière rotative,
+  // catégories du menu latéral et produit mis en avant — uniquement à partir
+  // de données réelles déjà chargées ci-dessus (aucune requête de plus). Une
+  // diapo sans donnée (pas de boutique éligible, aucune promo en cours) n'est
+  // simplement pas ajoutée.
+  const formatBannerPrice = (price: number) => `${price.toLocaleString("fr-FR")} FCFA`;
+  const toBannerImage = (p: MarketplaceCardProduct) => ({
+    src: p.thumbnail,
+    alt: p.title,
+    href: `/${p.shopSlug}/${p.slug}`,
+    caption: formatBannerPrice(p.price),
+  });
+
+  const heroSlides: HeroSlide[] = [
+    {
+      id: "positionnement",
+      headingLevel: "h1",
+      title: "La marketplace la plus simple de Côte d’Ivoire",
+      text: "Des vendeurs indépendants partout en Côte d’Ivoire. Commande sans compte, paie à la livraison.",
+      cta: { label: "Voir le catalogue", href: "#catalogue" },
+      secondary: { label: "Tu vends ? Ouvre ta boutique", href: "/inscription" },
+      tone: "sapin",
+      images: heroSlideshowProducts.slice(0, 3).map(toBannerImage),
+    },
+  ];
+  if (heroSpotlight) {
+    heroSlides.push({
+      id: "boutique",
+      headingLevel: "h2",
+      eyebrow: "Boutique à la une",
+      title: heroSpotlight.shop.name,
+      text: [
+        heroSpotlight.ville,
+        heroSpotlight.shop.category ? categoryLabel(heroSpotlight.shop.category) : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      cta: { label: "Voir la boutique", href: `/${heroSpotlight.shop.slug}` },
+      tone: "ivoire",
+      images: heroSpotlight.photos.map(toBannerImage),
+    });
+  }
+  const promoProducts = Array.from(
+    new Map(
+      [...newArrivalsProducts, ...feedPoolProducts]
+        .filter((p) => p.isOnSale && p.compareAtPrice && p.thumbnail)
+        .map((p) => [p.id, p])
+    ).values()
+  ).slice(0, 3);
+  if (promoProducts.length > 0) {
+    const maxDiscount = Math.max(
+      ...promoProducts.map((p) => Math.round((1 - p.price / (p.compareAtPrice as number)) * 100))
+    );
+    heroSlides.push({
+      id: "promotions",
+      headingLevel: "h2",
+      eyebrow: "Promotions",
+      title: maxDiscount > 0 ? `Jusqu’à -${maxDiscount} %` : "Des prix en baisse",
+      text: "Les promotions en cours chez nos vendeurs.",
+      cta: { label: "Voir les articles", href: "#catalogue" },
+      tone: "cuivre",
+      images: promoProducts.map(toBannerImage),
+    });
+  }
+
+  const heroCategories = availableCategories.map((c) => ({
+    value: c.value,
+    label: c.label,
+    href: buildMarketplaceHref({ ...current, attrs: {} }, { categorie: c.value, page: undefined }),
+  }));
+
+  // Carte "Meilleure vente" : seulement un vrai best-seller avec photo — pas de
+  // repli sur une nouveauté, le libellé serait faux.
+  const bestSeller = bestSellingProducts.find((p) => p.thumbnail);
+  const heroFeaturedProduct = bestSeller
+    ? {
+        href: `/${bestSeller.shopSlug}/${bestSeller.slug}`,
+        title: bestSeller.title,
+        price: bestSeller.price,
+        thumbnail: bestSeller.thumbnail,
+        shopName: bestSeller.shopName,
+      }
+    : null;
+
   // Résumé des filtres actifs + compteur de résultats, affiché au-dessus de
   // la grille filtrée.
   const resultLabel = `${count ?? 0} article${(count ?? 0) === 1 ? "" : "s"}`;
@@ -767,136 +816,19 @@ export default async function Home({
           </header>
 
           {/* ========== HERO (full width) ==========
-              Retravaillé le 22/09/2026 (v2, voir decisions-techniques.md et
-              le mockup Design "Nouvelle direction visuelle KEVA" validé par
-              Isaac) : le hero est maintenant une vraie carte encadrée (coins
-              arrondis, fond légèrement teinté de vert) plutôt qu'un bloc
-              blanc à plat contre le header — reprend la "carte" de la
-              référence sans réintroduire une couleur hors charte (juste une
-              nuance très pâle du vert de marque). Le dégradé est en valeurs
-              arbitraires (pas de token dédié) : usage ponctuel, propre au
-              cadre du hero, pas une nouvelle surface réutilisée ailleurs. */}
-          {/* Refonte du 06/10/2026 (retour de pros du métier : le hero
-              "sentait l'IA") : plus de grande carte arrondie en dégradé
-              menthe ni d'étiquette "Vendez · Encaissez · Grandissez" — le
-              hero est un bandeau pleine largeur sur fond `brume`, et sa
-              partie droite montre une VRAIE boutique (`HeroShopSpotlight`)
-              plutôt qu'un carrousel de produits anonymes. Le titre reste
-              celui voulu par Isaac (règle de positionnement du 02/10/2026,
-              voir plus bas). Le message vendeur n'a plus de bouton à égalité
-              avec l'action acheteur : simple lien discret, le bloc Promotions
-              juste dessous porte déjà l'argument "0 % de commission". */}
-          <section className="w-full border-b border-ligne bg-brume px-4 py-10 sm:px-6 sm:py-14">
-            <div className="mx-auto max-w-6xl">
-              <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
-                <div className="max-w-xl text-center lg:text-left">
-                  {/* Titre mis en scène en deux temps depuis le 28/09/2026
-                      (voir hero-headline.tsx) — ce composant reproduit
-                      exactement les mêmes classes/`{" "}` que le <h1>
-                      d'origine (dont le correctif d'espace mobile du
-                      23/09/2026), la seule différence est l'apparition en
-                      deux temps plutôt qu'en bloc.
-
-                      Texte changé le 02/10/2026, à la demande explicite
-                      d'Isaac ("le hero doit porter aussi une affirmation
-                      plus appuyée" — voir claude/regles-contenu-marketing.md).
-                      "Toutes les boutiques en un seul endroit" décrivait un
-                      inventaire (vrai pour n'importe quel annuaire), sans
-                      jamais affirmer la position de KEVA. Remplacé par les
-                      deux mots exacts de la règle d'Isaac ("la plus simple")
-                      plutôt qu'une formulation inventée — reste un H1
-                      acheteur (pas uniquement vendeur, erreur déjà corrigée
-                      le 23/09/2026), la preuve vient juste en dessous dans le
-                      paragraphe (aucun compte requis, paiement à la
-                      livraison) : l'affirmation est appuyée sur du vrai, pas
-                      sur un chiffre inventé. PAS de comparaison chiffrée
-                      avec un nombre de boutiques/produits : le seuil
-                      d'affichage du compteur plus bas sur cette même page
-                      (`HERO_STATS_MIN_SHOPS`) existe justement parce qu'un
-                      petit chiffre réel ferait amateur — une affirmation de
-                      simplicité reste vraie à n'importe quelle taille de
-                      plateforme, un chiffre de volume non. */}
-                  <HeroHeadline line1="La marketplace" line2="la plus simple de Côte d’Ivoire" />
-
-                  <p className="mt-5 max-w-md text-[15px] leading-relaxed text-encre/70">
-                    Des vendeurs indépendants partout en Côte d’Ivoire.
-                    Commande sans compte, paie à la livraison.
-                  </p>
-
-                  <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-                    <a
-                      href="#catalogue"
-                      className="flex items-center gap-2 rounded-lg bg-vert-actif px-6 py-3 text-sm font-semibold text-white transition hover:bg-vert-sapin"
-                    >
-                      Voir le catalogue
-                      <span aria-hidden="true">→</span>
-                    </a>
-                    <Link
-                      href="/inscription"
-                      className="text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif"
-                    >
-                      Tu vends ? Ouvre ta boutique
-                    </Link>
-                  </div>
-
-                  {(shopsCount ?? 0) >= HERO_STATS_MIN_SHOPS ? (
-                    <div className="mt-10 hidden items-center gap-8 sm:flex lg:justify-start">
-                      <div>
-                        <p className="font-mono text-xl font-semibold text-encre">
-                          <AnimatedCounter value={shopsCount ?? 0} />
-                        </p>
-                        <p className="mt-0.5 text-xs text-encre/50">boutiques</p>
-                      </div>
-                      <div className="h-8 w-px bg-ligne" />
-                      <div>
-                        <p className="font-mono text-xl font-semibold text-encre">
-                          <AnimatedCounter value={productsCount ?? 0} />
-                        </p>
-                        <p className="mt-0.5 text-xs text-encre/50">produits</p>
-                      </div>
-                    </div>
-                  ) : (
-                    // Sous le seuil (voir HERO_STATS_MIN_SHOPS) : pas de
-                    // chiffre réel (donnerait une impression amateur), pas de
-                    // chiffre inventé non plus — un message de croissance qui
-                    // reste vrai à n'importe quelle taille de plateforme.
-                    <div className="mt-10 hidden items-center gap-2 sm:flex lg:justify-start">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-vert-actif" />
-                      <p className="text-xs font-medium text-encre/60">
-                        Marketplace ivoirienne en pleine croissance
-                      </p>
-                    </div>
-                  )}
-
-                  <HeroMobileSlideshow products={heroSlideshowProducts} />
-                </div>
-
-                {/* Simplifié le 29/09/2026 (retour d'Isaac : "Simplifier vers
-                    l'exemple", après un premier passage en carrousel de
-                    bannières mêlant vitrines produit et bannières vendeur,
-                    jugé trop chargé). Redevient une vraie photo produit qui
-                    tourne, sans navigation manuelle — même composant que la
-                    case avant du collage d'origine (`HeroFeaturedSlideshow`,
-                    orpheline depuis le passage au carrousel, réutilisée ici
-                    à l'identique plutôt que dupliquée). Le message vendeur
-                    ("0% commission cachée") retiré d'ici est relogé dans la
-                    nouvelle section Promotions, juste sous le hero. */}
-                {heroSpotlight ? (
-                  <HeroShopSpotlight
-                    shop={heroSpotlight.shop}
-                    ville={heroSpotlight.ville}
-                    photos={heroSpotlight.photos}
-                    className="hidden w-80 shrink-0 sm:block lg:w-[22rem]"
-                  />
-                ) : (
-                  <HeroFeaturedSlideshow
-                    products={heroSlideshowProducts}
-                    className="hidden h-96 w-80 shrink-0 sm:block lg:h-[26rem] lg:w-[22rem]"
-                  />
-                )}
-              </div>
-            </div>
-          </section>
+              Refonte du 06/10/2026, à la demande d'Isaac ("une hero section
+              comme les grandes marketplaces" — Jumia/Amazon) : menu de
+              catégories à gauche, grande bannière rotative au centre, deux
+              cartes à droite (voir `HeroMarketplace`). Le <h1> de
+              positionnement voulu par Isaac le 02/10/2026 ("la plus simple de
+              Côte d'Ivoire") vit dans la première diapo. Les diapos sont
+              construites plus haut (`heroSlides`) uniquement à partir de
+              données réelles. */}
+          <HeroMarketplace
+            slides={heroSlides}
+            categories={heroCategories}
+            featuredProduct={heroFeaturedProduct}
+          />
 
           {/* Argumentaire de confiance — déplacé juste sous le hero le
               22/09/2026 (au lieu d'être noyé après "Catégories"), pour
