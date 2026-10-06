@@ -179,10 +179,10 @@ export default async function ProductPage({
 
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
   const tags: string[] = product.tags ?? [];
-  const hasDiscount =
-    product.compare_at_price != null && product.compare_at_price > product.price;
+  const compareAtPrice = product.compare_at_price;
+  const hasDiscount = compareAtPrice != null && compareAtPrice > product.price;
   const discountPercent = hasDiscount
-    ? Math.round((1 - product.price / product.compare_at_price) * 100)
+    ? Math.round((1 - product.price / compareAtPrice) * 100)
     : null;
 
   return (
