@@ -657,7 +657,10 @@ export default async function Home({
               les visuels sombres du hero. */}
           <ScrollHeader>
             <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
-              <Link href="/" className="flex shrink-0 items-center gap-2">
+              <Link
+                href="/"
+                className="flex shrink-0 items-center gap-2 rounded-full bg-white/80 py-1 pl-1 pr-3 backdrop-blur-sm transition group-data-[scrolled=true]:bg-transparent"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/keva-logo.jpg"

@@ -93,7 +93,10 @@ export default function HomeLoading() {
             squelette. */}
         <ScrollHeader>
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
-            <Link href="/" className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-2 rounded-full bg-white/80 py-1 pl-1 pr-3 backdrop-blur-sm transition group-data-[scrolled=true]:bg-transparent"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
               <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
               <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">
@@ -127,31 +130,40 @@ export default function HomeLoading() {
             pendant le chargement), seuls la barre de recherche, les pastilles
             et le visuel dépendent de Supabase/du client. */}
         <section className="relative flex w-full flex-col bg-[#e6f1ea] sm:block">
-          <div className="relative z-10 order-1 mx-auto w-full max-w-6xl px-4 pb-8 pt-40 sm:flex sm:min-h-[31rem] sm:items-center sm:pb-12 sm:pt-28 lg:min-h-[33rem]">
-            <div className="w-full sm:max-w-[34rem]">
-              <Skeleton className="h-7 w-72 rounded-full" />
-              <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.05] tracking-tight text-vert-profond sm:text-5xl lg:text-[3.1rem]">
-                La marketplace <br className="hidden sm:block" />
-                <span className="text-vert-actif">la plus simple de Côte d’Ivoire</span>
-              </h1>
-              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-encre/80">
-                Des vendeurs indépendants partout en Côte d’Ivoire. Commande sans compte, paie à la livraison.
-              </p>
-              <Skeleton className="mt-6 h-12 w-full rounded-full" />
-              <div className="mt-4 flex flex-wrap gap-2" aria-hidden="true">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-9 w-24 rounded-full" />
-                ))}
+          <div className="relative z-10 order-2 -mt-6 rounded-t-[1.75rem] bg-white sm:order-1 sm:mt-0 sm:rounded-none sm:bg-transparent">
+            <div className="relative mx-auto w-full max-w-6xl px-4 pb-6 pt-6 sm:flex sm:min-h-[31rem] sm:items-center sm:pb-12 sm:pt-28 lg:min-h-[33rem]">
+              <div className="w-full sm:max-w-[34rem]">
+                <Skeleton className="hidden h-7 w-72 rounded-full sm:block" />
+                <h1 className="text-balance font-display text-[1.7rem] font-black leading-[1.1] tracking-tight text-vert-profond sm:mt-4 sm:text-5xl sm:leading-[1.05] lg:text-[3.1rem]">
+                  La marketplace <br className="hidden sm:block" />
+                  <span className="text-vert-actif">la plus simple de Côte d’Ivoire</span>
+                </h1>
+                <p className="mt-2 text-sm text-encre/80 sm:hidden">Commande sans compte, paie à la livraison.</p>
+                <p className="mt-4 hidden max-w-md text-[15px] leading-relaxed text-encre/80 sm:block">
+                  Des vendeurs indépendants partout en Côte d’Ivoire. Commande sans compte, paie à la livraison.
+                </p>
+                <Skeleton className="mt-6 hidden h-12 w-full rounded-full sm:block" />
+                <div className="-mx-4 mt-4 flex gap-2 overflow-hidden px-4 sm:mx-0 sm:flex-wrap sm:px-0" aria-hidden="true">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-24 shrink-0 rounded-full" />
+                  ))}
+                </div>
+                <a
+                  href="#catalogue"
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-vert-actif px-6 py-3 text-sm font-semibold text-white sm:hidden"
+                >
+                  Voir le catalogue <span aria-hidden="true">→</span>
+                </a>
+                <Link
+                  href="/inscription"
+                  className="mt-4 block text-center text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif sm:mt-5 sm:inline-block sm:text-left"
+                >
+                  Tu vends ? Ouvre ta boutique
+                </Link>
               </div>
-              <Link
-                href="/inscription"
-                className="mt-5 inline-block text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif"
-              >
-                Tu vends ? Ouvre ta boutique
-              </Link>
             </div>
           </div>
-          <Skeleton className="order-2 h-44 sm:absolute sm:inset-0 sm:z-0 sm:h-auto" />
+          <Skeleton className="order-1 h-80 sm:order-2 sm:absolute sm:inset-0 sm:z-0 sm:h-auto" />
         </section>
 
         {/* Argumentaire de confiance — réel, texte statique. */}
