@@ -41,13 +41,17 @@ export function MarketplaceSearch({
   prixMin,
   prixMax,
   attrs,
+  variant = "header",
 }: {
   defaultValue: string;
   categorie?: string;
   prixMin?: string;
   prixMax?: string;
   attrs?: Record<string, string[]>;
+  /** "hero" : grande pastille du hero (09/10/2026) ; "header" : barre de l'en-tête. */
+  variant?: "header" | "hero";
 }) {
+  const isHero = variant === "hero";
   const [value, setValue] = useState(defaultValue);
   const [products, setProducts] = useState<ProductSuggestion[]>([]);
   const [shops, setShops] = useState<ShopSuggestion[]>([]);
@@ -105,12 +109,18 @@ export function MarketplaceSearch({
   return (
     <div
       ref={containerRef}
-      className="relative order-3 flex w-full sm:order-2 sm:w-auto sm:flex-1"
+      className={
+        isHero ? "relative flex w-full" : "relative order-3 flex w-full sm:order-2 sm:w-auto sm:flex-1"
+      }
     >
       <form
         method="GET"
         action="/"
-        className="flex w-full gap-2"
+        className={
+          isHero
+            ? "flex w-full items-center gap-1 rounded-full bg-white p-1.5 shadow-[0_8px_24px_rgba(14,59,44,0.12)] ring-1 ring-ligne focus-within:ring-2 focus-within:ring-vert-actif"
+            : "flex w-full gap-2"
+        }
         onSubmit={() => setOpen(false)}
       >
         {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
@@ -130,12 +140,20 @@ export function MarketplaceSearch({
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => hasSuggestions && setOpen(true)}
           autoComplete="off"
-          placeholder="Rechercher un article..."
-          className="w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
+          placeholder={isHero ? "Rechercher un produit, une boutique ou une catégorie..." : "Rechercher un article..."}
+          className={
+            isHero
+              ? "w-full rounded-full bg-transparent px-4 py-2.5 text-sm text-encre placeholder:text-encre/50 focus:outline-none"
+              : "w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
+          }
         />
         <button
           type="submit"
-          className="shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
+          className={
+            isHero
+              ? "shrink-0 rounded-full bg-vert-actif px-6 py-2.5 text-sm font-semibold text-white hover:bg-vert-sapin"
+              : "shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
+          }
         >
           Rechercher
         </button>

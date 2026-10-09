@@ -9,7 +9,6 @@ import { ProductCard, type MarketplaceCardProduct } from "@/components/product-c
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { HeroMarketplace } from "@/components/hero-marketplace";
-import type { HeroSlide } from "@/components/hero-banner-carousel";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { PromotionsSection } from "@/components/promotions-section";
@@ -238,22 +237,6 @@ function toCardProduct(product: RawMarketplaceProduct): MarketplaceCardProduct |
   };
 }
 
-// Mélange Fisher-Yates — utilisé uniquement pour le diaporama mobile du hero
-// (voir plus bas) : "aléatoire" veut dire un ordre différent à chaque
-// chargement de page, pas un vrai tirage pondéré. Ne mute jamais le tableau
-// reçu (copie d'abord) : les mêmes tableaux (`bestSellingProducts`,
-// `newArrivalsProducts`) servent aussi, dans leur ordre d'origine, aux
-// bandes "Meilleures ventes"/"Nouveautés" plus bas sur la page.
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-const HERO_SLIDESHOW_SIZE = 6;
-
 const PRODUCT_CARD_COLUMNS =
   "id, slug, title, price, compare_at_price, category, created_at, product_images(url, position), shop:shops!inner(slug, name, status, plan_rank, is_verified, ville, commune), sale_price, sale_starts_at, sale_ends_at";
 
@@ -327,7 +310,7 @@ export default async function Home({
   // recherche), contrairement aux bandes de catalogue ci-dessous.
   const featuredShopsQuery = supabase
     .from("shops")
-    .select("id, slug, name, logo_url, category, is_verified, ville")
+    .select("id, slug, name, logo_url, category, is_verified")
     .eq("status", "active")
     .order("view_count", { ascending: false })
     .limit(FEATURED_SHOPS_SIZE);
@@ -524,8 +507,8 @@ export default async function Home({
   // principe que les autres bandes de découverte, jamais de bande vide.
   const categoryRows: { value: string; label: string; products: MarketplaceCardProduct[] }[] = [];
   // Produits récents de toute la fenêtre `CATEGORY_FEED_LIMIT` (avant
-  // plafonnement par bande) — sert aussi à choisir la "boutique à la une" du
-  // hero (voir `heroSpotlight` plus bas).
+  // plafonnement par bande) — sert aussi à calculer la remise du badge du hero
+  // (voir `heroPromoDiscount` plus bas).
   let feedPoolProducts: MarketplaceCardProduct[] = [];
   if (!hasFilter) {
     // Boost par palier d'abonnement (ranking.ts) appliqué AVANT le
@@ -594,31 +577,6 @@ export default async function Home({
     for (const row of categoryRows) applyRatings(row.products);
   }
 
-  // Diaporama mobile du hero (16/09/2026, retour d'Isaac : sur mobile, les
-  // chiffres "Boutiques actives"/"Produits en vente" prennent de la place
-  // sans donner vraiment envie de cliquer — remplacés par un aperçu visuel
-  // de vrais produits, façon story). Puise dans les meilleures ventes,
-  // sinon dans les nouveautés si aucune vente n'existe encore (même repli
-  // que la bande "Meilleures ventes" plus bas) — jamais une liste vide qui
-  // ferait disparaître le bloc sans raison. Pas de nouvelle requête : ces
-  // deux tableaux sont déjà chargés (et déjà notés) ci-dessus.
-  //
-  // Filtre sur `thumbnail` ajouté le 23/09/2026 (capture d'Isaac : "certaines
-  // images du carrousel sont cassées") — en réalité pas des images cassées,
-  // mais un vrai produit sans aucune photo uploadée, qui tombait sur la case
-  // vedette du collage (`HeroFeaturedSlideshow`, la plus visible des trois) et
-  // affichait donc l'icône de repli de `ProductImage` — le même filtre
-  // manquait ici, sur la case la plus en avant des trois ("jamais une image
-  // de stock générique"). Repli vers les nouveautés si aucune meilleure
-  // vente n'a de photo, plutôt que vers une liste vide.
-  const withThumbnail = (products: typeof bestSellingProducts) =>
-    products.filter((p) => Boolean(p.thumbnail));
-  const heroSlideshowPool =
-    withThumbnail(bestSellingProducts).length > 0
-      ? withThumbnail(bestSellingProducts)
-      : withThumbnail(newArrivalsProducts);
-  const heroSlideshowProducts = shuffle(heroSlideshowPool).slice(0, HERO_SLIDESHOW_SIZE);
-
   // Note de confiance par boutique : réutilise `getShopRating` (0014/§4,
   // déjà utilisée sur la fiche boutique), une requête par boutique en
   // parallèle — nombre de boutiques mises en avant volontairement plafonné
@@ -633,29 +591,6 @@ export default async function Home({
       rating: await getShopRating(supabase, shop.id as string),
     }))
   );
-
-  // "Boutique à la une" du hero (06/10/2026) : parmi les boutiques déjà
-  // chargées (les plus visitées), celle qui a le plus de produits AVEC photo
-  // dans le flux récent — 3 photos max, 2 minimum. Rien d'inventé : sans
-  // boutique éligible, le hero retombe sur le carrousel de produits.
-  const featuredShopVilles = new Map(
-    (featuredShopsRaw ?? []).map((s) => [s.slug as string, (s.ville as string | null) ?? null])
-  );
-  let heroSpotlight: {
-    shop: MarketplaceShop;
-    ville: string | null;
-    photos: MarketplaceCardProduct[];
-  } | null = null;
-  if (!hasFilter) {
-    for (const shop of featuredShops) {
-      const photos = feedPoolProducts
-        .filter((p) => p.shopSlug === shop.slug && p.thumbnail)
-        .slice(0, 3);
-      if (photos.length >= 2 && (!heroSpotlight || photos.length > heroSpotlight.photos.length)) {
-        heroSpotlight = { shop, ville: featuredShopVilles.get(shop.slug) ?? null, photos };
-      }
-    }
-  }
 
   // Même mise en forme que `featuredShops` ci-dessus, pour la section
   // Promotions ("Nouveaux vendeurs de la semaine") — fan-out limité à
@@ -672,89 +607,20 @@ export default async function Home({
     }))
   );
 
-  // Hero "grande marketplace" (06/10/2026) : diapos de la bannière rotative,
-  // catégories du menu latéral et produit mis en avant — uniquement à partir
-  // de données réelles déjà chargées ci-dessus (aucune requête de plus). Une
-  // diapo sans donnée (pas de boutique éligible, aucune promo en cours) n'est
-  // simplement pas ajoutée.
-  const formatBannerPrice = (price: number) => `${price.toLocaleString("fr-FR")} FCFA`;
-  const toBannerImage = (p: MarketplaceCardProduct) => ({
-    src: p.thumbnail,
-    alt: p.title,
-    href: `/${p.shopSlug}/${p.slug}`,
-    caption: formatBannerPrice(p.price),
-  });
-
-  const heroSlides: HeroSlide[] = [
-    {
-      id: "positionnement",
-      headingLevel: "h1",
-      title: "La marketplace la plus simple de Côte d’Ivoire",
-      text: "Des vendeurs indépendants partout en Côte d’Ivoire. Commande sans compte, paie à la livraison.",
-      cta: { label: "Voir le catalogue", href: "#catalogue" },
-      secondary: { label: "Tu vends ? Ouvre ta boutique", href: "/inscription" },
-      tone: "sapin",
-      images: heroSlideshowProducts.slice(0, 3).map(toBannerImage),
-    },
-  ];
-  if (heroSpotlight) {
-    heroSlides.push({
-      id: "boutique",
-      headingLevel: "h2",
-      eyebrow: "Boutique à la une",
-      title: heroSpotlight.shop.name,
-      text: [
-        heroSpotlight.ville,
-        heroSpotlight.shop.category ? categoryLabel(heroSpotlight.shop.category) : null,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      cta: { label: "Voir la boutique", href: `/${heroSpotlight.shop.slug}` },
-      tone: "ivoire",
-      images: heroSpotlight.photos.map(toBannerImage),
-    });
-  }
-  const promoProducts = Array.from(
-    new Map(
-      [...newArrivalsProducts, ...feedPoolProducts]
-        .filter((p) => p.isOnSale && p.compareAtPrice && p.thumbnail)
-        .map((p) => [p.id, p])
-    ).values()
-  ).slice(0, 3);
-  if (promoProducts.length > 0) {
-    const maxDiscount = Math.max(
-      ...promoProducts.map((p) => Math.round((1 - p.price / (p.compareAtPrice as number)) * 100))
-    );
-    heroSlides.push({
-      id: "promotions",
-      headingLevel: "h2",
-      eyebrow: "Promotions",
-      title: maxDiscount > 0 ? `Jusqu’à -${maxDiscount} %` : "Des prix en baisse",
-      text: "Les promotions en cours chez nos vendeurs.",
-      cta: { label: "Voir les articles", href: "#catalogue" },
-      tone: "cuivre",
-      images: promoProducts.map(toBannerImage),
-    });
-  }
-
+  // Données du hero (09/10/2026) — uniquement à partir de données réelles déjà
+  // chargées ci-dessus, aucune requête de plus. Pastilles : catégories qui ont
+  // au moins un produit. Badge "Jusqu'à -X %" : plus forte remise parmi les
+  // promotions réellement actives, absent s'il n'y en a aucune.
   const heroCategories = availableCategories.map((c) => ({
     value: c.value,
     label: c.label,
     href: buildMarketplaceHref({ ...current, attrs: {} }, { categorie: c.value, page: undefined }),
   }));
-
-  // Carte "Meilleure vente" : seulement un vrai best-seller avec photo — pas de
-  // repli sur une nouveauté, le libellé serait faux.
-  const bestSeller = bestSellingProducts.find((p) => p.thumbnail);
-  const heroFeaturedProduct = bestSeller
-    ? {
-        href: `/${bestSeller.shopSlug}/${bestSeller.slug}`,
-        title: bestSeller.title,
-        price: bestSeller.price,
-        thumbnail: bestSeller.thumbnail,
-        shopName: bestSeller.shopName,
-      }
-    : null;
+  const discountsOnSale = [...newArrivalsProducts, ...feedPoolProducts]
+    .filter((p) => p.isOnSale && p.compareAtPrice && p.compareAtPrice > p.price)
+    .map((p) => Math.round((1 - p.price / (p.compareAtPrice as number)) * 100))
+    .filter((percent) => percent > 0);
+  const heroPromoDiscount = discountsOnSale.length > 0 ? Math.max(...discountsOnSale) : null;
 
   // Résumé des filtres actifs + compteur de résultats, affiché au-dessus de
   // la grille filtrée.
@@ -816,18 +682,16 @@ export default async function Home({
           </header>
 
           {/* ========== HERO (full width) ==========
-              Refonte du 06/10/2026, à la demande d'Isaac ("une hero section
-              comme les grandes marketplaces" — Jumia/Amazon) : menu de
-              catégories à gauche, grande bannière rotative au centre, deux
-              cartes à droite (voir `HeroMarketplace`). Le <h1> de
-              positionnement voulu par Isaac le 02/10/2026 ("la plus simple de
-              Côte d'Ivoire") vit dans la première diapo. Les diapos sont
-              construites plus haut (`heroSlides`) uniquement à partir de
-              données réelles. */}
+              Refonte du 09/10/2026, sur le modèle fourni par Isaac
+              (`public/hero/model.jpeg`) : bandeau pleine largeur avec texte,
+              recherche et pastilles de catégories, carrousel de visuels
+              derrière. Le <h1> ("la plus simple de Côte d'Ivoire") reste celui
+              voulu par Isaac le 02/10/2026. Le badge de promotion n'apparaît
+              que s'il existe une vraie promo (`heroPromoDiscount`). */}
           <HeroMarketplace
-            slides={heroSlides}
             categories={heroCategories}
-            featuredProduct={heroFeaturedProduct}
+            promoDiscount={heroPromoDiscount}
+            search={{ defaultValue: q ?? "", categorie, prixMin, prixMax, attrs }}
           />
 
           {/* Argumentaire de confiance — déplacé juste sous le hero le

@@ -115,22 +115,36 @@ export default function HomeLoading() {
           </div>
         </header>
 
-        {/* Hero "grande marketplace" (06/10/2026) en squelette : menu de
-            catégories à gauche, bannière au centre, deux cartes à droite —
-            mêmes proportions que `HeroMarketplace`, tout vient de Supabase. */}
-        <section className="mx-auto w-full max-w-6xl px-3 pb-2 pt-3 sm:px-4">
-          <div className="grid gap-3 lg:grid-cols-[14rem_minmax(0,1fr)_15rem]">
-            <div className="hidden h-[24rem] flex-col gap-3 rounded-lg border border-ligne bg-white p-4 lg:flex" aria-hidden="true">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <Skeleton key={i} className="h-4 w-full" />
-              ))}
-            </div>
-            <Skeleton className="h-80 rounded-lg sm:h-[22rem] lg:h-[24rem]" />
-            <div className="grid grid-cols-2 gap-3 lg:h-[24rem] lg:grid-cols-1 lg:grid-rows-2" aria-hidden="true">
-              <Skeleton className="min-h-32 rounded-lg" />
-              <Skeleton className="min-h-32 rounded-lg" />
+        {/* Hero (09/10/2026) en squelette : même bandeau que `HeroMarketplace`
+            — le titre, le texte et le lien vendeur sont réels (cliquables
+            pendant le chargement), seuls la barre de recherche, les pastilles
+            et le visuel dépendent de Supabase/du client. */}
+        <section className="relative flex w-full flex-col bg-[#e6f1ea] sm:block">
+          <div className="relative z-10 order-1 mx-auto w-full max-w-6xl px-4 py-8 sm:flex sm:min-h-[27rem] sm:items-center sm:py-12 lg:min-h-[29rem]">
+            <div className="w-full sm:max-w-[34rem]">
+              <Skeleton className="h-7 w-72 rounded-full" />
+              <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.05] tracking-tight text-vert-profond sm:text-5xl lg:text-[3.1rem]">
+                La marketplace <br className="hidden sm:block" />
+                <span className="text-vert-actif">la plus simple de Côte d’Ivoire</span>
+              </h1>
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-encre/80">
+                Des vendeurs indépendants partout en Côte d’Ivoire. Commande sans compte, paie à la livraison.
+              </p>
+              <Skeleton className="mt-6 h-12 w-full rounded-full" />
+              <div className="mt-4 flex flex-wrap gap-2" aria-hidden="true">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-24 rounded-full" />
+                ))}
+              </div>
+              <Link
+                href="/inscription"
+                className="mt-5 inline-block text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif"
+              >
+                Tu vends ? Ouvre ta boutique
+              </Link>
             </div>
           </div>
+          <Skeleton className="order-2 h-44 sm:absolute sm:inset-0 sm:z-0 sm:h-auto" />
         </section>
 
         {/* Argumentaire de confiance — réel, texte statique. */}
