@@ -10,7 +10,10 @@ import { SHOP_ASSETS_BUCKET, storagePathFromPublicUrl } from "./storage-path";
  * (1 Mo par défaut) et la limite de taille de requête des fonctions Vercel —
  * important pour des photos prises au téléphone. La sécurité est assurée par
  * les policies RLS sur `storage.objects` (voir 0003_storage.sql) : un
- * vendeur ne peut écrire que dans le dossier de sa propre boutique.
+ * vendeur ne peut écrire que dans le dossier de sa propre boutique. Taille et
+ * types de fichiers sont aussi imposés par le bucket lui-même depuis la
+ * migration 0057 (09/10/2026) — les contrôles ci-dessous ne servent plus qu'à
+ * afficher une erreur claire avant l'envoi.
  */
 
 const BUCKET = SHOP_ASSETS_BUCKET;
@@ -26,6 +29,12 @@ const MAX_INPUT_SIZE_MB = 20;
 const MAX_OUTPUT_SIZE_MB = 5;
 const MAX_DIMENSION_PX = 1600;
 const OUTPUT_QUALITY = 0.82;
+// Formats acceptés par le bucket lui-même depuis le 09/10/2026 (migration
+// 0057, `allowed_mime_types`) — gardés identiques ici pour afficher une
+// erreur claire au lieu du refus générique de Supabase Storage. Tout autre
+// format d'image (HEIC, BMP, SVG...) est d'abord converti en WebP par
+// `compressImage` ; s'il ne peut pas l'être, l'envoi est refusé.
+const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 
 export class ImageUploadError extends Error {}
 
@@ -64,9 +73,13 @@ function assertValidOutputSize(file: File) {
  * optimisation qui n'est qu'un bonus.
  */
 async function compressImage(file: File): Promise<File> {
+  // Format non accepté par le bucket (HEIC, BMP, SVG...) : conversion WebP
+  // obligatoire, quelle que soit la taille (09/10/2026).
+  const mustConvert = !ACCEPTED_IMAGE_TYPES.has(file.type);
+
   // Repli : fichier déjà léger, la compression ne vaut pas le coût de
   // décodage/réencodage (icônes, captures déjà optimisées...).
-  if (file.size < 300 * 1024) return file;
+  if (!mustConvert && file.size < 300 * 1024) return file;
 
   try {
     const bitmap = await createImageBitmap(file);
@@ -85,7 +98,7 @@ async function compressImage(file: File): Promise<File> {
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/webp", OUTPUT_QUALITY)
     );
-    if (!blob || blob.size >= file.size) return file;
+    if (!blob || (!mustConvert && blob.size >= file.size)) return file;
 
     const newName = `${file.name.replace(/\.[^.]+$/, "")}.webp`;
     return new File([blob], newName, { type: "image/webp" });
@@ -116,6 +129,9 @@ export async function uploadShopAssetImage(
 ): Promise<{ url: string; path: string }> {
   assertValidImageType(file);
   const compressed = await compressImage(file);
+  if (!ACCEPTED_IMAGE_TYPES.has(compressed.type)) {
+    throw new ImageUploadError("Format d'image non pris en charge. Utilise une photo JPG, PNG ou WebP.");
+  }
   assertValidOutputSize(compressed);
   file = compressed;
 

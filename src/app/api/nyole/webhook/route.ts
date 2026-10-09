@@ -134,7 +134,54 @@ export async function POST(request: NextRequest) {
   }
 
   if (event === "payment.completed") {
-    const result = await applyPlanToShop(supabase, payment.shop_id, payment.intent_plan_code);
+    // Verrou d'idempotence ATOMIQUE (09/10/2026, audit de sécurité) : le test
+    // `payment.status === "success"` ci-dessus ne suffit pas quand Nyole livre
+    // le même événement deux fois en parallèle — les deux livraisons lisaient
+    // "pending" et appliquaient le plan (et le parrainage) deux fois. On
+    // « réserve » donc le paiement en le passant à "success" AVANT tout
+    // traitement, avec une condition sur le statut : une seule livraison
+    // obtient la ligne en retour, les autres s'arrêtent là.
+    const { data: claimed } = await supabase
+      .from("payments")
+      .update({ status: "success", raw_payload: payload })
+      .eq("id", payment.id)
+      .neq("status", "success")
+      .select("id")
+      .maybeSingle();
+
+    if (!claimed) {
+      return NextResponse.json({ received: true });
+    }
+
+    // Contrôle de cohérence du montant : journalisé seulement, jamais
+    // bloquant. Le webhook est signé par Nyole, donc un écart signale un bug
+    // (le nôtre ou un frais ajouté par Nyole), pas une fraude — bloquer
+    // risquerait de refuser un vrai paiement.
+    const reportedAmount = payload?.data?.amount;
+    if (
+      typeof reportedAmount === "number" &&
+      payment.amount !== null &&
+      Number(payment.amount) !== reportedAmount
+    ) {
+      console.error("Nyole webhook — montant différent de celui attendu:", {
+        paymentId: payment.id,
+        expected: payment.amount,
+        reported: reportedAmount,
+        currency: payload?.data?.currency,
+      });
+    }
+
+    let result: Awaited<ReturnType<typeof applyPlanToShop>>;
+    try {
+      result = await applyPlanToShop(supabase, payment.shop_id, payment.intent_plan_code);
+    } catch (error) {
+      // Échec technique : on relâche le verrou (statut d'origine) et on répond
+      // 500 pour que Nyole retente plus tard, au lieu de laisser un paiement
+      // "réussi" sans abonnement activé.
+      console.error("Nyole webhook — échec de l'activation du plan, verrou relâché:", error);
+      await supabase.from("payments").update({ status: payment.status }).eq("id", payment.id);
+      return NextResponse.json({ error: "retry" }, { status: 500 });
+    }
 
     // Système de parrainage (voir src/lib/referrals.ts) : un paiement Nyole
     // confirmé (webhook signé) est l'un des deux seuls déclencheurs de
@@ -149,11 +196,6 @@ export async function POST(request: NextRequest) {
       // deux fois la même commission (voir le commentaire du fichier).
       await maybeCreditCommercialCommission(supabase, payment.shop_id, result.planCode, payment.id);
     }
-
-    await supabase
-      .from("payments")
-      .update({ status: "success", raw_payload: payload })
-      .eq("id", payment.id);
 
     await supabase.from("transaction_logs").insert({
       actor_id: null,

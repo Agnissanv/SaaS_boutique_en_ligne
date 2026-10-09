@@ -1676,6 +1676,11 @@ export type Database = {
         Args: { p_shop_slug: string; p_source?: string | null };
         Returns: undefined;
       };
+      // 0056.
+      get_my_shop_notification_email: {
+        Args: never;
+        Returns: string | null;
+      };
       // 0007.
       is_admin: {
         Args: never;

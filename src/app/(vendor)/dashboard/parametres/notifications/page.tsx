@@ -25,13 +25,18 @@ export default async function NotificationsSettingsPage() {
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, notification_email")
+    .select("id")
     .eq("owner_id", user?.id ?? "")
     .maybeSingle();
 
   if (!shop) {
     redirect("/dashboard/boutique");
   }
+
+  // `notification_email` n'est plus lisible directement par les rôles publics
+  // (migration 0056, audit du 09/10/2026) : lecture via une fonction réservée
+  // au propriétaire.
+  const { data: notificationEmail } = await supabase.rpc("get_my_shop_notification_email");
 
   const subscription = await getShopSubscription(supabase, shop.id);
 
@@ -62,7 +67,7 @@ export default async function NotificationsSettingsPage() {
             .
           </p>
           <NotificationEmailForm
-            currentEmail={shop.notification_email}
+            currentEmail={notificationEmail ?? null}
             accountEmail={user?.email ?? ""}
           />
           {!subscription.features.hasAdvancedStockAlerts && (
