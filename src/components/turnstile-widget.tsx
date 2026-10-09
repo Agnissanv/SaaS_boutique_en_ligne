@@ -10,7 +10,10 @@ type TurnstileApi = {
       callback: (token: string) => void;
       "expired-callback"?: () => void;
       "error-callback"?: () => void;
+      "before-interactive-callback"?: () => void;
+      "after-interactive-callback"?: () => void;
       language?: string;
+      theme?: "light" | "dark" | "auto";
       appearance?: "always" | "execute" | "interaction-only";
     }
   ) => string;
@@ -50,7 +53,9 @@ function loadTurnstile(): Promise<void> {
  * Widget anti-robot Cloudflare Turnstile (09/10/2026, voir
  * `verifyCheckoutCaptcha` et la migration 0059). Mode « interaction-only » :
  * invisible pour la grande majorité des visiteurs, une case à cocher
- * n'apparaît que si Cloudflare a un doute.
+ * n'apparaît que si Cloudflare a un doute ; `onInteractiveChange(true)` prévient
+ * alors le parent qu'il faut la cocher. Thème clair forcé : le thème "auto"
+ * suivait le réglage sombre de l'ordinateur et détonnait sur le site.
  *
  * Un jeton n'est valable qu'une fois : le parent incrémente `resetKey` après
  * chaque tentative de commande pour en obtenir un nouveau.
@@ -60,11 +65,13 @@ export function TurnstileWidget({
   resetKey,
   onToken,
   onLoadError,
+  onInteractiveChange,
 }: {
   siteKey: string;
   resetKey: number;
   onToken: (token: string | null) => void;
   onLoadError?: () => void;
+  onInteractiveChange?: (needsInteraction: boolean) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -72,9 +79,11 @@ export function TurnstileWidget({
   // toujours appeler la version la plus récente fournie par le parent.
   const onTokenRef = useRef(onToken);
   const onLoadErrorRef = useRef(onLoadError);
+  const onInteractiveChangeRef = useRef(onInteractiveChange);
   useEffect(() => {
     onTokenRef.current = onToken;
     onLoadErrorRef.current = onLoadError;
+    onInteractiveChangeRef.current = onInteractiveChange;
   });
 
   useEffect(() => {
@@ -87,8 +96,11 @@ export function TurnstileWidget({
           callback: (token) => onTokenRef.current(token),
           "expired-callback": () => onTokenRef.current(null),
           "error-callback": () => onTokenRef.current(null),
+          "before-interactive-callback": () => onInteractiveChangeRef.current?.(true),
+          "after-interactive-callback": () => onInteractiveChangeRef.current?.(false),
           language: "fr",
           appearance: "interaction-only",
+          theme: "light",
         });
       })
       .catch(() => {

@@ -72,6 +72,9 @@ export function CartCheckout({
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [captchaLoadFailed, setCaptchaLoadFailed] = useState(false);
+  // true quand Cloudflare affiche la case à cocher (il a un doute) : le
+  // client doit agir, ce n'est plus une simple attente.
+  const [captchaNeedsInteraction, setCaptchaNeedsInteraction] = useState(false);
   const abandonedCartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Paniers abandonnés (23/09/2026, voir migration 0044) : capture
@@ -165,7 +168,9 @@ export function CartCheckout({
         setError(
           captchaLoadFailed
             ? "La vérification anti-robot n'a pas pu se charger. Recharge la page et réessaie."
-            : "Vérification anti-robot en cours, réessaie dans une seconde."
+            : captchaNeedsInteraction
+              ? "Coche la case « Vérifiez que vous êtes humain » juste au-dessus, puis confirme la commande."
+              : "Vérification anti-robot en cours, réessaie dans une seconde."
         );
         return;
       }
@@ -465,6 +470,7 @@ export function CartCheckout({
           resetKey={captchaResetKey}
           onToken={setCaptchaToken}
           onLoadError={() => setCaptchaLoadFailed(true)}
+          onInteractiveChange={setCaptchaNeedsInteraction}
         />
       ) : null}
 
