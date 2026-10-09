@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { subscribeToPush, unsubscribeFromPush } from "./push-actions";
+
+// Support du Web Push par ce navigateur : une capacité fixe, lue directement
+// (09/10/2026) plutôt que posée par un `setState` dans un effet — ce que la
+// règle react-hooks/set-state-in-effect interdit. Côté serveur : non supporté.
+const noopSubscribe = () => () => {};
+const getPushSupport = () => "serviceWorker" in navigator && "PushManager" in window;
+const getServerPushSupport = () => false;
 
 /**
  * Interrupteur "Notifications sur cet appareil" (Web Push) — ajouté le
@@ -21,19 +28,18 @@ import { subscribeToPush, unsubscribeFromPush } from "./push-actions";
  * pas si CET appareil-ci est abonné.
  */
 export function PushNotificationToggle({ vapidPublicKey }: { vapidPublicKey: string }) {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(noopSubscribe, getPushSupport, getServerPushSupport);
   const [enabled, setEnabled] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-    setSupported(true);
+    if (!supported) return;
     navigator.serviceWorker.ready
       .then((registration) => registration.pushManager.getSubscription())
       .then((subscription) => setEnabled(Boolean(subscription)))
       .catch(() => {});
-  }, []);
+  }, [supported]);
 
   async function handleEnable() {
     setError(null);

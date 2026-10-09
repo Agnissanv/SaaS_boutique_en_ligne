@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Hors application (09/10/2026, mise en place de la CI) : documents et
+    // copies de travail (`Claude outputs/`), ancien relais CinetPay abandonné
+    // (`infra/`). Rien de tout ça n'est déployé.
+    "Claude outputs/**",
+    "infra/**",
   ]),
 ]);
 

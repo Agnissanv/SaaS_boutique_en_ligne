@@ -1,0 +1,56 @@
+# Vérifications automatiques — 09/10/2026 (filet de sécurité après l'audit).
+#
+# À chaque push sur main (et sur chaque pull request) : lint, vérification des
+# types, puis build de production. Si une étape échoue, GitHub affiche une
+# croix rouge sur le commit et envoie un email — en parallèle du déploiement
+# Vercel, qui de son côté garde l'ancienne version en ligne si son propre build
+# échoue.
+#
+# Aucun secret ici : le build n'a besoin que de la PRÉSENCE des variables
+# publiques (les pages qui lisent Supabase sont rendues à la demande, pas au
+# build). Les valeurs ci-dessous sont factices et ne donnent accès à rien.
+name: Vérifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verifications-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    name: Lint, types et build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_SITE_URL: https://shopkeva.com
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
