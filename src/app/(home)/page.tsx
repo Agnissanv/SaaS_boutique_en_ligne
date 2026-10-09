@@ -405,6 +405,57 @@ export default async function Home({
     .order("created_at", { ascending: false })
     .limit(CATEGORY_FEED_LIMIT);
 
+  // Ordonnancement des requêtes (09/10/2026, performance) : la page faisait
+  // ~22 requêtes en 6 vagues successives, chacune attendant la précédente
+  // même sans en dépendre. Désormais 3 vagues :
+  //   1. tout ce qui est indépendant (bandes, boutiques, catégories) + la RPC
+  //      des meilleures ventes, lancée ci-dessous en parallèle ;
+  //   2. les fiches des meilleures ventes + les notes des boutiques ;
+  //   3. les notes des produits affichés (dépendent de toutes les listes).
+  // Mêmes requêtes et mêmes données affichées qu'avant.
+  //
+  // Meilleures ventes : appel best-effort à la RPC `get_best_selling_products`
+  // (migration 0015). Enveloppé pour ne jamais faire échouer la page
+  // d'accueil si Isaac n'a pas encore appliqué la migration — même logique
+  // "best-effort" que les notifications email (ne jamais bloquer le
+  // parcours principal pour une fonctionnalité secondaire).
+  const bestSellingPromise: Promise<MarketplaceCardProduct[]> = hasFilter
+    ? Promise.resolve([])
+    : (async () => {
+        const { data: bestSellers, error: bestSellersError } = await supabase.rpc(
+          "get_best_selling_products",
+          { p_limit: BEST_SELLERS_SIZE }
+        );
+        if (bestSellersError) {
+          console.error(
+            "get_best_selling_products RPC error (migration 0015 appliquée ?):",
+            bestSellersError
+          );
+          return [];
+        }
+        if (!bestSellers || bestSellers.length === 0) return [];
+        const ids: string[] = (bestSellers as { product_id: string }[]).map(
+          (row) => row.product_id
+        );
+        const { data: bestSellersRaw } = await supabase
+          .from("products")
+          .select(PRODUCT_CARD_COLUMNS)
+          .in("id", ids)
+          .eq("is_active", true)
+          .is("deleted_at", null)
+          .eq("shop.status", "active");
+        const byId = new Map<string, RawMarketplaceProduct>(
+          ((bestSellersRaw ?? []) as RawMarketplaceProduct[]).map(
+            (p): [string, RawMarketplaceProduct] => [p.id, p]
+          )
+        );
+        return ids
+          .map((id: string): RawMarketplaceProduct | undefined => byId.get(id))
+          .filter((p): p is RawMarketplaceProduct => Boolean(p))
+          .map(toCardProduct)
+          .filter((p): p is MarketplaceCardProduct => p !== null);
+      })();
+
   const [
     { data: newArrivals },
     { data: featuredShopsRaw },
@@ -462,45 +513,21 @@ export default async function Home({
     .map(toCardProduct)
     .filter((p): p is MarketplaceCardProduct => p !== null);
 
-  // Meilleures ventes : appel best-effort à la RPC `get_best_selling_products`
-  // (migration 0015). Enveloppé pour ne jamais faire échouer la page
-  // d'accueil si Isaac n'a pas encore appliqué la migration — même logique
-  // "best-effort" que les notifications email (ne jamais bloquer le
-  // parcours principal pour une fonctionnalité secondaire).
-  let bestSellingProducts: MarketplaceCardProduct[] = [];
-  if (!hasFilter) {
-    const { data: bestSellers, error: bestSellersError } = await supabase.rpc(
-      "get_best_selling_products",
-      { p_limit: BEST_SELLERS_SIZE }
-    );
-    if (bestSellersError) {
-      console.error(
-        "get_best_selling_products RPC error (migration 0015 appliquée ?):",
-        bestSellersError
-      );
-    } else if (bestSellers && bestSellers.length > 0) {
-      const ids: string[] = (bestSellers as { product_id: string }[]).map(
-        (row) => row.product_id
-      );
-      const { data: bestSellersRaw } = await supabase
-        .from("products")
-        .select(PRODUCT_CARD_COLUMNS)
-        .in("id", ids)
-        .eq("is_active", true)
-        .is("deleted_at", null)
-        .eq("shop.status", "active");
-      const byId = new Map<string, RawMarketplaceProduct>(
-        ((bestSellersRaw ?? []) as RawMarketplaceProduct[]).map(
-          (p): [string, RawMarketplaceProduct] => [p.id, p]
-        )
-      );
-      bestSellingProducts = ids
-        .map((id: string): RawMarketplaceProduct | undefined => byId.get(id))
-        .filter((p): p is RawMarketplaceProduct => Boolean(p))
-        .map(toCardProduct)
-        .filter((p): p is MarketplaceCardProduct => p !== null);
-    }
-  }
+  // Note de confiance par boutique : réutilise `getShopRating` (0014/§4,
+  // déjà utilisée sur la fiche boutique), une requête par boutique en
+  // parallèle — nombre de boutiques plafonné (FEATURED_SHOPS_SIZE +
+  // NEWEST_SHOPS_SIZE) pour que ce fan-out reste raisonnable. Lancée dès que
+  // la liste des boutiques est connue (vague 2), en parallèle des meilleures
+  // ventes, et sans doublon quand une boutique est à la fois "en vedette" et
+  // "nouvelle".
+  const shopRatingIds = Array.from(
+    new Set([...(featuredShopsRaw ?? []), ...(newestShopsRaw ?? [])].map((shop) => shop.id as string))
+  );
+  const shopRatingsPromise = Promise.all(
+    shopRatingIds.map(async (id) => [id, await getShopRating(supabase, id)] as const)
+  ).then((entries) => new Map(entries));
+
+  const bestSellingProducts = await bestSellingPromise;
 
   // Bandes par catégorie : regroupe le flux borné ci-dessus par catégorie,
   // dans l'ordre de `CATEGORIES`, plafonné à `CATEGORY_ROW_SIZE` par bande.
@@ -578,35 +605,20 @@ export default async function Home({
     for (const row of categoryRows) applyRatings(row.products);
   }
 
-  // Note de confiance par boutique : réutilise `getShopRating` (0014/§4,
-  // déjà utilisée sur la fiche boutique), une requête par boutique en
-  // parallèle — nombre de boutiques mises en avant volontairement plafonné
-  // (FEATURED_SHOPS_SIZE) pour que ce fan-out reste raisonnable.
-  const featuredShops: MarketplaceShop[] = await Promise.all(
-    (featuredShopsRaw ?? []).map(async (shop) => ({
-      slug: shop.slug as string,
-      name: shop.name as string,
-      logoUrl: shop.logo_url as string | null,
-      category: shop.category as string | null,
-      isVerified: shop.is_verified as boolean,
-      rating: await getShopRating(supabase, shop.id as string),
-    }))
-  );
-
-  // Même mise en forme que `featuredShops` ci-dessus, pour la section
-  // Promotions ("Nouveaux vendeurs de la semaine") — fan-out limité à
-  // NEWEST_SHOPS_SIZE (4), négligeable à côté de celui déjà fait pour les
-  // boutiques en vedette.
-  const newestShops: MarketplaceShop[] = await Promise.all(
-    (newestShopsRaw ?? []).map(async (shop) => ({
-      slug: shop.slug as string,
-      name: shop.name as string,
-      logoUrl: shop.logo_url as string | null,
-      category: shop.category as string | null,
-      isVerified: shop.is_verified as boolean,
-      rating: await getShopRating(supabase, shop.id as string),
-    }))
-  );
+  // Notes des boutiques lancées plus haut (vague 2) : en général déjà
+  // arrivées à ce stade, pendant que les notes produit étaient chargées.
+  const shopRatings = await shopRatingsPromise;
+  const toMarketplaceShop = (shop: NonNullable<typeof featuredShopsRaw>[number]): MarketplaceShop => ({
+    slug: shop.slug as string,
+    name: shop.name as string,
+    logoUrl: shop.logo_url as string | null,
+    category: shop.category as string | null,
+    isVerified: shop.is_verified as boolean,
+    rating: shopRatings.get(shop.id as string) ?? null,
+  });
+  const featuredShops: MarketplaceShop[] = (featuredShopsRaw ?? []).map(toMarketplaceShop);
+  // Section Promotions ("Nouveaux vendeurs de la semaine"), même mise en forme.
+  const newestShops: MarketplaceShop[] = (newestShopsRaw ?? []).map(toMarketplaceShop);
 
   // Données du hero (09/10/2026) — uniquement à partir de données réelles déjà
   // chargées ci-dessus, aucune requête de plus. Pastilles : catégories qui ont

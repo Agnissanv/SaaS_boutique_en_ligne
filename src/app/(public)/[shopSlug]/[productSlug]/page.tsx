@@ -13,7 +13,17 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
-import { LOW_STOCK_THRESHOLD } from "@/lib/products";
+import { MobileMoneyBadge } from "@/components/mobile-money-badge";
+import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
+import { LOW_STOCK_THRESHOLD, getEffectivePrice } from "@/lib/products";
+import { RecordProductView } from "@/components/record-product-view";
+import { RecentlyViewedRow } from "@/components/recently-viewed-row";
+import { getCategoryAttributeFields, getAttributeValueLabel } from "@/lib/category-attributes";
+
+// Même variable que `layout.tsx` et `[shopSlug]/page.tsx` (23/09/2026, ajout
+// du canonical) — reprise de la convention déjà utilisée partout dans le
+// projet pour les URLs absolues.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 const RELATED_LIMIT = 4;
 
@@ -22,7 +32,34 @@ type Review = {
   rating: number;
   comment: string | null;
   created_at: string;
+  order_id: string | null;
+  seller_reply: string | null;
 };
+
+/**
+ * Badge "Achat vérifié" — ajouté le 21/09/2026 (cahier des charges, avis
+ * clients). Contrairement au badge "vendeur vérifié" volontairement écarté
+ * plus haut sur la page boutique (aucun système de vérification vendeur
+ * n'existe), celui-ci n'est pas un mensonge visuel : la migration 0011
+ * (`submit_product_review`) interdit déjà tout avis qui ne correspond pas à
+ * une commande réelle contenant ce produit — `order_id` est donc une vraie
+ * preuve d'achat, pas une déclaration sur l'honneur. Un avis sans `order_id`
+ * ne devrait normalement jamais exister (aucune policy ne permet d'insérer
+ * autrement), sauf commande supprimée entre-temps (`on delete set null`) —
+ * dans ce cas rare, le badge disparaît simplement plutôt que d'afficher une
+ * preuve qu'on ne peut plus vérifier.
+ */
+function VerifiedPurchaseBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-succes/15 px-2 py-0.5 text-[11px] font-medium text-succes">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M7 10.2l2 2 4-4.4" />
+      </svg>
+      Achat vérifié
+    </span>
+  );
+}
 
 type RelatedProduct = {
   id: string;
@@ -32,8 +69,14 @@ type RelatedProduct = {
   product_images: { url: string; position: number }[];
 };
 
-/** Note moyenne + liste des avis (cf. migration 0011, submit_product_review). */
-function ReviewsSection({ reviews }: { reviews: Review[] }) {
+/**
+ * Note moyenne + liste des avis (cf. migration 0011, submit_product_review).
+ * Réponse vendeur (migration 0028, tâche #78 du 21/09/2026) affichée sous le
+ * commentaire du client, visuellement rattachée (fond `brume`, léger
+ * décalage) pour bien la distinguer de l'avis lui-même — jamais confondue
+ * avec un second avis.
+ */
+function ReviewsSection({ reviews, shopName }: { reviews: Review[]; shopName: string }) {
   if (reviews.length === 0) {
     return (
       <p className="mt-3 text-sm text-encre/50">
@@ -54,11 +97,20 @@ function ReviewsSection({ reviews }: { reviews: Review[] }) {
       <ul className="mt-4 flex flex-col gap-3">
         {reviews.map((review, index) => (
           <li key={index} className="rounded-lg border border-ligne bg-white p-4">
-            <p className="flex items-center gap-2 text-sm font-medium text-encre">
+            <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-encre">
               <Stars rating={review.rating} /> {review.customer_name}
+              {review.order_id ? <VerifiedPurchaseBadge /> : null}
             </p>
             {review.comment && (
               <p className="mt-1.5 text-sm leading-relaxed text-encre/70">{review.comment}</p>
+            )}
+            {review.seller_reply && (
+              <div className="mt-3 rounded-md bg-brume p-3">
+                <p className="text-xs font-medium text-encre/70">Réponse de {shopName}</p>
+                <p className="mt-1 text-sm leading-relaxed text-encre/80">
+                  {review.seller_reply}
+                </p>
+              </div>
             )}
           </li>
         ))}
@@ -77,7 +129,7 @@ const getProductForPublicPage = cache(async (shopSlug: string, productSlug: stri
   const { data: product } = await supabase
     .from("products")
     .select(
-      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, accent_color), product_images(url, position), product_variants(id, name, value, extra_price)"
+      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, mobile_money_number, mobile_money_operator, accent_color), product_images(url, position), product_variants(id, name, value, extra_price)"
     )
     .eq("slug", productSlug)
     .eq("shop.slug", shopSlug)
@@ -116,12 +168,17 @@ export async function generateMetadata({
   const images = [...(product.product_images ?? [])].sort(
     (a: { position: number }, b: { position: number }) => a.position - b.position
   );
-  const image = images[0]?.url || "/keva-logo.jpg";
+  const image = images[0]?.url || "/keva-logo-og.jpg";
+  const canonicalUrl = `${siteUrl}/${shopSlug}/${productSlug}`;
 
   return {
     title,
     description,
-    openGraph: { title, description, images: [image], type: "website" },
+    // `alternates.canonical` ajouté le 23/09/2026 (audit SEO externe) — même
+    // raison que sur la page boutique : sans lui, la fiche produit héritait
+    // du canonical statique de l'accueil défini dans le layout racine.
+    alternates: { canonical: canonicalUrl },
+    openGraph: { title, description, images: [image], type: "website", url: canonicalUrl },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
@@ -146,28 +203,33 @@ export default async function ProductPage({
 
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
 
-  const { data: reviews } = await supabase
-    .from("product_reviews")
-    .select("customer_name, rating, comment, created_at")
-    .eq("product_id", product.id)
-    .order("created_at", { ascending: false });
-
-  const shopRating = await getShopRating(supabase, shop.id);
-
-  // Produits similaires : autres produits actifs de la même boutique,
-  // catégorie identique en priorité — demandé par Isaac le 14/09/2026
-  // (analyse comparative Jumia). Volontairement léger : pas de moteur de
-  // recommandation, juste "le reste du catalogue du même vendeur", trié pour
-  // privilégier la même catégorie quand elle existe.
-  const { data: relatedRaw } = await supabase
-    .from("products")
-    .select("id, slug, title, price, category, product_images(url, position)")
-    .eq("shop_id", shop.id)
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .neq("id", product.id)
-    .order("created_at", { ascending: false })
-    .limit(12);
+  // Regroupées en Promise.all (30/09/2026, audit technique — voir
+  // audit-technique-2026-09-29.md) : avis du produit, note de confiance de la
+  // boutique et produits similaires ne dépendent que de `product.id`/`shop.id`
+  // déjà connus, jamais du résultat l'une de l'autre — elles étaient awaited
+  // l'une après l'autre sans raison.
+  const [{ data: reviews }, shopRating, { data: relatedRaw }] = await Promise.all([
+    supabase
+      .from("product_reviews")
+      .select("customer_name, rating, comment, created_at, order_id, seller_reply")
+      .eq("product_id", product.id)
+      .order("created_at", { ascending: false }),
+    getShopRating(supabase, shop.id),
+    // Produits similaires : autres produits actifs de la même boutique,
+    // catégorie identique en priorité — demandé par Isaac le 14/09/2026
+    // (analyse comparative Jumia). Volontairement léger : pas de moteur de
+    // recommandation, juste "le reste du catalogue du même vendeur", trié pour
+    // privilégier la même catégorie quand elle existe.
+    supabase
+      .from("products")
+      .select("id, slug, title, price, category, product_images(url, position)")
+      .eq("shop_id", shop.id)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .neq("id", product.id)
+      .order("created_at", { ascending: false })
+      .limit(12),
+  ]);
 
   const related = [...(relatedRaw ?? [])]
     .sort((a, b) => {
@@ -179,10 +241,35 @@ export default async function ProductPage({
 
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
   const tags: string[] = product.tags ?? [];
-  const compareAtPrice = product.compare_at_price;
-  const hasDiscount = compareAtPrice != null && compareAtPrice > product.price;
+  const highlights: string[] = product.highlights ?? [];
+  // Spécifications par catégorie — ajouté le 22/09/2026 (voir
+  // category-attributes.ts). Seuls les champs prévus pour la catégorie DE CE
+  // PRODUIT et effectivement renseignés par le vendeur sont affichés — l'ordre
+  // suit celui du formulaire vendeur, pas l'ordre d'insertion dans le JSON.
+  const productAttributes: Record<string, string> = product.attributes ?? {};
+  const specs = getCategoryAttributeFields(product.category)
+    .filter((field) => Boolean(productAttributes[field.key]))
+    .map((field) => ({
+      label: field.label,
+      value: getAttributeValueLabel(product.category, field.key, productAttributes[field.key]),
+    }));
+  // Prix effectif (soldé si une promo datée est active maintenant, sinon le
+  // prix normal) — voir migration 0031 pour le contexte complet. C'est aussi
+  // ce prix qui doit être transmis à `AddToCartForm`/`StickyAddToCartBar` :
+  // le montant réellement facturé est de toute façon recalculé côté serveur
+  // par `create_order` (jamais celui envoyé par le client), mais le panier
+  // doit refléter la même promo que ce que le client vient de voir.
+  const effectivePrice = getEffectivePrice({
+    price: product.price,
+    compareAtPrice: product.compare_at_price,
+    salePrice: product.sale_price,
+    saleStartsAt: product.sale_starts_at,
+    saleEndsAt: product.sale_ends_at,
+  });
+  const hasDiscount =
+    effectivePrice.compareAtPrice != null && effectivePrice.compareAtPrice > effectivePrice.price;
   const discountPercent = hasDiscount
-    ? Math.round((1 - product.price / compareAtPrice) * 100)
+    ? Math.round((1 - effectivePrice.price / (effectivePrice.compareAtPrice as number)) * 100)
     : null;
 
   return (
@@ -193,16 +280,40 @@ export default async function ProductPage({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <RecordProductView
+        item={{
+          productId: product.id,
+          shopSlug,
+          shopName: shop.name,
+          productSlug: product.slug,
+          title: product.title,
+          price: effectivePrice.price,
+          compareAtPrice: effectivePrice.compareAtPrice,
+          imageUrl: images[0]?.url,
+        }}
+      />
+      {/* Lien retour : caché sur mobile au profit du chevron flottant sur la
+          photo ci-dessous (refonte fiche produit, 22/09/2026, mockup validé
+          par Isaac) — repris à partir de sm:, où la mise en page à deux
+          colonnes laisse assez de place au-dessus de la galerie. */}
       <Link
         href={`/${shopSlug}`}
         transitionTypes={["nav-back"]}
-        className="inline-flex items-center gap-1 text-sm text-vert-actif hover:underline"
+        className="hidden items-center gap-1 text-sm text-vert-actif hover:underline sm:inline-flex"
       >
         ‹ Retour à la boutique
       </Link>
 
-      <div className="mt-4 grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+      <div className="mt-0 grid gap-8 sm:mt-4 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
         <div className="relative">
+          <Link
+            href={`/${shopSlug}`}
+            transitionTypes={["nav-back"]}
+            aria-label="Retour à la boutique"
+            className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg text-vert-sapin shadow-sm sm:hidden"
+          >
+            ‹
+          </Link>
           <div className="absolute right-3 top-3 z-10">
             <WishlistButton
               item={{
@@ -210,8 +321,8 @@ export default async function ProductPage({
                 shopSlug,
                 productSlug: product.slug,
                 title: product.title,
-                price: product.price,
-                compareAtPrice: product.compare_at_price,
+                price: effectivePrice.price,
+                compareAtPrice: effectivePrice.compareAtPrice,
                 imageUrl: images[0]?.url,
               }}
             />
@@ -246,7 +357,7 @@ export default async function ProductPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-sable px-2.5 py-1 text-xs font-medium text-cuivre-profond"
+                  className="rounded-full bg-brume px-2.5 py-1 text-xs font-medium text-vert-actif"
                 >
                   {tag}
                 </span>
@@ -259,19 +370,38 @@ export default async function ProductPage({
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-encre/70">{product.description}</p>
 
+          {/* "Points forts" — ajouté le 22/09/2026 (migration 0031), demandé
+              par Isaac sur inspiration Jumia : quelques atouts courts mis en
+              avant, distincts de la description longue ci-dessus. */}
+          {highlights.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-1">
+              {highlights.map((point, index) => (
+                <li key={index} className="flex items-start gap-1.5 text-sm text-encre/80">
+                  <span aria-hidden="true" className="mt-0.5 text-vert-actif">✓</span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+          )}
+
           <div className="mt-5 flex flex-wrap items-baseline gap-2.5">
-            <p className="font-mono text-2xl font-semibold text-cuivre-profond">
-              {product.price} FCFA
+            <p className="font-mono text-2xl font-semibold text-vert-actif">
+              {effectivePrice.price} FCFA
             </p>
             {hasDiscount && (
               <>
                 <p className="font-mono text-sm text-encre/40 line-through">
-                  {product.compare_at_price} FCFA
+                  {effectivePrice.compareAtPrice} FCFA
                 </p>
                 <span className="rounded-full bg-erreur px-2 py-0.5 text-xs font-semibold text-ivoire">
                   -{discountPercent}%
                 </span>
               </>
+            )}
+            {effectivePrice.isOnSale && (
+              <span className="rounded-full bg-erreur/15 px-2 py-0.5 text-xs font-semibold text-erreur">
+                Promo en cours
+              </span>
             )}
           </div>
 
@@ -293,6 +423,18 @@ export default async function ProductPage({
             ) : null}
           </div>
 
+          {/* Numéro Mobile Money du vendeur (29/09/2026) — voir
+              decisions-techniques.md, même badge purement informatif que sur
+              la page boutique. */}
+          {shop.mobile_money_number && shop.mobile_money_operator && isMobileMoneyOperator(shop.mobile_money_operator) ? (
+            <div className="mt-2">
+              <MobileMoneyBadge
+                operator={shop.mobile_money_operator}
+                number={shop.mobile_money_number}
+              />
+            </div>
+          ) : null}
+
           {/* `id="acheter"` : cible du scroll de la barre fixe mobile
               (`sticky-add-to-cart-bar.tsx`), voir son commentaire pour le
               raisonnement complet. */}
@@ -302,7 +444,7 @@ export default async function ProductPage({
               productId={product.id}
               productSlug={product.slug}
               title={product.title}
-              price={product.price}
+              price={effectivePrice.price}
               imageUrl={images[0]?.url}
               variants={product.product_variants ?? []}
               stock={product.stock}
@@ -313,14 +455,36 @@ export default async function ProductPage({
       </div>
 
       <StickyAddToCartBar
-        price={product.price}
+        price={effectivePrice.price}
         stock={product.stock}
         accentColor={shop.accent_color}
       />
 
+      {/* Tableau "Spécifications" — ajouté le 22/09/2026, en même temps que
+          les champs dynamiques par catégorie du formulaire vendeur (voir
+          category-attributes.ts). N'apparaît que si le produit a une
+          catégorie couverte par ce système ET qu'au moins un champ a été
+          renseigné — jamais de section vide. */}
+      {specs.length > 0 && (
+        <section className="mt-10 border-t border-ligne pt-8">
+          <h2 className="font-display text-lg font-semibold text-encre">Spécifications</h2>
+          <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+            {specs.map((spec) => (
+              <div
+                key={spec.label}
+                className="flex items-baseline justify-between gap-3 border-b border-ligne/60 py-2 text-sm sm:justify-start"
+              >
+                <dt className="text-encre/60">{spec.label}</dt>
+                <dd className="text-right font-medium text-encre sm:ml-auto">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
       <section className="mt-12 border-t border-ligne pt-8">
         <h2 className="font-display text-lg font-semibold text-encre">Avis clients</h2>
-        <ReviewsSection reviews={reviews ?? []} />
+        <ReviewsSection reviews={reviews ?? []} shopName={shop.name} />
       </section>
 
       {related.length > 0 && (
@@ -338,7 +502,7 @@ export default async function ProductPage({
                   key={item.id}
                   href={`/${shopSlug}/${item.slug}`}
                   transitionTypes={["nav-forward"]}
-                  className="group rounded-lg border border-ligne bg-white p-2 transition hover:border-cuivre"
+                  className="group rounded-lg border border-ligne bg-white p-2 transition hover:border-vert-actif"
                 >
                   <ViewTransition name={`product-photo-${item.id}`} share="morph" default="none">
                     <ProductImage
@@ -348,13 +512,15 @@ export default async function ProductPage({
                     />
                   </ViewTransition>
                   <p className="truncate text-xs font-medium text-encre">{item.title}</p>
-                  <p className="font-mono text-xs text-cuivre-profond">{item.price} FCFA</p>
+                  <p className="font-mono text-xs text-vert-actif">{item.price} FCFA</p>
                 </Link>
               );
             })}
           </div>
         </section>
       )}
+
+      <RecentlyViewedRow excludeProductId={product.id} />
     </main>
     </ViewTransition>
     </ViewTransition>
