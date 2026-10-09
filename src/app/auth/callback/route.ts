@@ -53,6 +53,26 @@ import { resolveHomePath } from "@/lib/auth-constants";
  * `referred_by_code`. Voir decisions-techniques.md et
  * supabase/migrations/0046_commercial_referral_system.sql.
  */
+/**
+ * `?next=` ne doit mener QUE vers une page de ce site (09/10/2026, audit de
+ * sécurité). Avant, la valeur était collée telle quelle après l'origine :
+ * `next=@evil.com` donnait `https://keva…@evil.com`, que le navigateur lit
+ * comme « utilisateur keva… sur evil.com » — redirection ouverte, utilisable
+ * pour du hameçonnage avec un vrai lien KEVA. On résout la valeur comme une URL
+ * relative à l'origine et on la rejette si elle sort du site ; seul le chemin
+ * (+ requête + ancre) est conservé.
+ */
+function toSameOriginPath(raw: string | null, origin: string): string | null {
+  if (!raw || !raw.startsWith("/")) return null;
+  try {
+    const url = new URL(raw, origin);
+    if (url.origin !== origin) return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -99,8 +119,9 @@ export async function GET(request: Request) {
           .is("referred_by_agent_code", null);
       }
 
-      if (explicitNext) {
-        return NextResponse.redirect(`${origin}${explicitNext}`);
+      const safeNext = toSameOriginPath(explicitNext, origin);
+      if (safeNext) {
+        return NextResponse.redirect(`${origin}${safeNext}`);
       }
 
       const { data: profile } = await supabase

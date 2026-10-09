@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { SiteFooter } from "@/components/site-footer";
 import { AdminQuickAccess } from "@/components/admin-quick-access";
+import { serializeJsonLd } from "@/lib/utils/json-ld";
 import "./globals.css";
 
 // Typographie KEVA — révisée le 22/09/2026 (voir decisions-techniques.md,
@@ -226,7 +227,7 @@ function OrganizationJsonLd({ siteUrl }: { siteUrl: string }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
     />
   );
 }

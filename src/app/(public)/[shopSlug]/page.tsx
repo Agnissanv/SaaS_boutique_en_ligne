@@ -27,6 +27,7 @@ import {
 } from "@/lib/marketplace/filters";
 import { computeAttributeFacets } from "@/lib/marketplace/attribute-facets";
 import { getCategoryAttributeFields } from "@/lib/category-attributes";
+import { serializeJsonLd } from "@/lib/utils/json-ld";
 
 // Même variable que `layout.tsx` (23/09/2026, ajout du canonical) — pas de
 // nouvelle convention, juste la reprise de celle déjà utilisée partout dans
@@ -188,7 +189,7 @@ function ShopJsonLd({
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
     />
   );
 }

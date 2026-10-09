@@ -14,9 +14,21 @@ const PAYMENT_LABELS: Record<string, string> = {
   mobile_money: "Mobile Money",
 };
 
-/** Échappe une valeur pour un champ CSV (RFC 4180) : entoure de guillemets si nécessaire. */
+/**
+ * Échappe une valeur pour un champ CSV (RFC 4180) : entoure de guillemets si nécessaire.
+ *
+ * Neutralise aussi les formules (09/10/2026, audit de sécurité) : nom, téléphone
+ * et adresse sont saisis par n'importe quel client, et Excel exécute une cellule
+ * qui commence par `=`, `+`, `-`, `@` (ou une tabulation / un retour chariot)
+ * comme une formule — `=HYPERLINK(...)` ou pire à l'ouverture par le vendeur.
+ * Une apostrophe en tête force Excel à l'afficher comme du texte. Seulement sur
+ * les textes : les montants restent des nombres exploitables.
+ */
 function csvField(value: string | number): string {
-  const str = String(value);
+  let str = String(value);
+  if (typeof value === "string" && /^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
   if (/[",\n;]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
@@ -57,13 +69,40 @@ export async function GET() {
     return NextResponse.json({ error: "Aucune boutique" }, { status: 404 });
   }
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select(
-      "id, customer_name, customer_phone, customer_email, delivery_address, status, payment_method, delivery_fee, total_amount, created_at"
-    )
-    .eq("shop_id", shop.id)
-    .order("created_at", { ascending: false });
+  // Lecture par pages de 1000 (09/10/2026, audit) : PostgREST plafonne une
+  // réponse à 1000 lignes par défaut, sans erreur — au-delà, l'export était
+  // tronqué en silence. Tri stable (date puis id) pour qu'aucune commande ne
+  // saute ni ne soit dupliquée d'une page à l'autre.
+  const PAGE_SIZE = 1000;
+  const orders: {
+    id: string;
+    customer_name: string;
+    customer_phone: string;
+    customer_email: string | null;
+    delivery_address: string | null;
+    status: string;
+    payment_method: string;
+    delivery_fee: number;
+    total_amount: number;
+    created_at: string;
+  }[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data: page, error } = await supabase
+      .from("orders")
+      .select(
+        "id, customer_name, customer_phone, customer_email, delivery_address, status, payment_method, delivery_fee, total_amount, created_at"
+      )
+      .eq("shop_id", shop.id)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      return NextResponse.json({ error: "Export impossible pour le moment" }, { status: 500 });
+    }
+    orders.push(...(page ?? []));
+    if (!page || page.length < PAGE_SIZE) break;
+  }
 
   const header = [
     "Date",
@@ -79,7 +118,7 @@ export async function GET() {
 
   const lines = [header.map(csvField).join(";")];
 
-  for (const order of orders ?? []) {
+  for (const order of orders) {
     lines.push(
       [
         new Date(order.created_at).toLocaleString("fr-FR"),
