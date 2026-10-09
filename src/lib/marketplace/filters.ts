@@ -41,7 +41,9 @@ export function buildFilterHref(
   const params = new URLSearchParams();
   if (merged.q) params.set("q", merged.q);
   if (merged.categorie) params.set("categorie", merged.categorie);
-  if (merged.tri && merged.tri !== "recent") params.set("tri", merged.tri);
+  // "recent" est le tri par défaut, sauf pendant une recherche texte (défaut :
+  // "pertinence") : il doit alors rester dans l'URL quand il est choisi.
+  if (merged.tri && (merged.tri !== "recent" || merged.q)) params.set("tri", merged.tri);
   if (merged.page && merged.page !== "1") params.set("page", merged.page);
   if (merged.prixMin) params.set("prix_min", merged.prixMin);
   if (merged.prixMax) params.set("prix_max", merged.prixMax);

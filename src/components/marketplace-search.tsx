@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ProductImage } from "@/components/product-image";
+import { InstantSearchForm } from "@/components/instant-search-form";
 
 type ProductSuggestion = {
   id: string;
@@ -14,6 +15,8 @@ type ProductSuggestion = {
 };
 
 type ShopSuggestion = { slug: string; name: string };
+
+type CategorySuggestion = { value: string; label: string };
 
 /**
  * Barre de recherche marketplace avec autocomplete — extraite de l'en-tête
@@ -29,6 +32,10 @@ type ShopSuggestion = { slug: string; name: string };
  * Une suggestion boutique renvoie directement vers la boutique, une
  * suggestion produit directement vers la fiche produit — l'autocomplete
  * saute l'étape "page de résultats" quand l'intention est déjà claire.
+ *
+ * 09/10/2026 : l'envoi ne recharge plus la page (voir `InstantSearchForm`),
+ * et les suggestions viennent du même moteur que la page de résultats
+ * (rayons proposés en plus : « ordinateur » -> Informatique).
  *
  * `prixMin`/`prixMax`/`attrs` ajoutés en champs cachés le 22/09/2026
  * (chantier "filtres") : sans ça, lancer une nouvelle recherche texte
@@ -53,10 +60,22 @@ export function MarketplaceSearch({
 }) {
   const isHero = variant === "hero";
   const [value, setValue] = useState(defaultValue);
+  // La recherche change sans recharger la page : on resynchronise le champ
+  // quand la requête de l'URL change (ex. la barre de l'en-tête après une
+  // recherche lancée depuis le hero).
+  const [syncedDefault, setSyncedDefault] = useState(defaultValue);
+  if (defaultValue !== syncedDefault) {
+    setSyncedDefault(defaultValue);
+    setValue(defaultValue);
+  }
   const [products, setProducts] = useState<ProductSuggestion[]>([]);
   const [shops, setShops] = useState<ShopSuggestion[]>([]);
+  const [categories, setCategories] = useState<CategorySuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Requête qui vient d'être envoyée : ses suggestions, si elles arrivent
+  // après l'envoi, ne doivent pas rouvrir la liste par-dessus les résultats.
+  const submittedQuery = useRef<string | null>(null);
 
   useEffect(() => {
     const query = value.trim();
@@ -74,12 +93,21 @@ export function MarketplaceSearch({
         signal: controller.signal,
       })
         .then((res) => (res.ok ? res.json() : null))
-        .then((data: { products?: ProductSuggestion[]; shops?: ShopSuggestion[] } | null) => {
+        .then(
+          (
+            data: {
+              products?: ProductSuggestion[];
+              shops?: ShopSuggestion[];
+              categories?: CategorySuggestion[];
+            } | null
+          ) => {
           if (!data) return;
           setProducts(data.products ?? []);
           setShops(data.shops ?? []);
-          setOpen(true);
-        })
+          setCategories(data.categories ?? []);
+          if (submittedQuery.current !== query) setOpen(true);
+          }
+        )
         .catch(() => {
           // Requête annulée (nouvelle frappe) ou réseau indisponible — la
           // recherche classique au submit reste fonctionnelle dans tous les
@@ -104,7 +132,8 @@ export function MarketplaceSearch({
   }, []);
 
   const queryLongEnough = value.trim().length >= 2;
-  const hasSuggestions = queryLongEnough && (products.length > 0 || shops.length > 0);
+  const hasSuggestions =
+    queryLongEnough && (products.length > 0 || shops.length > 0 || categories.length > 0);
 
   return (
     <div
@@ -113,15 +142,18 @@ export function MarketplaceSearch({
         isHero ? "relative flex w-full" : "relative order-3 flex w-full sm:order-2 sm:w-auto sm:flex-1"
       }
     >
-      <form
-        method="GET"
+      <InstantSearchForm
         action="/"
+        scrollTargetId="catalogue"
+        onSubmitted={() => {
+          submittedQuery.current = value.trim();
+          setOpen(false);
+        }}
         className={
           isHero
-            ? "flex w-full items-center gap-1 rounded-full bg-white p-1.5 shadow-[0_8px_24px_rgba(14,59,44,0.12)] ring-1 ring-ligne focus-within:ring-2 focus-within:ring-vert-actif"
-            : "flex w-full gap-2"
+            ? "group/search flex w-full items-center gap-1 rounded-full bg-white p-1.5 shadow-[0_8px_24px_rgba(14,59,44,0.12)] ring-1 ring-ligne focus-within:ring-2 focus-within:ring-vert-actif"
+            : "group/search flex w-full gap-2"
         }
-        onSubmit={() => setOpen(false)}
       >
         {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
         {prixMin ? <input type="hidden" name="prix_min" value={prixMin} /> : null}
@@ -151,16 +183,37 @@ export function MarketplaceSearch({
           type="submit"
           className={
             isHero
-              ? "shrink-0 rounded-full bg-vert-actif px-6 py-2.5 text-sm font-semibold text-white hover:bg-vert-sapin"
-              : "shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
+              ? "relative shrink-0 rounded-full bg-vert-actif px-6 py-2.5 text-sm font-semibold text-white hover:bg-vert-sapin"
+              : "relative shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
           }
         >
-          Rechercher
+          <span className="group-data-[pending]/search:invisible">Rechercher</span>
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 hidden items-center justify-center group-data-[pending]/search:flex"
+          >
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+          </span>
         </button>
-      </form>
+      </InstantSearchForm>
 
       {open && hasSuggestions ? (
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto rounded-md border border-ligne bg-white text-encre shadow-lg">
+          {categories.length > 0 ? (
+            <div className="border-b border-ligne p-1">
+              {categories.map((category) => (
+                <Link
+                  key={category.value}
+                  href={`/?categorie=${encodeURIComponent(category.value)}`}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-brume"
+                >
+                  <span className="shrink-0 text-xs text-encre/50">Rayon</span>
+                  <span className="line-clamp-1 font-medium">{category.label}</span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
           {shops.length > 0 ? (
             <div className="border-b border-ligne p-1">
               {shops.map((shop) => (

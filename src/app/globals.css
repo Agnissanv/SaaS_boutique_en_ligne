@@ -342,3 +342,12 @@ a[class*="rounded-"]:not([class*="underline"]):active {
     display: none;
   }
 }
+
+/* Recherche en cours (09/10/2026, voir src/components/instant-search-form.tsx) :
+   la page reste en place, seule la zone de résultats s'atténue le temps que
+   les nouveaux résultats arrivent. */
+html[data-search-pending] [data-search-results] {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
+}

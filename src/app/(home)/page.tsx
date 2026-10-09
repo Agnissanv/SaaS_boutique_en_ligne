@@ -31,6 +31,9 @@ import {
   type VisitorLocation,
 } from "@/lib/marketplace/ranking";
 import { VISITOR_LOCATION_COOKIE, parseVisitorLocationCookie } from "@/lib/geo/visitor-location";
+import { loadSearchDocs } from "@/lib/search/catalog";
+import { searchDocs, type SearchOutcome } from "@/lib/search/engine";
+import { orderByIds, refineSearchResults } from "@/lib/search/results";
 
 // Marketplace publique : découverte multi-boutiques (cf. demande d'Isaac du
 // 13/09/2026 — équivalent d'un "atterrissage" façon Jumia, en complément du
@@ -77,7 +80,10 @@ const CATEGORY_FEED_LIMIT = 400;
 // grossit significativement (voir `computeAttributeFacets`).
 const FACET_SAMPLE_LIMIT = 400;
 
+// "Pertinence" (09/10/2026, nouveau moteur de recherche) : tri par défaut
+// d'une recherche texte, proposé seulement quand il y a une recherche.
 const SORTS = [
+  { value: "pertinence", label: "Pertinence" },
   { value: "recent", label: "Plus récent" },
   { value: "prix_asc", label: "Prix croissant" },
   { value: "prix_desc", label: "Prix décroissant" },
@@ -183,6 +189,22 @@ type RawMarketplaceProduct = {
   sale_ends_at: string | null;
 };
 
+type FacetRow = { price: number; attributes: Record<string, string> | null };
+
+// Grille filtrée : une page de produits, le total, l'échantillon des
+// facettes et, pour une recherche texte, ce que le moteur en a compris.
+type CatalogueResult = {
+  products: RawMarketplaceProduct[];
+  count: number;
+  facetRows: FacetRow[];
+  search: {
+    correctedQuery: string | null;
+    categoryOnly: boolean;
+    inferredCategories: string[];
+    totalBeforeFilters: number;
+  } | null;
+};
+
 // Rang de palier d'une ligne produit brute — normalise la forme `shop`
 // (objet ou tableau selon le contexte de requête, même remarque que
 // `toCardProduct` ci-dessous) et retombe sur le rang Starter (le plus bas)
@@ -264,7 +286,10 @@ export default async function Home({
   const attrs = Object.fromEntries(
     Object.entries(parseAttrsFromSearchParams(rawParams)).filter(([key]) => validAttrKeys.has(key))
   );
-  const sort: SortValue = SORTS.some((s) => s.value === tri) ? (tri as SortValue) : "recent";
+  const sortOptions = SORTS.filter((s) => q || s.value !== "pertinence");
+  const sort: SortValue = sortOptions.some((s) => s.value === tri)
+    ? (tri as SortValue)
+    : sortOptions[0].value;
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -345,9 +370,11 @@ export default async function Home({
   // plafonnés.
   const availableCategoriesQuery = supabase.rpc("get_available_categories");
 
-  // Grille filtrée (recherche/catégorie), seulement construite en mode
-  // filtré — inutile de payer une requête paginée de tout le catalogue
-  // quand la page par défaut n'en a plus besoin.
+  // Grille filtrée par catégorie/prix/attributs SANS recherche texte,
+  // seulement construite dans ce cas — inutile de payer une requête paginée
+  // de tout le catalogue quand la page par défaut n'en a plus besoin. Une
+  // recherche texte passe par le moteur de recherche (`searchCatalogue`
+  // plus bas).
   let catalogueQuery = supabase
     .from("products")
     .select(PRODUCT_CARD_COLUMNS, { count: "exact" })
@@ -355,7 +382,6 @@ export default async function Home({
     .is("deleted_at", null)
     .eq("shop.status", "active")
     .range(from, to);
-  if (q) catalogueQuery = catalogueQuery.ilike("title", `%${q}%`);
   if (categorie) catalogueQuery = catalogueQuery.eq("category", categorie);
   // Filtre de prix — sur la colonne `price` brute, pas le prix effectif
   // (soldé) calculé par `getEffectivePrice` : même approximation déjà
@@ -389,8 +415,73 @@ export default async function Home({
     .is("deleted_at", null)
     .eq("shop.status", "active")
     .limit(FACET_SAMPLE_LIMIT);
-  if (q) facetRowsQuery = facetRowsQuery.ilike("title", `%${q}%`);
   if (categorie) facetRowsQuery = facetRowsQuery.eq("category", categorie);
+
+  // Recherche texte (09/10/2026) — remplace le `ilike '%texte%'` sur le seul
+  // titre, qui ne trouvait rien pour « vêtements », « ordinateur » ou
+  // « cle usb » alors que la plateforme en vend. Le moteur
+  // (src/lib/search/engine.ts) classe tout le catalogue par pertinence :
+  // mots du titre, de la description, des tags et des caractéristiques,
+  // familles de mots (« pc » pour « ordinateur »), catégorie désignée par la
+  // requête (« vêtements » -> Mode) et fautes de frappe. Les filtres de
+  // catégorie, prix et attributs s'appliquent ensuite sur ses résultats,
+  // avec les mêmes règles que la grille sans recherche (prix brut).
+  async function searchCatalogue(query: string): Promise<CatalogueResult> {
+    let outcome: SearchOutcome;
+    try {
+      outcome = searchDocs(await loadSearchDocs(), query);
+    } catch (error) {
+      console.error("Recherche marketplace : chargement du catalogue impossible", error);
+      outcome = { results: [], inferredCategories: [], correctedQuery: null, hasDirectMatch: false };
+    }
+
+    const { inCategory, matches } = refineSearchResults(outcome, {
+      categorie,
+      prixMin,
+      prixMax,
+      attrs,
+      sort,
+    });
+
+    const pageIds = matches.slice(from, to + 1).map((doc) => doc.id);
+    let pageProducts: RawMarketplaceProduct[] = [];
+    if (pageIds.length > 0) {
+      const { data } = await supabase
+        .from("products")
+        .select(PRODUCT_CARD_COLUMNS)
+        .in("id", pageIds)
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .eq("shop.status", "active");
+      pageProducts = orderByIds((data ?? []) as RawMarketplaceProduct[], pageIds);
+    }
+
+    return {
+      products: pageProducts,
+      count: matches.length,
+      facetRows: inCategory.map((doc) => ({ price: doc.price, attributes: doc.attributes })),
+      search: {
+        correctedQuery: outcome.correctedQuery,
+        // Résultats venus uniquement de la catégorie désignée (aucun article
+        // ne contient les mots cherchés) : on le dit plutôt que de laisser
+        // croire à une correspondance exacte.
+        categoryOnly: outcome.results.length > 0 && !outcome.hasDirectMatch,
+        inferredCategories: outcome.inferredCategories,
+        totalBeforeFilters: outcome.results.length,
+      },
+    };
+  }
+
+  const cataloguePromise: Promise<CatalogueResult> = !hasFilter
+    ? Promise.resolve({ products: [], count: 0, facetRows: [], search: null })
+    : q
+      ? searchCatalogue(q)
+      : Promise.all([catalogueQuery, facetRowsQuery]).then(([catalogue, facetRows]) => ({
+          products: (catalogue.data ?? []) as RawMarketplaceProduct[],
+          count: catalogue.count ?? 0,
+          facetRows: (facetRows.data ?? []) as FacetRow[],
+          search: null,
+        }));
 
   // Flux borné de produits récents, regroupé en JS par catégorie plus bas —
   // une seule requête plutôt que jusqu'à 24 (une par catégorie). Seulement
@@ -463,23 +554,16 @@ export default async function Home({
     { data: availableCategoriesRaw },
     catalogueResult,
     categoryFeedResult,
-    facetRowsResult,
   ] = await Promise.all([
     newArrivalsQuery,
     featuredShopsQuery,
     newestShopsQuery,
     availableCategoriesQuery,
-    hasFilter ? catalogueQuery : Promise.resolve({ data: [] as RawMarketplaceProduct[], count: 0 }),
+    cataloguePromise,
     hasFilter ? Promise.resolve({ data: [] as RawMarketplaceProduct[] }) : categoryFeedQuery,
-    hasFilter
-      ? facetRowsQuery
-      : Promise.resolve({ data: [] as { price: number; attributes: Record<string, string> | null }[] }),
   ]);
 
-  const { facets, priceBounds } = computeAttributeFacets(
-    categorie,
-    (facetRowsResult.data ?? []) as { price: number; attributes: Record<string, string> | null }[]
-  );
+  const { facets, priceBounds } = computeAttributeFacets(categorie, catalogueResult.facetRows);
 
   const availableCategoryValues = new Set(
     ((availableCategoriesRaw ?? []) as { category: string | null }[])
@@ -488,7 +572,7 @@ export default async function Home({
   );
   const availableCategories = CATEGORIES.filter((c) => availableCategoryValues.has(c.value));
 
-  const { data: products, count } = catalogueResult;
+  const { products, count, search } = catalogueResult;
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
   // Boost par palier d'abonnement (voir ranking.ts) — seulement en tri
   // "Plus récent" (le défaut) : un tri prix explicite reflète une intention
@@ -637,15 +721,35 @@ export default async function Home({
 
   // Résumé des filtres actifs + compteur de résultats, affiché au-dessus de
   // la grille filtrée.
-  const resultLabel = `${count ?? 0} article${(count ?? 0) === 1 ? "" : "s"}`;
-  const filterSummary = q && categorie
-    ? `${resultLabel} pour « ${q} » dans ${categoryLabel(categorie)}`
-    : q
-      ? `${resultLabel} pour « ${q} »`
+  // Requête affichée : la version corrigée quand le moteur a rattrapé une
+  // faute de frappe (« ordinatuer » -> « ordinateur »).
+  const displayQuery = search?.correctedQuery ?? q;
+  const resultLabel = `${count ?? 0} article${(count ?? 0) <= 1 ? "" : "s"}`;
+  const filterSummary = displayQuery && categorie
+    ? `${resultLabel} pour « ${displayQuery} » dans ${categoryLabel(categorie)}`
+    : displayQuery
+      ? `${resultLabel} pour « ${displayQuery} »`
       : categorie
         ? `${resultLabel} dans ${categoryLabel(categorie)}`
         : resultLabel;
   const gridTitle = categorie ? categoryLabel(categorie) : "Résultats de recherche";
+
+  // Rayons désignés par la recherche (« ordinateur » -> Informatique) qui ont
+  // réellement des produits : proposés en raccourcis sous le résumé, et
+  // nommés quand les résultats ne viennent que de là.
+  const searchCategories = (search?.inferredCategories ?? [])
+    .filter((value) => availableCategoryValues.has(value))
+    .slice(0, 3)
+    .map((value) => ({
+      value,
+      label: categoryLabel(value),
+      href: buildMarketplaceHref({}, { categorie: value }),
+    }));
+  // La recherche trouve des articles, mais les filtres (rayon, prix,
+  // caractéristiques) les ont tous écartés.
+  const filtersHideResults = Boolean(
+    search && search.totalBeforeFilters > 0 && catalogueProducts.length === 0 && page === 1
+  );
 
     return (
     <ViewTransition
@@ -802,7 +906,7 @@ export default async function Home({
             ) : null}
 
             {/* Catalogue */}
-            <div id="catalogue" className="scroll-mt-20">
+            <div id="catalogue" data-search-results className="scroll-mt-20">
               {hasFilter ? (
                 <section className="mt-10">
                   <div className="rounded-lg border border-ligne bg-white p-4">
@@ -814,7 +918,7 @@ export default async function Home({
                         basePath="/"
                         value={sort}
                         options={
-                          SORTS as unknown as { value: string; label: string }[]
+                          sortOptions as unknown as { value: string; label: string }[]
                         }
                         current={current}
                       />
@@ -826,6 +930,7 @@ export default async function Home({
                         href={buildMarketplaceHref(current, {
                           q: undefined,
                           categorie: undefined,
+                          tri: undefined,
                           prixMin: undefined,
                           prixMax: undefined,
                           attrs: {},
@@ -836,6 +941,39 @@ export default async function Home({
                         réinitialiser les filtres
                       </Link>
                     </p>
+                    {search?.correctedQuery ? (
+                      <p className="mt-2 text-sm text-encre/80">
+                        Résultats pour{" "}
+                        <span className="font-semibold text-encre">« {search.correctedQuery} »</span>
+                        {" "}— tu as tapé « {q} ».
+                      </p>
+                    ) : null}
+                    {search?.categoryOnly && catalogueProducts.length > 0 ? (
+                      <p className="mt-2 text-sm text-encre/80">
+                        Aucun article ne mentionne « {displayQuery} » mot pour mot. Voici
+                        des articles du même rayon
+                        {searchCategories.length > 0
+                          ? ` (${searchCategories.map((c) => c.label).join(", ")})`
+                          : ""}
+                        {" "}qui peuvent t&apos;intéresser.
+                      </p>
+                    ) : null}
+                    {searchCategories.some((c) => c.value !== categorie) ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="text-encre/60">Voir tout le rayon :</span>
+                        {searchCategories
+                          .filter((c) => c.value !== categorie)
+                          .map((c) => (
+                            <Link
+                              key={c.value}
+                              href={c.href}
+                              className="rounded-full border border-ligne px-3 py-1 font-medium text-encre transition hover:border-vert-actif hover:text-vert-actif"
+                            >
+                              {c.label}
+                            </Link>
+                          ))}
+                      </div>
+                    ) : null}
                     <div className="mt-3">
                       <ProductFilterPanel
                         basePath="/"
@@ -846,10 +984,47 @@ export default async function Home({
                     </div>
                   </div>
 
+                  {/* Jamais de page vide (09/10/2026, demande d'Isaac : « tu ne
+                      vas jamais voir sur une plateforme où on te dit qu'il n'y
+                      a aucun résultat ») : si les filtres écartent tout, lien
+                      vers les résultats sans filtre ; sinon, des articles
+                      récents à découvrir à la place. */}
                   {catalogueProducts.length === 0 ? (
-                    <p className="mt-10 text-sm text-encre/70">
-                      Aucun article ne correspond à ta recherche.
-                    </p>
+                    <div className="mt-8">
+                      {filtersHideResults && search ? (
+                        <p className="text-sm text-encre/80">
+                          Aucun article ne correspond à tous ces filtres.{" "}
+                          <Link
+                            href={buildMarketplaceHref({}, { q })}
+                            className="font-medium text-vert-actif underline"
+                          >
+                            Voir les {search.totalBeforeFilters} article
+                            {search.totalBeforeFilters === 1 ? "" : "s"} pour « {displayQuery} »
+                            sans filtre
+                          </Link>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-encre/80">
+                          {q
+                            ? `Rien sur KEVA ne ressemble encore à « ${displayQuery} ».`
+                            : "Aucun article ne correspond à ces filtres pour l'instant."}{" "}
+                          Parcours les catégories ci-dessus, ou découvre les derniers
+                          articles publiés :
+                        </p>
+                      )}
+                      {!filtersHideResults && newArrivalsProducts.length > 0 ? (
+                        <>
+                          <h3 className="mt-6 font-display text-base font-semibold text-encre">
+                            Tu pourrais aimer
+                          </h3>
+                          <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                            {newArrivalsProducts.map((product) => (
+                              <ProductCard key={product.id} product={product} />
+                            ))}
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
                   ) : (
                     <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                       {catalogueProducts.map((product) => (

@@ -41,7 +41,8 @@ export function SortSelect({
     if (nextSort === value) return;
     router.push(
       buildFilterHref(basePath, current, {
-        tri: nextSort === "recent" ? undefined : nextSort,
+        // Le premier choix est le tri par défaut de la page : inutile dans l'URL.
+        tri: nextSort === options[0]?.value ? undefined : nextSort,
         page: undefined,
       })
     );

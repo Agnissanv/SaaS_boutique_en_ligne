@@ -28,6 +28,10 @@ import {
 import { computeAttributeFacets } from "@/lib/marketplace/attribute-facets";
 import { getCategoryAttributeFields } from "@/lib/category-attributes";
 import { serializeJsonLd } from "@/lib/utils/json-ld";
+import { InstantSearchForm } from "@/components/instant-search-form";
+import { loadSearchDocs } from "@/lib/search/catalog";
+import { searchDocs } from "@/lib/search/engine";
+import { orderByIds, refineSearchResults } from "@/lib/search/results";
 
 // Même variable que `layout.tsx` (23/09/2026, ajout du canonical) — pas de
 // nouvelle convention, juste la reprise de celle déjà utilisée partout dans
@@ -49,9 +53,15 @@ type PublicProduct = {
   sale_ends_at: string | null;
 };
 
+const PUBLIC_PRODUCT_COLUMNS =
+  "id, slug, title, price, compare_at_price, category, product_images(url, position), sale_price, sale_starts_at, sale_ends_at";
+
 const PAGE_SIZE = 24;
 
+// "Pertinence" : tri par défaut d'une recherche texte (09/10/2026, voir la
+// marketplace, src/app/(home)/page.tsx).
 const SORTS = [
+  { value: "pertinence", label: "Pertinence" },
   { value: "recent", label: "Plus récent" },
   { value: "prix_asc", label: "Prix croissant" },
   { value: "prix_desc", label: "Prix décroissant" },
@@ -253,7 +263,10 @@ export default async function ShopPage({
   const attrs = Object.fromEntries(
     Object.entries(parseAttrsFromSearchParams(rawParams)).filter(([key]) => validAttrKeys.has(key))
   );
-  const sort: SortValue = SORTS.some((s) => s.value === tri) ? (tri as SortValue) : "recent";
+  const sortOptions = SORTS.filter((s) => q || s.value !== "pertinence");
+  const sort: SortValue = sortOptions.some((s) => s.value === tri)
+    ? (tri as SortValue)
+    : sortOptions[0].value;
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -273,18 +286,16 @@ export default async function ShopPage({
   // `increment_product_view` sur la fiche produit.
   await supabase.rpc("increment_shop_view", { p_shop_slug: shopSlug, p_source: src ?? "direct" });
 
+  // Grille sans recherche texte. Une recherche passe par le moteur de
+  // recherche (`searchShop` plus bas).
   let query = supabase
     .from("products")
-    .select(
-      "id, slug, title, price, compare_at_price, category, product_images(url, position), sale_price, sale_starts_at, sale_ends_at",
-      { count: "exact" }
-    )
+    .select(PUBLIC_PRODUCT_COLUMNS, { count: "exact" })
     .eq("shop_id", shop.id)
     .eq("is_active", true)
     .is("deleted_at", null)
     .range(from, to);
 
-  if (q) query = query.ilike("title", `%${q}%`);
   if (categorie) query = query.eq("category", categorie);
   // Prix + attributs — mêmes règles que la marketplace globale (voir
   // `src/app/page.tsx` et decisions-techniques.md, chantier "filtres" du
@@ -312,8 +323,55 @@ export default async function ShopPage({
     .eq("is_active", true)
     .is("deleted_at", null)
     .limit(400);
-  if (q) facetRowsQuery = facetRowsQuery.ilike("title", `%${q}%`);
   if (categorie) facetRowsQuery = facetRowsQuery.eq("category", categorie);
+
+  // Recherche texte dans la boutique (09/10/2026) — même moteur que la
+  // marketplace (src/lib/search/engine.ts), limité aux produits de la
+  // boutique : description, tags, familles de mots, rayon désigné, fautes de
+  // frappe. Si rien ne correspond, les derniers articles de la boutique sont
+  // proposés à la place (`isFallback`) : jamais une page vide.
+  async function searchShop(text: string) {
+    try {
+      const docs = await loadSearchDocs({ shopId: shop!.id });
+      const outcome = searchDocs(docs, text);
+      const { inCategory, matches } = refineSearchResults(outcome, {
+        categorie,
+        prixMin,
+        prixMax,
+        attrs,
+        sort,
+      });
+      const filtersHideResults = outcome.results.length > 0 && matches.length === 0;
+      const isFallback = matches.length === 0 && !filtersHideResults;
+      const ids = (isFallback ? docs.slice(0, PAGE_SIZE) : matches.slice(from, to + 1)).map(
+        (doc) => doc.id
+      );
+      const { data } =
+        ids.length > 0
+          ? await supabase
+              .from("products")
+              .select(PUBLIC_PRODUCT_COLUMNS)
+              .in("id", ids)
+              .eq("is_active", true)
+              .is("deleted_at", null)
+          : { data: [] };
+      return {
+        products: orderByIds((data ?? []) as PublicProduct[], ids),
+        count: isFallback ? 0 : matches.length,
+        facetRows: inCategory.map((doc) => ({ price: doc.price, attributes: doc.attributes })),
+        search: {
+          correctedQuery: outcome.correctedQuery,
+          categoryOnly: outcome.results.length > 0 && !outcome.hasDirectMatch,
+          totalBeforeFilters: outcome.results.length,
+          filtersHideResults,
+          isFallback,
+        },
+      };
+    } catch (error) {
+      console.error("Recherche boutique : chargement du catalogue impossible", error);
+      return null;
+    }
+  }
 
   // Regroupées en Promise.all (30/09/2026, audit technique — voir
   // audit-technique-2026-09-29.md) : note de confiance de la boutique, grille
@@ -327,10 +385,11 @@ export default async function ShopPage({
     { data: products, count },
     { data: facetRows },
     { data: shopCategoriesRaw },
+    searchResult,
   ] = await Promise.all([
     getShopRating(supabase, shop.id),
-    query,
-    facetRowsQuery,
+    q ? Promise.resolve({ data: null, count: null }) : query,
+    q ? Promise.resolve({ data: null }) : facetRowsQuery,
     // Catégories réellement disponibles dans cette boutique (16/09/2026,
     // retour d'Isaac : "les catégories de filtre présentes sur les boutiques
     // ne doivent pas s'afficher toutes, seulement celles qui sont dispo sur
@@ -342,11 +401,21 @@ export default async function ShopPage({
     // base au lieu de relire une ligne par produit puis dédupliquer en JS —
     // même correction que la marketplace globale (`src/app/page.tsx`).
     supabase.rpc("get_shop_available_categories", { p_shop_id: shop.id }),
+    q ? searchShop(q) : Promise.resolve(null),
   ]);
+
+  const search = searchResult?.search ?? null;
+  const gridProducts: PublicProduct[] = searchResult
+    ? searchResult.products
+    : ((products ?? []) as PublicProduct[]);
+  const gridCount = searchResult ? searchResult.count : count;
+  const displayQuery = search?.correctedQuery ?? q;
 
   const { facets, priceBounds } = computeAttributeFacets(
     categorie,
-    (facetRows ?? []) as { price: number; attributes: Record<string, string> | null }[]
+    searchResult
+      ? searchResult.facetRows
+      : ((facetRows ?? []) as { price: number; attributes: Record<string, string> | null }[])
   );
 
   const shopCategoryValues = new Set(
@@ -362,7 +431,7 @@ export default async function ShopPage({
   // (16/09/2026, voir migration 0027_product_ratings_on_listing.sql et le
   // même raisonnement appliqué à la marketplace dans `page.tsx`) — un seul
   // appel groupé pour toute la page (au plus `PAGE_SIZE` produits).
-  const productIds = (products ?? []).map((p) => p.id);
+  const productIds = gridProducts.map((p) => p.id);
   const ratingsByProduct = new Map<string, { average: number; count: number }>();
   if (productIds.length > 0) {
     const { data: ratingsRaw } = await supabase.rpc("get_products_ratings", {
@@ -377,7 +446,7 @@ export default async function ShopPage({
     }
   }
 
-  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
+  const totalPages = gridCount ? Math.ceil(gridCount / PAGE_SIZE) : 1;
   const current: MarketplaceFilters = { q, categorie, tri, page: pageParam, prixMin, prixMax, attrs };
   // Même construction que `generateMetadata` ci-dessus — nécessaire ici aussi
   // pour l'`url` du JSON-LD `Organization` (02/10/2026).
@@ -561,7 +630,11 @@ export default async function ShopPage({
           arrondi + loupe, bouton "Rechercher" texte remplacé par un bouton
           rond — comportement du formulaire inchangé). */}
       <div className="mt-6 rounded-2xl border border-ligne bg-white p-3">
-        <form method="GET" className="flex items-center gap-2 rounded-full bg-brume py-1.5 pl-4 pr-1.5">
+        <InstantSearchForm
+          action={`/${shopSlug}`}
+          scrollTargetId="resultats"
+          className="group/search flex items-center gap-2 rounded-full bg-brume py-1.5 pl-4 pr-1.5"
+        >
           {categorie ? <input type="hidden" name="categorie" value={categorie} /> : null}
           {tri ? <input type="hidden" name="tri" value={tri} /> : null}
           {prixMin ? <input type="hidden" name="prix_min" value={prixMin} /> : null}
@@ -587,12 +660,16 @@ export default async function ShopPage({
             aria-label="Rechercher"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-vert-actif text-ivoire transition hover:bg-vert-sapin"
           >
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 group-data-[pending]/search:hidden">
               <circle cx="8.5" cy="8.5" r="5.5" />
               <path d="m16 16-3.2-3.2" />
             </svg>
+            <span
+              aria-hidden="true"
+              className="hidden h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent group-data-[pending]/search:block"
+            />
           </button>
-        </form>
+        </InstantSearchForm>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <ProductFilterPanel
@@ -604,7 +681,7 @@ export default async function ShopPage({
           <SortSelect
             basePath={`/${shopSlug}`}
             value={sort}
-            options={SORTS as unknown as { value: string; label: string }[]}
+            options={sortOptions as unknown as { value: string; label: string }[]}
             current={current}
           />
         </div>
@@ -635,12 +712,61 @@ export default async function ShopPage({
         </div>
       ) : null}
 
-      {(products ?? []).length === 0 ? (
+      <div id="resultats" data-search-results className="scroll-mt-20">
+      {/* Recherche (09/10/2026) : faute de frappe corrigée, résultats venus
+          seulement du rayon, ou rien de proche dans la boutique — dans ce
+          dernier cas, ses derniers articles sont affichés et on propose de
+          chercher sur toute la marketplace. */}
+      {search ? (
+        <div className="mt-6 space-y-1 text-sm text-encre/80">
+          {search.correctedQuery ? (
+            <p>
+              Résultats pour{" "}
+              <span className="font-semibold text-encre">« {search.correctedQuery} »</span>
+              {" "}— tu as tapé « {q} ».
+            </p>
+          ) : null}
+          {search.isFallback ? (
+            <p>
+              Rien dans cette boutique ne ressemble à « {displayQuery} ».{" "}
+              <Link
+                href={`/?q=${encodeURIComponent(q ?? "")}`}
+                className="font-medium text-vert-actif underline"
+              >
+                Chercher sur toute la marketplace KEVA
+              </Link>
+              {gridProducts.length > 0 ? " — ou découvre ses derniers articles :" : "."}
+            </p>
+          ) : search.filtersHideResults ? (
+            <p>
+              Aucun article ne correspond à tous ces filtres.{" "}
+              <Link
+                href={buildHref(shopSlug, {}, { q })}
+                className="font-medium text-vert-actif underline"
+              >
+                Voir les {search.totalBeforeFilters} article
+                {search.totalBeforeFilters === 1 ? "" : "s"} pour « {displayQuery} » sans filtre
+              </Link>
+            </p>
+          ) : (
+            <p>
+              {gridCount} article{gridCount === 1 ? "" : "s"} pour « {displayQuery} »
+              {search.categoryOnly
+                ? " — aucun ne le mentionne mot pour mot, voici les plus proches."
+                : "."}
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {gridProducts.length === 0 ? (
+        search ? null : (
         <p className="mt-10 text-sm text-encre/70">
-          {q || categorie || prixMin || prixMax || Object.keys(attrs).length > 0
-            ? "Aucun article ne correspond à ta recherche."
+          {categorie || prixMin || prixMax || Object.keys(attrs).length > 0
+            ? "Aucun article ne correspond à ces filtres."
             : "Aucun produit disponible pour l'instant."}
         </p>
+        )
       ) : (
         // Cartes produit passées au composant partagé `ProductCard` le
         // 22/09/2026 (refonte de la boutique vendeur) : cette page avait sa
@@ -652,7 +778,7 @@ export default async function ShopPage({
         // fiche produit). Un seul composant désormais : la prochaine
         // évolution de carte s'applique partout à la fois.
         <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {(products as PublicProduct[]).map((product) => {
+          {gridProducts.map((product) => {
             const thumbnail = [...(product.product_images ?? [])].sort(
               (a, b) => a.position - b.position
             )[0]?.url;
@@ -723,6 +849,7 @@ export default async function ShopPage({
           )}
         </div>
       ) : null}
+      </div>
 
       <CartLink shopSlug={shopSlug} />
     </main>
