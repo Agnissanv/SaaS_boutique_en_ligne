@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ViewTransition } from "react";
 import { Skeleton } from "@/components/skeleton";
+import { ScrollHeader } from "@/components/scroll-header";
 
 /**
  * Squelette de la page d'accueil marketplace — REFAIT le 23/09/2026, à la
@@ -90,7 +91,7 @@ export default function HomeLoading() {
         {/* En-tête — réel, ne dépend d'aucune donnée. Seule la barre de
             recherche (contrôle interactif, pas juste du texte) est en
             squelette. */}
-        <header className="sticky top-0 z-20 w-full border-b border-ligne bg-white text-encre">
+        <ScrollHeader>
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
             <Link href="/" className="flex shrink-0 items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
@@ -105,22 +106,28 @@ export default function HomeLoading() {
             </div>
 
             <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
-              <Link href="/favoris" className="hover:text-vert-actif">
+              <Link
+                href="/favoris"
+                className="rounded-full bg-white/80 px-3.5 py-1.5 backdrop-blur-sm transition hover:text-vert-actif group-data-[scrolled=true]:bg-transparent"
+              >
                 Mes favoris
               </Link>
-              <Link href="/compte" className="hover:text-vert-actif">
+              <Link
+                href="/compte"
+                className="rounded-full bg-white/80 px-3.5 py-1.5 backdrop-blur-sm transition hover:text-vert-actif group-data-[scrolled=true]:bg-transparent"
+              >
                 Mon compte
               </Link>
             </div>
           </div>
-        </header>
+        </ScrollHeader>
 
         {/* Hero (09/10/2026) en squelette : même bandeau que `HeroMarketplace`
             — le titre, le texte et le lien vendeur sont réels (cliquables
             pendant le chargement), seuls la barre de recherche, les pastilles
             et le visuel dépendent de Supabase/du client. */}
         <section className="relative flex w-full flex-col bg-[#e6f1ea] sm:block">
-          <div className="relative z-10 order-1 mx-auto w-full max-w-6xl px-4 py-8 sm:flex sm:min-h-[27rem] sm:items-center sm:py-12 lg:min-h-[29rem]">
+          <div className="relative z-10 order-1 mx-auto w-full max-w-6xl px-4 pb-8 pt-40 sm:flex sm:min-h-[31rem] sm:items-center sm:pb-12 sm:pt-28 lg:min-h-[33rem]">
             <div className="w-full sm:max-w-[34rem]">
               <Skeleton className="h-7 w-72 rounded-full" />
               <h1 className="mt-4 text-balance font-display text-4xl font-black leading-[1.05] tracking-tight text-vert-profond sm:text-5xl lg:text-[3.1rem]">

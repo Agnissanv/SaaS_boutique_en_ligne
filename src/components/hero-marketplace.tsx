@@ -23,6 +23,11 @@ const MAX_CHIPS = 6;
  * celui voulu par Isaac le 02/10/2026 ("la plus simple de Côte d'Ivoire").
  * Server Component — seul le carrousel et la recherche sont des composants
  * client.
+ *
+ * L'en-tête (`ScrollHeader`) est `fixed` et transparent par-dessus ce hero :
+ * le `padding-top` du bloc de texte (et la hauteur minimale) réserve sa
+ * place — environ 4 rem sur desktop, 8,5 rem sur mobile où la recherche passe
+ * sur une 2e ligne.
  */
 export function HeroMarketplace({
   categories,
@@ -41,7 +46,7 @@ export function HeroMarketplace({
 }) {
   return (
     <section className="relative flex w-full flex-col bg-[#e6f1ea] sm:block">
-      <div className="relative z-10 order-1 mx-auto w-full max-w-6xl px-4 py-8 sm:flex sm:min-h-[27rem] sm:items-center sm:py-12 lg:min-h-[29rem]">
+      <div className="relative z-10 order-1 mx-auto w-full max-w-6xl px-4 pb-8 pt-40 sm:flex sm:min-h-[31rem] sm:items-center sm:pb-12 sm:pt-28 lg:min-h-[33rem]">
         <div className="w-full sm:max-w-[34rem]">
           <p className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-vert-sapin shadow-sm ring-1 ring-ligne">
             <ShieldIcon />
@@ -94,7 +99,7 @@ export function HeroMarketplace({
         {promoDiscount ? (
           <a
             href="#catalogue"
-            className="absolute right-4 top-8 hidden items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-[0_12px_30px_rgba(14,59,44,0.2)] transition hover:-translate-y-0.5 sm:flex"
+            className="absolute right-4 top-24 hidden items-center gap-3 rounded-2xl bg-white p-3 pr-5 shadow-[0_12px_30px_rgba(14,59,44,0.2)] transition hover:-translate-y-0.5 sm:flex"
           >
             <span
               aria-hidden="true"

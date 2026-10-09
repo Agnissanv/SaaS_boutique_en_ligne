@@ -9,6 +9,7 @@ import { ProductCard, type MarketplaceCardProduct } from "@/components/product-c
 import { ProductRow } from "@/components/product-row";
 import { ShopCard, type MarketplaceShop } from "@/components/shop-card";
 import { HeroMarketplace } from "@/components/hero-marketplace";
+import { ScrollHeader } from "@/components/scroll-header";
 import { MarketplaceSearch } from "@/components/marketplace-search";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { PromotionsSection } from "@/components/promotions-section";
@@ -647,8 +648,14 @@ export default async function Home({
               devs externes : la charte cuivre/ivoire lisait comme un thème
               "IA générique" — voir decisions-techniques.md, "Fond blanc +
               accents verts"). Le vert de marque reste porté par le logo et
-              les accents, plus par un bandeau plein. */}
-          <header className="sticky top-0 z-20 w-full border-b border-ligne bg-white text-encre">
+              les accents, plus par un bandeau plein.
+
+              09/10/2026 (demande d'Isaac) : barre transparente en haut de
+              page, qui se remplit en fondu au défilement (voir `ScrollHeader`).
+              Tant qu'elle est transparente, les liens de droite sont posés sur
+              une pastille blanche translucide pour rester lisibles par-dessus
+              les visuels sombres du hero. */}
+          <ScrollHeader>
             <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
               <Link href="/" className="flex shrink-0 items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -671,15 +678,21 @@ export default async function Home({
               />
 
               <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
-                <Link href="/favoris" className="hover:text-vert-actif">
+                <Link
+                  href="/favoris"
+                  className="rounded-full bg-white/80 px-3.5 py-1.5 backdrop-blur-sm transition hover:text-vert-actif group-data-[scrolled=true]:bg-transparent"
+                >
                   Mes favoris
                 </Link>
-                <Link href="/compte" className="hover:text-vert-actif">
+                <Link
+                  href="/compte"
+                  className="rounded-full bg-white/80 px-3.5 py-1.5 backdrop-blur-sm transition hover:text-vert-actif group-data-[scrolled=true]:bg-transparent"
+                >
                   Mon compte
                 </Link>
               </div>
             </div>
-          </header>
+          </ScrollHeader>
 
           {/* ========== HERO (full width) ==========
               Refonte du 09/10/2026, sur le modèle fourni par Isaac
