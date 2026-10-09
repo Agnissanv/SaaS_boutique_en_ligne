@@ -31,14 +31,20 @@ import type { NextConfig } from "next";
 // Supabase navigateur (`src/lib/supabase/client.ts`) visent ce domaine.
 // Pas de `wss:` : aucun canal realtime Supabase utilisé dans le projet
 // (vérifié par grep sur `.channel(`), donc rien à ajouter pour ça.
+//
+// `https://challenges.cloudflare.com` sur script-src/frame-src (09/10/2026) :
+// captcha Cloudflare Turnstile du tunnel de commande (voir
+// src/components/turnstile-widget.tsx) — le script se charge depuis ce
+// domaine et le widget s'affiche dans une iframe servie par lui.
 const isDev = process.env.NODE_ENV === "development";
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""};
+  script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""};
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https://*.supabase.co;
   font-src 'self';
   connect-src 'self' https://*.supabase.co;
+  frame-src https://challenges.cloudflare.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

@@ -45,6 +45,8 @@
  * Point d'attention découvert pendant cette reconstitution : deux fonctions
  * existent en base sous PLUSIEURS signatures (surcharges jamais supprimées,
  * `create_order` et `get_shop_best_sellers` — détail en section Functions).
+ * Résolu depuis : 0051 (`get_shop_best_sellers`) et 0059 (`create_order`,
+ * une seule version désormais).
  * Un appel `.rpc()` dont les arguments nommés correspondent à plus d'une
  * surcharge est refusé par PostgREST (erreur PGRST203) : toujours nommer
  * explicitement le dernier paramètre optionnel de la version voulue.
@@ -156,8 +158,7 @@ export type ContactMessageStatus = "new" | "handled";
 export type ProductAttributes = { [key: string]: string };
 
 // ----------------------------------------------------------------------------
-// Arguments communs aux 4 surcharges de `create_order` encore présentes en
-// base (voir la section Functions plus bas).
+// Arguments de base de `create_order` (voir la section Functions plus bas).
 // ----------------------------------------------------------------------------
 type CreateOrderBaseArgs = {
   p_shop_id: string;
@@ -1403,6 +1404,15 @@ export type Database = {
         Relationships: [];
       };
 
+      // 0059 — laissez-passer anti-robot du tunnel de commande (RLS sans
+      // policy : service role et fonctions security definer uniquement).
+      checkout_captcha_passes: {
+        Row: { id: string; created_at: string };
+        Insert: { id?: string; created_at?: string };
+        Update: { id?: string; created_at?: string };
+        Relationships: [];
+      };
+
       // 0053 — historique des envois admin groupés (une ligne par ENVOI, pas
       // par boutique destinataire — voir `notifications` pour ça).
       admin_notification_campaigns: {
@@ -1489,42 +1499,19 @@ export type Database = {
         Args: { p_referred_shop_id: string; p_agent_code: string | null };
         Returns: undefined;
       };
-      // Quatre surcharges coexistent en base : chaque ajout de paramètre
-      // (0006, 0012, 0023) a créé une NOUVELLE fonction via `create or
-      // replace` au lieu de remplacer l'ancienne, et aucune migration ne les
-      // a supprimées. Seule la version à 10 paramètres (0023, corps actuel
-      // 0031) est à jour ; les autres sont des reliquats (celle à 6
-      // paramètres de 0004 insère même encore dans `order_items.variant_id`,
-      // colonne supprimée en 0010).
-      create_order:
-        | {
-            Args: CreateOrderBaseArgs;
-            Returns: string;
-          }
-        | {
-            Args: CreateOrderBaseArgs & {
-              p_delivery_lat?: number | null;
-              p_delivery_lng?: number | null;
-            };
-            Returns: string;
-          }
-        | {
-            Args: CreateOrderBaseArgs & {
-              p_delivery_lat?: number | null;
-              p_delivery_lng?: number | null;
-              p_customer_email?: string | null;
-            };
-            Returns: string;
-          }
-        | {
-            Args: CreateOrderBaseArgs & {
-              p_delivery_lat?: number | null;
-              p_delivery_lng?: number | null;
-              p_customer_email?: string | null;
-              p_promo_code?: string | null;
-            };
-            Returns: string;
-          };
+      // 0059 : une seule version (les 4 surcharges historiques à 6, 8, 9 et
+      // 10 paramètres ont été supprimées). `p_captcha_pass` = laissez-passer
+      // anti-robot délivré par verifyCheckoutCaptcha (obligatoire après 0060).
+      create_order: {
+        Args: CreateOrderBaseArgs & {
+          p_delivery_lat?: number | null;
+          p_delivery_lng?: number | null;
+          p_customer_email?: string | null;
+          p_promo_code?: string | null;
+          p_captcha_pass?: string | null;
+        };
+        Returns: string;
+      };
       // 0045.
       create_referral: {
         Args: { p_referred_shop_id: string; p_referrer_slug: string | null };

@@ -37,13 +37,18 @@ export async function GET(request: NextRequest) {
     Date.now() - MESSAGE_RETENTION_DAYS * 24 * 60 * 60 * 1000
   ).toISOString();
 
-  const [notifications, contactMessages, campaigns] = await Promise.all([
+  // Laissez-passer anti-robot (migration 0059) jamais utilisés — valables
+  // 10 minutes seulement, donc tout ce qui a plus d'un jour est inutile.
+  const captchaPassCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const [notifications, contactMessages, campaigns, captchaPasses] = await Promise.all([
     supabase.from("notifications").delete().lt("created_at", cutoff).select("id"),
     supabase.from("contact_messages").delete().lt("created_at", cutoff).select("id"),
     supabase.from("admin_notification_campaigns").delete().lt("created_at", cutoff).select("id"),
+    supabase.from("checkout_captcha_passes").delete().lt("created_at", captchaPassCutoff).select("id"),
   ]);
 
-  const errors = [notifications.error, contactMessages.error, campaigns.error].filter(Boolean);
+  const errors = [notifications.error, contactMessages.error, campaigns.error, captchaPasses.error].filter(Boolean);
   if (errors.length > 0) {
     console.error("purge-old-messages cron — erreurs:", errors);
   }
@@ -54,6 +59,7 @@ export async function GET(request: NextRequest) {
       notifications: notifications.data?.length ?? 0,
       contactMessages: contactMessages.data?.length ?? 0,
       campaigns: campaigns.data?.length ?? 0,
+      captchaPasses: captchaPasses.data?.length ?? 0,
     },
     errors: errors.length > 0 ? errors : undefined,
   });

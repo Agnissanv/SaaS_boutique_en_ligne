@@ -6,6 +6,14 @@ import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { createClient } from "@/lib/supabase/client";
 import { notifyVendorNewOrder, notifyVendorLowStock } from "./notify-vendor-action";
+import { verifyCheckoutCaptcha } from "./captcha-action";
+import { TurnstileWidget } from "@/components/turnstile-widget";
+
+// Captcha anti-robot (09/10/2026, migrations 0059/0060). Clé publique inscrite
+// au build : absente (dev local sans clé, ou avant sa configuration sur
+// Vercel), le widget n'est pas affiché et la commande part sans laissez-passer
+// — accepté tant que la migration 0060 n'a pas rendu le captcha obligatoire.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 type Step = "panier" | "commande";
 
@@ -59,6 +67,11 @@ export function CartCheckout({
   // 0023), un code invalide/expiré remonte comme une erreur de commande
   // normale (voir handleSubmitOrder) plutôt qu'un aller-retour séparé.
   const [promoCode, setPromoCode] = useState("");
+  // Jeton Turnstile (usage unique) et compteur pour en redemander un après
+  // chaque tentative de commande.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [captchaLoadFailed, setCaptchaLoadFailed] = useState(false);
   const abandonedCartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Paniers abandonnés (23/09/2026, voir migration 0044) : capture
@@ -142,6 +155,32 @@ export function CartCheckout({
   async function handleSubmitOrder(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    // Captcha : jeton Turnstile -> laissez-passer délivré par le serveur
+    // (voir captcha-action.ts). Le jeton est consommé dans tous les cas : on
+    // en redemande un nouveau après la tentative.
+    let captchaPass: string | null = null;
+    if (TURNSTILE_SITE_KEY) {
+      if (!captchaToken) {
+        setError(
+          captchaLoadFailed
+            ? "La vérification anti-robot n'a pas pu se charger. Recharge la page et réessaie."
+            : "Vérification anti-robot en cours, réessaie dans une seconde."
+        );
+        return;
+      }
+      setPending(true);
+      const verification = await verifyCheckoutCaptcha(captchaToken);
+      setCaptchaToken(null);
+      setCaptchaResetKey((k) => k + 1);
+      if ("error" in verification) {
+        setPending(false);
+        setError(verification.error);
+        return;
+      }
+      captchaPass = verification.passId;
+    }
+
     setPending(true);
 
     const supabase = createClient();
@@ -160,6 +199,7 @@ export function CartCheckout({
       p_delivery_lng: deliveryLng,
       p_customer_email: customerEmail.trim() || null,
       p_promo_code: promoCode.trim() || null,
+      p_captcha_pass: captchaPass,
     });
 
     setPending(false);
@@ -418,6 +458,15 @@ export function CartCheckout({
           directement avec lui.
         </p>
       </div>
+
+      {TURNSTILE_SITE_KEY ? (
+        <TurnstileWidget
+          siteKey={TURNSTILE_SITE_KEY}
+          resetKey={captchaResetKey}
+          onToken={setCaptchaToken}
+          onLoadError={() => setCaptchaLoadFailed(true)}
+        />
+      ) : null}
 
       {error && <p className="text-sm text-erreur">{error}</p>}
 
