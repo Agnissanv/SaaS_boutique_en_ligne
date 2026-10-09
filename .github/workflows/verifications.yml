@@ -35,16 +35,21 @@ jobs:
       NEXT_PUBLIC_SITE_URL: https://shopkeva.com
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Installer Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
+      # `npm install` plutôt que `npm ci` : c'est la commande qu'utilise Vercel,
+      # et `npm ci` échoue à tort sur ce projet (bug npm avec les dépendances
+      # embarquées de Tailwind 4 : « Missing: @emnapi/runtime from lock file »,
+      # constaté le 09/10/2026 avec npm 10 et 11). Les versions restent
+      # celles de package-lock.json.
       - name: Installer les dépendances
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
