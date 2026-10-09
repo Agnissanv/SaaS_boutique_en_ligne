@@ -4,6 +4,12 @@ import { Skeleton } from "@/components/skeleton";
 import { ScrollHeader } from "@/components/scroll-header";
 
 /**
+ * Emplacement (09/10/2026) : ce fichier et `page.tsx` vivent dans le groupe de
+ * routes `(home)` (sans effet sur l'URL, toujours `/`). Placé à la racine de
+ * `app/`, ce squelette de l'ACCUEIL s'affichait pendant le chargement de
+ * n'importe quelle page du site (produit, connexion, 404...) avant leur propre
+ * squelette. Dans `(home)`, il ne s'applique plus qu'à l'accueil.
+ *
  * Squelette de la page d'accueil marketplace — REFAIT le 23/09/2026, à la
  * demande d'Isaac ("le loading design ne me plaît pas" : contraste sur fond
  * sombre, forme qui ne ressemblait plus au vrai hero, rendu trop générique).
