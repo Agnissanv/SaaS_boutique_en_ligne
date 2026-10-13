@@ -49,3 +49,14 @@ export async function acceptPartnerInvitation(
   await syncPartnerGift(partnerId);
   redirect("/partenaire");
 }
+
+/**
+ * « Ce n'est pas le bon compte ? » : déconnexion, puis retour sur la même
+ * invitation pour créer son compte ou se connecter avec le bon (cas vécu au
+ * premier essai : Isaac était encore connecté avec son compte admin).
+ */
+export async function signOutToInvitation(token: string) {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect(`/partenaire/invitation/${encodeURIComponent(token)}`);
+}

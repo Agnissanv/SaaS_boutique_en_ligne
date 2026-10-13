@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AcceptInvitationForm } from "./accept-form";
+import { signOutToInvitation } from "./actions";
 
 export const metadata: Metadata = {
   title: "Invitation partenaire",
@@ -38,9 +39,17 @@ export default async function PartnerInvitationPage({
   const user = auth.user;
 
   // Déjà partenaire (invitation acceptée puis lien rouvert) : direction l'espace.
+  let teamAccount = false;
+  let accountName: string | null = null;
   if (user) {
-    const { data: ownPartner } = await supabase.from("partners").select("id").eq("profile_id", user.id).maybeSingle();
+    const [{ data: ownPartner }, { data: profile }] = await Promise.all([
+      supabase.from("partners").select("id").eq("profile_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("role, display_name").eq("id", user.id).maybeSingle(),
+    ]);
     if (ownPartner) redirect("/partenaire");
+    // Compte d'équipe KEVA (admin, commercial) : jamais partenaire.
+    teamAccount = profile?.role === "admin" || profile?.role === "commercial";
+    accountName = profile?.display_name ?? null;
   }
 
   const selfPath = `/partenaire/invitation/${encodeURIComponent(token)}`;
@@ -80,10 +89,32 @@ export default async function PartnerInvitationPage({
         </ul>
 
         {user ? (
-          <AcceptInvitationForm
-            token={token}
-            defaultName={(user.user_metadata?.display_name as string | undefined) ?? ""}
-          />
+          <>
+            {/* Compte connecté, toujours visible : on sait avec quel compte
+                l'espace partenaire sera activé, et on peut en changer. */}
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ligne px-3 py-2 text-sm">
+              <span className="min-w-0 truncate text-encre/70">
+                Compte connecté : <span className="font-medium text-encre">{accountName ?? user.email}</span>
+              </span>
+              <form action={signOutToInvitation.bind(null, token)}>
+                <button type="submit" className="text-xs font-medium text-vert-actif transition-colors hover:text-vert-sapin">
+                  Ce n&apos;est pas le bon compte ?
+                </button>
+              </form>
+            </div>
+            {teamAccount ? (
+              <p className="mt-4 rounded-lg bg-attention/10 p-3 text-sm text-encre/80">
+                Ce compte appartient à l&apos;équipe KEVA (administration ou commercial) : il ne peut
+                pas devenir partenaire. Déconnecte-toi avec le bouton ci-dessus, puis crée le compte
+                de la partenaire ou connecte-toi avec le sien.
+              </p>
+            ) : (
+              <AcceptInvitationForm
+                token={token}
+                defaultName={(user.user_metadata?.display_name as string | undefined) ?? ""}
+              />
+            )}
+          </>
         ) : (
           <div className="mt-5 flex flex-col gap-2">
             <Link
