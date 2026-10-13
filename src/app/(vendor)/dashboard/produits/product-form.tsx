@@ -316,7 +316,7 @@ function HighlightsField({ initial }: { initial: string[] }) {
             <button
               type="button"
               onClick={() => removeItem(index)}
-              className="text-xs text-erreur underline"
+              className="text-xs text-erreur hover:opacity-80"
             >
               Retirer
             </button>
@@ -327,7 +327,7 @@ function HighlightsField({ initial }: { initial: string[] }) {
         <button
           type="button"
           onClick={addItem}
-          className="w-fit text-xs font-medium text-encre underline"
+          className="w-fit text-xs font-medium text-encre hover:text-vert-actif"
         >
           + Ajouter un point fort
         </button>
@@ -484,7 +484,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
               <button
                 type="button"
                 onClick={() => removeGroup(groupIndex)}
-                className="text-xs text-erreur underline"
+                className="text-xs text-erreur hover:opacity-80"
               >
                 Retirer le groupe
               </button>
@@ -519,7 +519,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
                   <button
                     type="button"
                     onClick={() => removeRow(groupIndex, rowIndex)}
-                    className="text-xs text-erreur underline"
+                    className="text-xs text-erreur hover:opacity-80"
                   >
                     Retirer
                   </button>
@@ -544,7 +544,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
             <button
               type="button"
               onClick={() => addRow(groupIndex)}
-              className="w-fit text-xs font-medium text-encre underline"
+              className="w-fit text-xs font-medium text-encre hover:text-vert-actif"
             >
               + Ajouter une valeur
             </button>
@@ -555,7 +555,7 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
         <button
           type="button"
           onClick={addGroup}
-          className="w-fit text-xs font-medium text-encre underline"
+          className="w-fit text-xs font-medium text-encre hover:text-vert-actif"
         >
           + Ajouter un groupe de variantes
         </button>

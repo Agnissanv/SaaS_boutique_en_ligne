@@ -106,7 +106,7 @@ export function HeroMarketplace({
 
           <Link
             href="/inscription"
-            className="mt-4 block text-center text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif sm:mt-5 sm:inline-block sm:text-left"
+            className="mt-4 block text-center text-sm font-medium text-vert-sapin transition hover:text-vert-actif sm:mt-5 sm:inline-block sm:text-left kv-link-arrow"
           >
             Tu vends ? Ouvre ta boutique
           </Link>

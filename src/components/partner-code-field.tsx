@@ -70,7 +70,7 @@ export function PartnerCodeField({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start text-sm text-vert-actif underline"
+        className="self-start text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors"
       >
         J&apos;ai un code partenaire
       </button>

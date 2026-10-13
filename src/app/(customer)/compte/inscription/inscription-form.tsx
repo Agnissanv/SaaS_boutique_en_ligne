@@ -239,7 +239,7 @@ export function InscriptionClientForm() {
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Déjà un compte ?{" "}
-              <Link href="/compte/connexion" className="text-vert-actif underline">
+              <Link href="/compte/connexion" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Se connecter
               </Link>
             </p>
@@ -254,7 +254,7 @@ export function InscriptionClientForm() {
               l&apos;activer. Pense à vérifier tes spams s&apos;il n&apos;arrive
               pas après quelques minutes.
             </p>
-            <Link href="/compte/connexion" className="text-sm text-vert-actif underline">
+            <Link href="/compte/connexion" className="text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
               Retour à la connexion
             </Link>
           </div>
@@ -265,7 +265,7 @@ export function InscriptionClientForm() {
             <p className="text-sm text-encre/70">
               Un compte existe déjà avec l&apos;adresse {email}.
             </p>
-            <Link href="/compte/connexion" className="text-sm text-vert-actif underline">
+            <Link href="/compte/connexion" className="text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors">
               Se connecter
             </Link>
           </div>

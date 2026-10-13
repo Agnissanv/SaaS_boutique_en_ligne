@@ -56,11 +56,11 @@ export default async function CommercialLayout({ children }: { children: React.R
           </Link>
 
           <div className="flex items-center gap-4 text-sm">
-            <Link href="/compte" className="text-encre/60 underline hover:text-vert-actif">
+            <Link href="/compte" className="text-encre/60 hover:text-vert-actif transition-colors">
               Mon espace client
             </Link>
             <form action={signOut}>
-              <button type="submit" className="text-encre/60 underline hover:text-vert-actif">
+              <button type="submit" className="text-encre/60 hover:text-vert-actif transition-colors">
                 Déconnexion
               </button>
             </form>

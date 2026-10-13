@@ -118,7 +118,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
               type="button"
               disabled={isPending}
               onClick={() => handleBulk(true)}
-              className="text-vert-actif underline disabled:opacity-50"
+              className="text-vert-actif disabled:opacity-50 hover:text-vert-sapin font-medium transition-colors"
             >
               Activer
             </button>
@@ -126,7 +126,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
               type="button"
               disabled={isPending}
               onClick={() => handleBulk(false)}
-              className="text-vert-actif underline disabled:opacity-50"
+              className="text-vert-actif disabled:opacity-50 hover:text-vert-sapin font-medium transition-colors"
             >
               Désactiver
             </button>
@@ -249,15 +249,15 @@ function ProductTable({ products, shopSlug, selected, onToggleSelected, onToggle
                 </td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2.5 whitespace-nowrap text-encre/70">
-                    <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
+                    <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                       Modifier
                     </Link>
-                    <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
+                    <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                       Dupliquer
                     </Link>
                     <ShareProductButton shopSlug={shopSlug} slug={product.slug} title={product.title} />
                     <form action={deleteProduct.bind(null, product.id)}>
-                      <button type="submit" className="text-erreur underline">
+                      <button type="submit" className="text-erreur hover:opacity-80">
                         Supprimer
                       </button>
                     </form>
@@ -305,15 +305,15 @@ function ProductGrid({ products, shopSlug, selected, onToggleSelected, onToggleA
               <StockBar stock={product.stock} threshold={product.stock_alert_threshold} />
             </div>
             <div className="mt-3 flex items-center gap-2.5 text-xs text-encre/70">
-              <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
+              <Link href={`/dashboard/produits/${product.id}`} transitionTypes={["nav-forward"]} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Modifier
               </Link>
-              <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="underline hover:text-vert-actif">
+              <Link href={`/dashboard/produits/nouveau?depuis=${product.id}`} transitionTypes={["nav-forward"]} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Dupliquer
               </Link>
               <ShareProductButton shopSlug={shopSlug} slug={product.slug} title={product.title} />
               <form action={deleteProduct.bind(null, product.id)} className="ml-auto">
-                <button type="submit" className="text-erreur underline">
+                <button type="submit" className="text-erreur hover:opacity-80">
                   Supprimer
                 </button>
               </form>

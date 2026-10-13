@@ -57,7 +57,7 @@ export default async function CustomerNotificationsPage() {
     <div className="mx-auto w-full max-w-lg">
       <Link
         href="/compte"
-        className="mb-5 inline-flex items-center gap-1 text-sm text-encre/60 hover:text-vert-actif"
+        className="mb-5 inline-flex items-center gap-1 text-sm text-encre/60 hover:text-vert-actif transition-colors"
       >
         ‹ Retour
       </Link>

@@ -181,7 +181,7 @@ export default async function SubscriptionPage() {
       ) : (
         <p className="mt-1 rounded-md bg-brume px-2 py-1.5 text-xs text-encre/70">
           Le paiement en ligne est temporairement indisponible.{" "}
-          <Link href="/dashboard/aide" className="underline">
+          <Link href="/dashboard/aide" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
             Contacte-nous
           </Link>{" "}
           pour mettre à niveau ton abonnement.

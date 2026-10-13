@@ -116,7 +116,7 @@ export default async function AdminMessagesPage({
                 <div className="flex shrink-0 items-center gap-2">
                   <a
                     href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: ${m.subject}`)}`}
-                    className="rounded-md border border-ligne px-3 py-1 text-xs font-medium text-encre/70 hover:border-vert-actif hover:text-vert-actif"
+                    className="rounded-md border border-ligne px-3 py-1 text-xs font-medium text-encre/70 hover:border-vert-actif hover:text-vert-actif transition-colors"
                   >
                     Répondre
                   </a>

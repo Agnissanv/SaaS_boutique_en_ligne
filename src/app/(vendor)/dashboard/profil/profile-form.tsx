@@ -64,7 +64,7 @@ function AvatarField({ initialUrl }: { initialUrl: string | null }) {
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element -- image uploadée par l'utilisateur, source dynamique */}
           <img src={url} alt="Photo de profil" className="h-16 w-16 rounded-full object-cover" />
-          <button type="button" onClick={handleRemove} className="text-sm text-erreur underline">
+          <button type="button" onClick={handleRemove} className="text-sm text-erreur hover:opacity-80">
             Retirer
           </button>
         </div>

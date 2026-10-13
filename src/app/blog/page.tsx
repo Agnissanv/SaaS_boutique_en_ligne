@@ -68,7 +68,7 @@ export default function BlogPage() {
           ))}
         </div>
 
-        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif underline">
+        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
           Retour à l&apos;accueil
         </Link>
       </main>

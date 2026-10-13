@@ -165,7 +165,7 @@ export default function PolitiqueConfidentialitePage() {
                 href="https://developers.google.com/terms/api-services-user-data-policy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-vert-actif underline"
+                className="text-vert-actif hover:text-vert-sapin font-medium transition-colors"
               >
                 Google API Services User Data Policy
               </a>
@@ -239,7 +239,7 @@ export default function PolitiqueConfidentialitePage() {
             <h2 className="font-display text-base font-semibold text-encre">11. Contact</h2>
             <p className="mt-2">
               Pour toute question sur cette politique ou sur tes données :{" "}
-              <a href="mailto:contact@shopkeva.com" className="text-vert-actif underline">
+              <a href="mailto:contact@shopkeva.com" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 contact@shopkeva.com
               </a>
               .
@@ -257,7 +257,7 @@ export default function PolitiqueConfidentialitePage() {
           </section>
         </div>
 
-        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif underline">
+        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
           Retour à l&apos;accueil
         </Link>
       </main>

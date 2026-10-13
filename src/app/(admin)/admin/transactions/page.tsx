@@ -101,7 +101,7 @@ export default async function AdminTransactionsPage({
           Filtrer
         </button>
         {actionFilter && (
-          <Link href="/admin/transactions" className="text-sm text-encre/50 underline hover:text-encre">
+          <Link href="/admin/transactions" className="text-sm text-encre/50 hover:text-encre">
             Réinitialiser
           </Link>
         )}

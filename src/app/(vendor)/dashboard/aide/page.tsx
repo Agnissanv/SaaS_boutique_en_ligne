@@ -225,7 +225,7 @@ export default function HelpPage() {
 
       <Link
         href="/charte-vendeur"
-        className="mt-4 inline-block text-sm text-vert-actif underline"
+        className="mt-4 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-arrow"
       >
         Relire les règles de KEVA
       </Link>
@@ -274,7 +274,7 @@ export default function HelpPage() {
                       href={item.videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-block text-sm text-vert-actif underline"
+                      className="mt-2 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-arrow"
                     >
                       Voir le tuto en vidéo
                     </a>

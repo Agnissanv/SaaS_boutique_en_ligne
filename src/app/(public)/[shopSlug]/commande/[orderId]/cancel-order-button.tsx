@@ -46,7 +46,7 @@ export function CancelOrderButton({ orderId }: { orderId: string }) {
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="text-sm text-erreur underline underline-offset-2 hover:text-erreur/80"
+        className="text-sm text-erreur hover:text-erreur/80"
       >
         Annuler ma commande
       </button>

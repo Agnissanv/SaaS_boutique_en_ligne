@@ -21,7 +21,7 @@ export function BlogTeaser() {
     <section className="mt-10">
       <div className="mb-3 flex items-center justify-between px-1">
         <h2 className="font-display text-lg font-semibold text-encre">Sur le blog KEVA</h2>
-        <Link href="/blog" className="text-xs font-medium text-vert-actif underline">
+        <Link href="/blog" className="text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
           Tout voir
         </Link>
       </div>

@@ -53,8 +53,8 @@ export default async function BlogPostPage({
       </header>
 
       <main className="mx-auto w-full max-w-2xl px-4 py-10">
-        <Link href="/blog" className="text-sm text-vert-actif underline">
-          ← Tous les articles
+        <Link href="/blog" className="text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
+          Tous les articles
         </Link>
 
         <p className="mt-5 text-xs text-encre/50">

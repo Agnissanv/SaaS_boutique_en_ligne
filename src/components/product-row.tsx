@@ -35,8 +35,8 @@ export function ProductRow({
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-display text-lg font-semibold text-encre">{title}</h2>
         {viewAllHref ? (
-          <Link href={viewAllHref} className="shrink-0 text-sm font-medium text-vert-actif hover:underline">
-            {viewAllLabel} ›
+          <Link href={viewAllHref} className="shrink-0 text-sm font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
+            {viewAllLabel}
           </Link>
         ) : null}
       </div>

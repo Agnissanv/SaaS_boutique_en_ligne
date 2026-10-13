@@ -23,7 +23,7 @@ export default function FavorisPage() {
           <p className="text-sm text-encre/70">
             Tu n&apos;as encore ajouté aucun produit à tes favoris.
           </p>
-          <Link href="/" className="mt-2 inline-block text-sm text-vert-actif underline">
+          <Link href="/" className="mt-2 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-arrow">
             Découvrir des produits
           </Link>
         </div>

@@ -260,7 +260,7 @@ export function AddToCartForm({
       {justAdded && (
         <p className="text-sm text-succes">
           Ajouté au panier.{" "}
-          <Link href={`/${shopSlug}/panier`} className="font-medium text-vert-actif underline">
+          <Link href={`/${shopSlug}/panier`} className="font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
             Voir le panier ({count})
           </Link>
         </p>

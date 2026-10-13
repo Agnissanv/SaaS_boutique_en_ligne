@@ -150,27 +150,27 @@ export default async function DashboardLayout({
               href={`/${shop.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+              className="block rounded-md px-3 py-2 text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
             >
               Voir ma boutique ↗
             </a>
           )}
           <Link
             href="/compte"
-            className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+            className="block rounded-md px-3 py-2 text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
           >
             Mon espace client
           </Link>
           <Link
             href="/charte-vendeur"
-            className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+            className="block rounded-md px-3 py-2 text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
           >
             Règles de KEVA
           </Link>
           <form action={signOut}>
             <button
               type="submit"
-              className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+              className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
             >
               Déconnexion
             </button>
@@ -191,27 +191,27 @@ export default async function DashboardLayout({
                     href={`/${shop.slug}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+                    className="block rounded-md px-3 py-2 text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
                   >
                     Voir ma boutique ↗
                   </a>
                 )}
                 <Link
                   href="/compte"
-                  className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+                  className="block rounded-md px-3 py-2 text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
                 >
                   Mon espace client
                 </Link>
                 <Link
                   href="/charte-vendeur"
-                  className="block rounded-md px-3 py-2 text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+                  className="block rounded-md px-3 py-2 text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
                 >
                   Règles de KEVA
                 </Link>
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+                    className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
                   >
                     Déconnexion
                   </button>
@@ -249,7 +249,7 @@ export default async function DashboardLayout({
           <Link
             href="/dashboard/notifications"
             title="Notifications"
-            className="relative ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ligne text-encre/70 hover:border-vert-actif hover:text-vert-actif"
+            className="relative ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ligne text-encre/70 hover:border-vert-actif hover:text-vert-actif transition-colors"
           >
             <IconBell className="h-4 w-4" />
             {unreadNotificationsCount > 0 && (

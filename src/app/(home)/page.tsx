@@ -873,7 +873,7 @@ export default async function Home({
                 </h2>
                 <Link
                   href="/categories"
-                  className="text-xs font-medium text-vert-actif underline"
+                  className="text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
                 >
                   Tout voir
                 </Link>
@@ -936,7 +936,7 @@ export default async function Home({
                           attrs: {},
                           page: undefined,
                         })}
-                        className="text-vert-actif underline"
+                        className="text-vert-actif hover:text-vert-sapin font-medium transition-colors"
                       >
                         réinitialiser les filtres
                       </Link>
@@ -996,7 +996,7 @@ export default async function Home({
                           Aucun article ne correspond à tous ces filtres.{" "}
                           <Link
                             href={buildMarketplaceHref({}, { q })}
-                            className="font-medium text-vert-actif underline"
+                            className="font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
                           >
                             Voir les {search.totalBeforeFilters} article
                             {search.totalBeforeFilters === 1 ? "" : "s"} pour « {displayQuery} »

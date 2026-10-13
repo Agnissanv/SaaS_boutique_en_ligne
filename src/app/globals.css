@@ -351,3 +351,36 @@ html[data-search-pending] [data-search-results] {
   pointer-events: none;
   transition: opacity 150ms ease-out;
 }
+
+/* Liens texte (13/10/2026, demande d'Isaac : « je déteste les liens
+   soulignés... rends-les plus stylés et premium ») : jamais soulignés, vert
+   KEVA en graisse moyenne, couleur qui s'assombrit en douceur au survol.
+   Liens isolés : une flèche qui avance (`kv-link-arrow`, « Tout voir »,
+   « Voir le panier »...) ou qui recule (`kv-link-back`, « Retour à... »). */
+@layer components {
+  .kv-link-arrow::after,
+  .kv-link-back::before {
+    display: inline-block;
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .kv-link-arrow::after {
+    content: "→";
+    margin-left: 0.35em;
+  }
+  .kv-link-back::before {
+    content: "←";
+    margin-right: 0.35em;
+  }
+  .kv-link-arrow:hover::after {
+    transform: translateX(3px);
+  }
+  .kv-link-back:hover::before {
+    transform: translateX(-3px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kv-link-arrow::after,
+    .kv-link-back::before {
+      transition: none;
+    }
+  }
+}

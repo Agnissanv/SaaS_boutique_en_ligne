@@ -138,7 +138,7 @@ export default function FaqPage() {
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre/70">
           Les réponses aux questions les plus courantes sur KEVA. Une autre
           question ?{" "}
-          <Link href="/contact" className="text-vert-actif underline">
+          <Link href="/contact" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
             Contacte-nous
           </Link>
           .
@@ -175,7 +175,7 @@ export default function FaqPage() {
           </div>
         ))}
 
-        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif underline">
+        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
           Retour à l&apos;accueil
         </Link>
       </main>

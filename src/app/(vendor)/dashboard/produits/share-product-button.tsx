@@ -62,7 +62,7 @@ export function ShareProductButton({
   }
 
   return (
-    <button type="button" onClick={share} className="underline hover:text-vert-actif">
+    <button type="button" onClick={share} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
       {copied ? "Lien copié !" : "Partager"}
     </button>
   );

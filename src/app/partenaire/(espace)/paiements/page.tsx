@@ -98,7 +98,7 @@ export default async function PartnerPaymentsPage({
             {partner.payoutMethod ? PAYOUT_METHOD_LABELS[partner.payoutMethod] : "—"}
             {partner.payoutPhone ? ` · ${maskPhone(partner.payoutPhone)}` : ""}
           </p>
-          <Link href="/partenaire/reglages" className="text-xs text-vert-actif underline">
+          <Link href="/partenaire/reglages" className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors">
             Modifier
           </Link>
         </div>

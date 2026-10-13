@@ -107,8 +107,8 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <Link href="/admin/partenaires" className="text-xs text-vert-actif underline">
-          ← Partenaires
+        <Link href="/admin/partenaires" className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
+          Partenaires
         </Link>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -154,7 +154,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
             <p className="mt-1 text-sm text-encre/70">Le lien a expiré.</p>
           )}
           <form action={regeneratePartnerInvitation.bind(null, id)} className="mt-3">
-            <button type="submit" className="text-xs text-vert-actif underline">
+            <button type="submit" className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors">
               Créer un nouveau lien (l&apos;ancien ne marchera plus)
             </button>
           </form>
@@ -181,7 +181,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
             <li>
               Pro offert :{" "}
               {giftShop ? (
-                <a href={`/${giftShop.slug}`} target="_blank" rel="noreferrer" className="text-vert-actif underline">
+                <a href={`/${giftShop.slug}`} target="_blank" rel="noreferrer" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                   {giftShop.name}
                 </a>
               ) : (
@@ -192,7 +192,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
           <form action={revokePartnerAcceptance.bind(null, id)} className="mt-3">
             <ConfirmButton
               message="Ce n'est pas elle qui a accepté ? Le compte perdra l'accès partenaire, ses codes seront libérés et un nouveau lien d'invitation sera créé."
-              className="text-xs text-erreur underline"
+              className="text-xs text-erreur hover:opacity-80"
             >
               Ce n&apos;est pas elle : annuler l&apos;acceptation
             </ConfirmButton>
@@ -301,7 +301,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
                 <li key={referral.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
                   <div className="min-w-0">
                     {referral.shop ? (
-                      <a href={`/${referral.shop.slug}`} target="_blank" rel="noreferrer" className="font-medium text-encre underline">
+                      <a href={`/${referral.shop.slug}`} target="_blank" rel="noreferrer" className="font-medium text-encre hover:text-vert-actif">
                         {referral.shop.name}
                       </a>
                     ) : (
@@ -316,7 +316,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
                     <form action={detachShopFromPartner.bind(null, id, referral.id)}>
                       <ConfirmButton
                         message="Retirer cette boutique du partenaire ? Les commissions déjà créditées restent."
-                        className="text-xs text-encre/50 underline hover:text-erreur"
+                        className="text-xs text-encre/50 hover:text-erreur"
                       >
                         Retirer
                       </ConfirmButton>
@@ -351,7 +351,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
         <form action={deletePartner.bind(null, id)}>
           <ConfirmButton
             message="Supprimer définitivement ce partenaire (essai ou invitation inutilisée) ? Ses codes, clics et boutiques rattachées seront effacés."
-            className="text-xs text-encre/50 underline hover:text-erreur"
+            className="text-xs text-encre/50 hover:text-erreur"
           >
             Supprimer ce partenaire (essai)
           </ConfirmButton>

@@ -276,7 +276,7 @@ export function ConnexionForm() {
                   <button
                     type="button"
                     onClick={handleSendResetCode}
-                    className="text-xs text-vert-actif underline"
+                    className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors"
                   >
                     Oublié / pas encore défini ?
                   </button>
@@ -309,7 +309,7 @@ export function ConnexionForm() {
                     setUseEmailCode(true);
                     setError(null);
                   }}
-                  className="text-center text-sm text-encre/60 underline"
+                  className="text-center text-sm text-encre/60 hover:text-vert-actif transition-colors"
                 >
                   Se connecter avec un code reçu par email à la place
                 </button>
@@ -345,7 +345,7 @@ export function ConnexionForm() {
                     setUseEmailCode(false);
                     setError(null);
                   }}
-                  className="text-center text-sm text-encre/60 underline"
+                  className="text-center text-sm text-encre/60 hover:text-vert-actif transition-colors"
                 >
                   Se connecter avec un mot de passe à la place
                 </button>
@@ -363,7 +363,7 @@ export function ConnexionForm() {
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Pas encore de compte ?{" "}
-              <Link href="/inscription" className="text-vert-actif underline">
+              <Link href="/inscription" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Créer un compte
               </Link>
             </p>
@@ -409,7 +409,7 @@ export function ConnexionForm() {
                 type="button"
                 onClick={handleSendLoginCode}
                 disabled={pending}
-                className="text-vert-actif underline disabled:opacity-50"
+                className="text-vert-actif disabled:opacity-50 hover:text-vert-sapin font-medium transition-colors"
               >
                 Renvoyer le code
               </button>
@@ -419,7 +419,7 @@ export function ConnexionForm() {
                   setView("password");
                   setError(null);
                 }}
-                className="text-encre/60 underline"
+                className="text-encre/60 hover:text-vert-actif transition-colors"
               >
                 Retour
               </button>
@@ -499,7 +499,7 @@ export function ConnexionForm() {
                 type="button"
                 onClick={handleSendResetCode}
                 disabled={pending}
-                className="text-vert-actif underline disabled:opacity-50"
+                className="text-vert-actif disabled:opacity-50 hover:text-vert-sapin font-medium transition-colors"
               >
                 Renvoyer le code
               </button>
@@ -509,7 +509,7 @@ export function ConnexionForm() {
                   setView("password");
                   setError(null);
                 }}
-                className="text-encre/60 underline"
+                className="text-encre/60 hover:text-vert-actif transition-colors"
               >
                 Retour
               </button>

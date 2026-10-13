@@ -57,7 +57,7 @@ export function PromotionsSection({ newestShops }: { newestShops: MarketplaceSho
             </h2>
             <Link
               href="/categories"
-              className="shrink-0 text-xs font-medium text-vert-actif underline"
+              className="shrink-0 text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
             >
               Tout voir
             </Link>

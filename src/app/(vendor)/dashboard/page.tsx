@@ -366,7 +366,7 @@ export default async function DashboardOverviewPage({
         <p className="mt-3 rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
           Le taux de conversion, les clients actifs et la comparaison vs
           période précédente sont disponibles avec le plan{" "}
-          <Link href="/dashboard/abonnement" className="font-medium text-vert-actif underline">
+          <Link href="/dashboard/abonnement" className="font-medium text-vert-actif hover:text-vert-sapin transition-colors">
             Pro
           </Link>
           .
@@ -402,7 +402,7 @@ export default async function DashboardOverviewPage({
         <p className="mt-4 rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
           La courbe de ventes et la répartition du trafic par source sont
           disponibles à partir du plan{" "}
-          <Link href="/dashboard/abonnement" className="font-medium text-vert-actif underline">
+          <Link href="/dashboard/abonnement" className="font-medium text-vert-actif hover:text-vert-sapin transition-colors">
             Business
           </Link>
           .
@@ -444,7 +444,7 @@ export default async function DashboardOverviewPage({
           </ul>
           <Link
             href="/dashboard/produits"
-            className="mt-3 inline-block text-sm font-medium text-attention underline"
+            className="mt-3 inline-block text-sm font-medium text-attention hover:opacity-80"
           >
             Gérer les stocks
           </Link>
@@ -456,7 +456,7 @@ export default async function DashboardOverviewPage({
           <h2 className="font-display text-sm font-semibold text-encre">Commandes récentes</h2>
           <Link
             href="/dashboard/commandes"
-            className="text-sm text-encre/60 underline hover:text-vert-sapin"
+            className="text-sm text-encre/60 hover:text-vert-sapin"
           >
             Voir tout
           </Link>

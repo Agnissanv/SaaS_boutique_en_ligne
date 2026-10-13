@@ -140,7 +140,7 @@ export default async function AdminPromoCodesPage({
                     <td className="py-3 pl-4 pr-4 font-mono font-medium text-encre">{c.code}</td>
                     <td className="py-3 pr-4 text-encre/70">
                       {shop ? (
-                        <Link href={`/admin/vendeurs/${shop.slug}`} className="underline hover:text-vert-actif">
+                        <Link href={`/admin/vendeurs/${shop.slug}`} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                           {shop.name}
                         </Link>
                       ) : (

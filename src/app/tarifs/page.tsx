@@ -62,7 +62,7 @@ export default async function TarifsPage() {
             <img src="/keva-logo.jpg" alt="KEVA" className="h-8 w-8 rounded-md object-cover" />
             <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">KEVA</span>
           </Link>
-          <Link href="/" className="text-sm text-encre/60 hover:text-vert-actif">
+          <Link href="/" className="text-sm text-encre/60 hover:text-vert-actif transition-colors">
             Marketplace
           </Link>
         </div>
@@ -143,7 +143,7 @@ export default async function TarifsPage() {
           actif — aucun frais de transaction supplémentaire côté KEVA. Tu
           peux changer de plan à tout moment depuis ton tableau de bord, une
           fois ta boutique créée.{" "}
-          <Link href="/conditions-utilisation" className="text-vert-actif underline">
+          <Link href="/conditions-utilisation" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
             Voir les conditions d&apos;utilisation
           </Link>
           .

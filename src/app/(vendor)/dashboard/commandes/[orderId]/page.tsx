@@ -98,7 +98,7 @@ export default async function OrderDetailPage({
           href={`https://www.google.com/maps?q=${order.delivery_lat},${order.delivery_lng}`}
           target="_blank"
           rel="noreferrer"
-          className="mt-1 inline-block text-sm text-vert-sapin underline hover:text-vert-actif"
+          className="mt-1 inline-block text-sm text-vert-sapin hover:text-vert-actif"
         >
           📍 Voir la position exacte sur Google Maps
         </a>

@@ -187,7 +187,7 @@ export default async function AdminOrdersPage({
                     </td>
                     <td className="py-3 pr-4 text-encre/70">
                       {shop ? (
-                        <Link href={`/admin/vendeurs/${shop.slug}`} className="underline hover:text-vert-actif">
+                        <Link href={`/admin/vendeurs/${shop.slug}`} className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                           {shop.name}
                         </Link>
                       ) : (

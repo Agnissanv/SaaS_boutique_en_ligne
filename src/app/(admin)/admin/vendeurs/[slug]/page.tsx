@@ -84,8 +84,8 @@ export default async function AdminVendorDetailPage({
 
   return (
     <div>
-      <Link href="/admin/vendeurs" className="text-sm text-encre/60 underline hover:text-encre">
-        ‹ Retour aux vendeurs
+      <Link href="/admin/vendeurs" className="text-sm text-encre/60 hover:text-encre kv-link-back">
+        Retour aux vendeurs
       </Link>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-4">

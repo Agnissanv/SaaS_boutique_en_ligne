@@ -299,7 +299,7 @@ export default async function ProductPage({
       <Link
         href={`/${shopSlug}`}
         transitionTypes={["nav-back"]}
-        className="hidden items-center gap-1 text-sm text-vert-actif hover:underline sm:inline-flex"
+        className="hidden items-center gap-1 text-sm text-vert-actif sm:inline-flex hover:text-vert-sapin font-medium transition-colors"
       >
         ‹ Retour à la boutique
       </Link>
@@ -334,7 +334,7 @@ export default async function ProductPage({
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Link
               href={`/${shopSlug}`}
-              className="flex items-center gap-2 font-medium text-vert-actif hover:underline"
+              className="flex items-center gap-2 font-medium text-vert-actif hover:text-vert-sapin transition-colors"
             >
               <span
                 aria-hidden="true"

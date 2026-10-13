@@ -235,7 +235,7 @@ export function ConnexionClientForm() {
                   <button
                     type="button"
                     onClick={handleSendResetCode}
-                    className="text-xs text-vert-actif underline"
+                    className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors"
                   >
                     Oublié / pas encore défini ?
                   </button>
@@ -268,7 +268,7 @@ export function ConnexionClientForm() {
                     setUseEmailCode(true);
                     setError(null);
                   }}
-                  className="text-center text-sm text-encre/60 underline"
+                  className="text-center text-sm text-encre/60 hover:text-vert-actif transition-colors"
                 >
                   Se connecter avec un code reçu par email à la place
                 </button>
@@ -304,7 +304,7 @@ export function ConnexionClientForm() {
                     setUseEmailCode(false);
                     setError(null);
                   }}
-                  className="text-center text-sm text-encre/60 underline"
+                  className="text-center text-sm text-encre/60 hover:text-vert-actif transition-colors"
                 >
                   Se connecter avec un mot de passe à la place
                 </button>
@@ -322,7 +322,7 @@ export function ConnexionClientForm() {
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Pas encore de compte ?{" "}
-              <Link href="/compte/inscription" className="text-vert-actif underline">
+              <Link href="/compte/inscription" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Créer un compte
               </Link>
             </p>
@@ -368,7 +368,7 @@ export function ConnexionClientForm() {
                 type="button"
                 onClick={handleSendLoginCode}
                 disabled={pending}
-                className="text-vert-actif underline disabled:opacity-50"
+                className="text-vert-actif disabled:opacity-50 hover:text-vert-sapin font-medium transition-colors"
               >
                 Renvoyer le code
               </button>
@@ -378,7 +378,7 @@ export function ConnexionClientForm() {
                   setView("password");
                   setError(null);
                 }}
-                className="text-encre/60 underline"
+                className="text-encre/60 hover:text-vert-actif transition-colors"
               >
                 Retour
               </button>
@@ -458,7 +458,7 @@ export function ConnexionClientForm() {
                 type="button"
                 onClick={handleSendResetCode}
                 disabled={pending}
-                className="text-vert-actif underline disabled:opacity-50"
+                className="text-vert-actif disabled:opacity-50 hover:text-vert-sapin font-medium transition-colors"
               >
                 Renvoyer le code
               </button>
@@ -468,7 +468,7 @@ export function ConnexionClientForm() {
                   setView("password");
                   setError(null);
                 }}
-                className="text-encre/60 underline"
+                className="text-encre/60 hover:text-vert-actif transition-colors"
               >
                 Retour
               </button>

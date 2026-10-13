@@ -167,7 +167,7 @@ export default async function ReviewsPage({
                 {product && (
                   <Link
                     href={`/dashboard/produits/${product.id}`}
-                    className="text-xs text-encre/60 underline hover:text-vert-sapin"
+                    className="text-xs text-encre/60 hover:text-vert-sapin"
                   >
                     {product.title}
                   </Link>

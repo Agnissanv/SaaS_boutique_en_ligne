@@ -38,7 +38,7 @@ export function MobileMoneyBadge({
       <button
         type="button"
         onClick={handleCopy}
-        className="text-xs text-vert-actif underline underline-offset-2"
+        className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors"
       >
         {copied ? "Copié !" : "Copier"}
       </button>

@@ -731,7 +731,7 @@ export default async function ShopPage({
               Rien dans cette boutique ne ressemble à « {displayQuery} ».{" "}
               <Link
                 href={`/?q=${encodeURIComponent(q ?? "")}`}
-                className="font-medium text-vert-actif underline"
+                className="font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
               >
                 Chercher sur toute la marketplace KEVA
               </Link>
@@ -742,7 +742,7 @@ export default async function ShopPage({
               Aucun article ne correspond à tous ces filtres.{" "}
               <Link
                 href={buildHref(shopSlug, {}, { q })}
-                className="font-medium text-vert-actif underline"
+                className="font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
               >
                 Voir les {search.totalBeforeFilters} article
                 {search.totalBeforeFilters === 1 ? "" : "s"} pour « {displayQuery} » sans filtre

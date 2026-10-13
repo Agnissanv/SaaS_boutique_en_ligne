@@ -55,13 +55,13 @@ export function ReviewReplyForm({
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="text-xs text-encre/60 underline hover:text-vert-sapin"
+                className="text-xs text-encre/60 hover:text-vert-sapin"
               >
                 Modifier
               </button>
               <form action={formAction}>
                 <input type="hidden" name="reviewId" value={reviewId} />
-                <button type="submit" className="text-xs text-erreur underline hover:opacity-80">
+                <button type="submit" className="text-xs text-erreur hover:opacity-80">
                   Supprimer ma réponse
                 </button>
               </form>
@@ -71,7 +71,7 @@ export function ReviewReplyForm({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-xs text-encre/60 underline hover:text-vert-sapin"
+            className="text-xs text-encre/60 hover:text-vert-sapin"
           >
             Répondre à cet avis
           </button>

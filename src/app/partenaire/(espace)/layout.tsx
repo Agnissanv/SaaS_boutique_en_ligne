@@ -39,7 +39,7 @@ export default async function PartnerLayout({ children }: { children: React.Reac
           <form action={signOut}>
             <button
               type="submit"
-              className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 underline hover:bg-white/5 hover:text-ivoire"
+              className="block w-full rounded-md px-3 py-2 text-left text-ivoire/70 hover:bg-white/5 hover:text-ivoire"
             >
               Déconnexion
             </button>
@@ -56,7 +56,7 @@ export default async function PartnerLayout({ children }: { children: React.Reac
               <span className="font-display text-base font-bold tracking-wide">KEVA</span>
             </Link>
             <form action={signOut}>
-              <button type="submit" className="text-xs text-ivoire/70 underline">
+              <button type="submit" className="text-xs text-ivoire/70 hover:text-ivoire">
                 Déconnexion
               </button>
             </form>

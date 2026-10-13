@@ -183,7 +183,7 @@ export default async function AdminVendorsPage({
                         <div>
                           <Link
                             href={`/admin/vendeurs/${shop.slug}`}
-                            className="font-medium text-encre underline hover:text-vert-actif"
+                            className="font-medium text-encre hover:text-vert-actif"
                           >
                             {shop.name}
                           </Link>

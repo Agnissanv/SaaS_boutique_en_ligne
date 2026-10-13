@@ -214,7 +214,7 @@ export function InscriptionForm({
                   (lien direct, pub...) sans passer par la marketplace n'a
                   toujours aucun moyen d'y voir les tarifs avant de créer un
                   compte. */}
-              <Link href="/tarifs" className="text-vert-actif underline">
+              <Link href="/tarifs" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Voir les tarifs
               </Link>
               .
@@ -322,7 +322,7 @@ export function InscriptionForm({
               Déjà un compte ?{" "}
               <Link
                 href={suite ? `/connexion?suite=${encodeURIComponent(suite)}` : "/connexion"}
-                className="text-vert-actif underline"
+                className="text-vert-actif hover:text-vert-sapin font-medium transition-colors"
               >
                 Se connecter
               </Link>
@@ -338,7 +338,7 @@ export function InscriptionForm({
               l&apos;activer. Pense à vérifier tes spams s&apos;il n&apos;arrive
               pas après quelques minutes.
             </p>
-            <Link href="/connexion" className="text-sm text-vert-actif underline">
+            <Link href="/connexion" className="text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors">
               Retour à la connexion
             </Link>
           </div>
@@ -349,7 +349,7 @@ export function InscriptionForm({
             <p className="text-sm text-encre/70">
               Un compte existe déjà avec l&apos;adresse {email}.
             </p>
-            <Link href="/connexion" className="text-sm text-vert-actif underline">
+            <Link href="/connexion" className="text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors">
               Se connecter
             </Link>
           </div>

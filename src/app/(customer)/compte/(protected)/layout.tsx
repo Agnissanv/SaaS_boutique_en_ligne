@@ -41,7 +41,7 @@ export default async function CompteLayout({
 
           <Link
             href="/"
-            className="text-sm text-encre/60 hover:text-vert-actif"
+            className="text-sm text-encre/60 hover:text-vert-actif transition-colors"
           >
             Marketplace
           </Link>

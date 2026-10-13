@@ -84,7 +84,7 @@ export function PromoCodeList({
                       onClick={() =>
                         startTransition(() => togglePromoCodeActive(code.id, !code.is_active))
                       }
-                      className="underline hover:text-vert-actif disabled:opacity-50"
+                      className="disabled:opacity-50 text-vert-actif hover:text-vert-sapin font-medium transition-colors"
                     >
                       {code.is_active ? "Désactiver" : "Activer"}
                     </button>
@@ -92,7 +92,7 @@ export function PromoCodeList({
                       type="button"
                       disabled={isPending}
                       onClick={() => startTransition(() => deletePromoCode(code.id))}
-                      className="text-erreur underline disabled:opacity-50"
+                      className="text-erreur disabled:opacity-50 hover:opacity-80"
                     >
                       Supprimer
                     </button>

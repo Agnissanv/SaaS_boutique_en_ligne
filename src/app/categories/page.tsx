@@ -87,7 +87,7 @@ export default async function CategoriesPage() {
   return (
     <main className="w-full mx-auto max-w-6xl px-4 py-6 sm:py-8">
       <div className="mb-1 flex items-center gap-2 text-xs">
-        <Link href="/" className="text-vert-actif underline">
+        <Link href="/" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
           Accueil
         </Link>
         <span className="text-encre/40">/</span>

@@ -148,7 +148,7 @@ export function CartCheckout({
     return (
       <div className="mt-6">
         <p className="text-sm text-encre/70">Ton panier est vide.</p>
-        <Link href={`/${shopSlug}`} className="mt-2 inline-block text-sm text-vert-actif underline">
+        <Link href={`/${shopSlug}`} className="mt-2 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
           Retour à la boutique
         </Link>
       </div>
@@ -289,7 +289,7 @@ export function CartCheckout({
                 <button
                   type="button"
                   onClick={() => removeItem(item.key)}
-                  className="text-xs text-erreur underline"
+                  className="text-xs text-erreur hover:opacity-80"
                 >
                   Retirer
                 </button>
@@ -480,7 +480,7 @@ export function CartCheckout({
         <button
           type="button"
           onClick={() => setStep("panier")}
-          className="text-sm text-vert-actif underline"
+          className="text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back"
         >
           Retour au panier
         </button>

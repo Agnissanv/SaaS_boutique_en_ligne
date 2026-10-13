@@ -162,7 +162,7 @@ export default function HomeLoading() {
                 </a>
                 <Link
                   href="/inscription"
-                  className="mt-4 block text-center text-sm font-medium text-vert-sapin underline transition hover:text-vert-actif sm:mt-5 sm:inline-block sm:text-left"
+                  className="mt-4 block text-center text-sm font-medium text-vert-sapin transition hover:text-vert-actif sm:mt-5 sm:inline-block sm:text-left kv-link-arrow"
                 >
                   Tu vends ? Ouvre ta boutique
                 </Link>
@@ -200,7 +200,7 @@ export default function HomeLoading() {
           <div className="mt-8">
             <div className="mb-3 flex items-center justify-between px-1">
               <h2 className="font-display text-lg font-semibold text-encre">Catégories</h2>
-              <Link href="/categories" className="text-xs font-medium text-vert-actif underline">
+              <Link href="/categories" className="text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
                 Tout voir
               </Link>
             </div>

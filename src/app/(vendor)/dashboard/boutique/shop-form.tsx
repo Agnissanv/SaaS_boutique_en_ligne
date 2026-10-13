@@ -130,7 +130,7 @@ function ImageField({
           <button
             type="button"
             onClick={handleRemove}
-            className="text-sm text-erreur underline"
+            className="text-sm text-erreur hover:opacity-80"
           >
             Retirer
           </button>
@@ -407,7 +407,7 @@ export function ShopForm({
             href={`/${shop.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="font-mono text-vert-sapin underline hover:text-vert-actif"
+            className="font-mono text-vert-sapin hover:text-vert-actif"
           >
             /{shop.slug}
           </a>{" "}

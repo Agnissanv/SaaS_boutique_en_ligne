@@ -64,7 +64,7 @@ export function CollaboratorList({
                     type="button"
                     disabled={isPending}
                     onClick={() => startTransition(() => removeCollaborator(collab.id))}
-                    className="text-erreur underline disabled:opacity-50"
+                    className="text-erreur disabled:opacity-50 hover:opacity-80"
                   >
                     Retirer
                   </button>

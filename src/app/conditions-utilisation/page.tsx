@@ -225,7 +225,7 @@ export default function ConditionsUtilisationPage() {
             <h2 className="font-display text-base font-semibold text-encre">12. Contact</h2>
             <p className="mt-2">
               Pour toute question sur ces conditions :{" "}
-              <a href="mailto:contactkevashop@gmail.com" className="text-vert-actif underline">
+              <a href="mailto:contactkevashop@gmail.com" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 contactkevashop@gmail.com
               </a>
               .
@@ -243,7 +243,7 @@ export default function ConditionsUtilisationPage() {
           </section>
         </div>
 
-        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif underline">
+        <Link href="/" className="mt-10 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
           Retour à l&apos;accueil
         </Link>
       </main>

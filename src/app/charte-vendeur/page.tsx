@@ -97,7 +97,7 @@ export default async function SellerCharterPage({
             Une erreur est survenue et ton acceptation n&apos;a pas pu être
             enregistrée. Réessaie dans un instant ; si ça persiste,
             écris-nous à{" "}
-            <a href="mailto:contactkevashop@gmail.com" className="underline">
+            <a href="mailto:contactkevashop@gmail.com" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
               contactkevashop@gmail.com
             </a>
             .
@@ -120,11 +120,11 @@ export default async function SellerCharterPage({
             <h2 className="font-display text-base font-semibold text-encre">Besoin d&apos;aide ?</h2>
             <p className="mt-2 text-sm leading-relaxed text-encre/80">
               Une question sur une règle ou sur ta boutique ? Écris-nous à{" "}
-              <a href="mailto:contactkevashop@gmail.com" className="text-vert-actif underline">
+              <a href="mailto:contactkevashop@gmail.com" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 contactkevashop@gmail.com
               </a>{" "}
               ou consulte la page{" "}
-              <Link href="/dashboard/aide" className="text-vert-actif underline">
+              <Link href="/dashboard/aide" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Aide
               </Link>{" "}
               du dashboard.
@@ -134,7 +134,7 @@ export default async function SellerCharterPage({
 
         <p className="mt-6 text-sm text-encre/60">
           Le détail complet des règles de KEVA est dans les{" "}
-          <Link href="/conditions-utilisation" className="text-vert-actif underline">
+          <Link href="/conditions-utilisation" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
             conditions d&apos;utilisation
           </Link>
           .

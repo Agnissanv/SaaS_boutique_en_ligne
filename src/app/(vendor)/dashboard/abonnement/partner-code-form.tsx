@@ -19,7 +19,7 @@ export function PartnerCodeForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-4 text-sm text-vert-actif underline"
+        className="mt-4 text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors"
       >
         Tu as un code partenaire ?
       </button>
