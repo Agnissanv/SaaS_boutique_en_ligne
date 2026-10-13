@@ -1451,6 +1451,282 @@ export type Database = {
         };
         Relationships: [];
       };
+      // 0061 : programme partenaire influenceur.
+      partners: {
+        Row: {
+          id: string;
+          label: string;
+          profile_id: string | null;
+          display_name: string | null;
+          code: string | null;
+          payout_method: string | null;
+          payout_phone: string | null;
+          payout_updated_at: string | null;
+          business_commission: number;
+          pro_commission: number;
+          starts_on: string;
+          ends_on: string | null;
+          gifted_shop_id: string | null;
+          invite_token: string | null;
+          invite_expires_at: string | null;
+          accepted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          label: string;
+          profile_id?: string | null;
+          display_name?: string | null;
+          code?: string | null;
+          payout_method?: string | null;
+          payout_phone?: string | null;
+          payout_updated_at?: string | null;
+          business_commission: number;
+          pro_commission: number;
+          starts_on?: string;
+          ends_on?: string | null;
+          gifted_shop_id?: string | null;
+          invite_token?: string | null;
+          invite_expires_at?: string | null;
+          accepted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          label?: string;
+          profile_id?: string | null;
+          display_name?: string | null;
+          code?: string | null;
+          payout_method?: string | null;
+          payout_phone?: string | null;
+          payout_updated_at?: string | null;
+          business_commission?: number;
+          pro_commission?: number;
+          starts_on?: string;
+          ends_on?: string | null;
+          gifted_shop_id?: string | null;
+          invite_token?: string | null;
+          invite_expires_at?: string | null;
+          accepted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partners_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partners_gifted_shop_id_fkey";
+            columns: ["gifted_shop_id"];
+            isOneToOne: true;
+            referencedRelation: "shops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_codes: {
+        Row: {
+          code: string;
+          partner_id: string;
+          created_at: string;
+        };
+        Insert: {
+          code: string;
+          partner_id: string;
+          created_at?: string;
+        };
+        Update: {
+          code?: string;
+          partner_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_codes_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_clicks: {
+        Row: {
+          id: number;
+          partner_id: string;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          partner_id: string;
+          source: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          partner_id?: string;
+          source?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_clicks_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_referrals: {
+        Row: {
+          id: string;
+          partner_id: string;
+          referred_shop_id: string;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          partner_id: string;
+          referred_shop_id: string;
+          source: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          partner_id?: string;
+          referred_shop_id?: string;
+          source?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_referrals_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_referrals_referred_shop_id_fkey";
+            columns: ["referred_shop_id"];
+            isOneToOne: true;
+            referencedRelation: "shops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_commission_events: {
+        Row: {
+          id: string;
+          partner_id: string;
+          referred_shop_id: string | null;
+          plan_code: string;
+          amount: number;
+          period_month: string;
+          payment_id: string | null;
+          month_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          partner_id: string;
+          referred_shop_id?: string | null;
+          plan_code: string;
+          amount: number;
+          period_month: string;
+          payment_id?: string | null;
+          month_index?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          partner_id?: string;
+          referred_shop_id?: string | null;
+          plan_code?: string;
+          amount?: number;
+          period_month?: string;
+          payment_id?: string | null;
+          month_index?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_commission_events_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_commission_events_referred_shop_id_fkey";
+            columns: ["referred_shop_id"];
+            isOneToOne: false;
+            referencedRelation: "shops";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_commission_events_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      partner_payouts: {
+        Row: {
+          id: string;
+          partner_id: string;
+          period_month: string;
+          amount: number;
+          reference: string | null;
+          paid_at: string;
+          paid_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          partner_id: string;
+          period_month: string;
+          amount: number;
+          reference?: string | null;
+          paid_at?: string;
+          paid_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          partner_id?: string;
+          period_month?: string;
+          amount?: number;
+          reference?: string | null;
+          paid_at?: string;
+          paid_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "partner_payouts_partner_id_fkey";
+            columns: ["partner_id"];
+            isOneToOne: false;
+            referencedRelation: "partners";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "partner_payouts_paid_by_fkey";
+            columns: ["paid_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1464,6 +1740,50 @@ export type Database = {
     // typée comme une union, exactement comme le générateur le ferait.
     // ------------------------------------------------------------------------
     Functions: {
+      // 0061 : programme partenaire influenceur.
+      partner_is_active: {
+        Args: { p_partner_id: string };
+        Returns: boolean;
+      };
+      normalize_partner_code: {
+        Args: { p_code: string };
+        Returns: string | null;
+      };
+      get_partner_invitation: {
+        Args: { p_token: string };
+        Returns: Json;
+      };
+      accept_partner_invitation: {
+        Args: {
+          p_token: string;
+          p_display_name: string;
+          p_code: string;
+          p_payout_method: string;
+          p_payout_phone: string;
+        };
+        Returns: string;
+      };
+      update_partner_settings: {
+        Args: {
+          p_display_name: string;
+          p_code: string;
+          p_payout_method: string;
+          p_payout_phone: string;
+        };
+        Returns: undefined;
+      };
+      record_partner_click: {
+        Args: { p_code: string; p_source: string; p_count: boolean };
+        Returns: string | null;
+      };
+      create_partner_referral: {
+        Args: { p_shop_id: string; p_code: string; p_source: string };
+        Returns: string;
+      };
+      get_partner_stats: {
+        Args: { p_month: string; p_partner_id?: string | null };
+        Returns: Json;
+      };
       // 0024.
       accept_shop_collaboration: {
         Args: { p_shop_id: string };

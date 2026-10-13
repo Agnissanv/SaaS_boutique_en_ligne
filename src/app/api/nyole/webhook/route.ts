@@ -4,6 +4,7 @@ import { verifyNyoleWebhookSignature } from "@/lib/nyole";
 import { applyPlanToShop } from "@/lib/subscription";
 import { maybeGrantReferralReward } from "@/lib/referrals";
 import { maybeCreditCommercialCommission } from "@/lib/commercial-referrals";
+import { maybeCreditPartnerCommission } from "@/lib/partners";
 import { resolveNotificationEmail } from "@/lib/subscription-lifecycle";
 import { sendSubscriptionPaymentReceiptEmail } from "@/lib/email/subscription-payment-receipt";
 import type { Json } from "@/lib/types/database";
@@ -195,6 +196,9 @@ export async function POST(request: NextRequest) {
       // même événement jusqu'à 10 fois, sans lui le webhook pouvait créditer
       // deux fois la même commission (voir le commentaire du fichier).
       await maybeCreditCommercialCommission(supabase, payment.shop_id, result.planCode, payment.id);
+      // Programme partenaire (13/10/2026) : un mois payé = une commission
+      // mensuelle, verrouillée par `payment.id` comme ci-dessus.
+      await maybeCreditPartnerCommission(supabase, payment.shop_id, result.planCode, payment.id);
     }
 
     await supabase.from("transaction_logs").insert({

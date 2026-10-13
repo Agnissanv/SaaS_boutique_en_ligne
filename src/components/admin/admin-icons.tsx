@@ -150,6 +150,15 @@ export function GiftIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+/** Ajoutée le 13/10/2026 pour "Partenaires" (programme partenaire influenceur). */
+export function StarIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M10 2.8l2.1 4.4 4.8.6-3.5 3.3.9 4.7L10 13.5l-4.3 2.3.9-4.7-3.5-3.3 4.8-.6L10 2.8Z" />
+    </svg>
+  );
+}
+
 /** Ajoutée le 01/10/2026 pour "Notifications" (envoi de messages admin aux boutiques). */
 export function MegaphoneIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (

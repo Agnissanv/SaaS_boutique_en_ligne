@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { resolveHomePath } from "@/lib/auth-constants";
+import { readSpacePreference, resolveHomePath } from "@/lib/auth-constants";
 
 /**
  * Point d'arrivée du flux OAuth "Se connecter avec Google" (Supabase Auth).
@@ -130,7 +130,12 @@ export async function GET(request: Request) {
         .eq("id", user.id)
         .maybeSingle();
 
-      const destination = await resolveHomePath(supabase, user.id, profile?.role);
+      const destination = await resolveHomePath(
+        supabase,
+        user.id,
+        profile?.role,
+        readSpacePreference(request.headers.get("cookie"))
+      );
       return NextResponse.redirect(`${origin}${destination}`);
     }
   }

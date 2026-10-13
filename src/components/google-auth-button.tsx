@@ -43,18 +43,26 @@ export function GoogleAuthButton({
   portal,
   referralCode,
   agentCode,
+  beforeRedirect,
+  next,
 }: {
   portal?: "customer";
   referralCode?: string;
   agentCode?: string;
+  /** Appelé juste avant de partir chez Google (ex. mémoriser un code partenaire saisi). */
+  beforeRedirect?: () => void;
+  /** Page où revenir après la connexion Google (chemin interne, ex. une invitation partenaire). */
+  next?: string;
 }) {
   const supabase = createClient();
 
   async function handleClick() {
+    beforeRedirect?.();
     const params = new URLSearchParams();
     if (portal) params.set("portal", portal);
     if (referralCode) params.set("ref", referralCode);
     if (agentCode) params.set("agent", agentCode);
+    if (next) params.set("next", next);
     const query = params.toString();
     const redirectTo = `${window.location.origin}/auth/callback${query ? `?${query}` : ""}`;
 

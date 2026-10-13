@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { applyPlanToShop } from "@/lib/subscription";
 import { maybeGrantReferralReward } from "@/lib/referrals";
 import { maybeCreditCommercialCommission } from "@/lib/commercial-referrals";
+import { maybeCreditPartnerCommission } from "@/lib/partners";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -70,6 +71,10 @@ export async function assignPlan(shopId: string, planCode: string, durationMonth
   // différente (commission en argent réel, à chaque paiement) — ne fait
   // rien si cette boutique n'a pas été recrutée par un commercial.
   await maybeCreditCommercialCommission(supabase, shopId, result.planCode);
+
+  // Programme partenaire (13/10/2026, src/lib/partners.ts) : une commission
+  // par MOIS payé (« X F / mois » dans le contrat), d'où `durationMonths`.
+  await maybeCreditPartnerCommission(supabase, shopId, result.planCode, null, durationMonths ?? 1);
 
   await supabase.from("transaction_logs").insert({
     actor_id: userId,

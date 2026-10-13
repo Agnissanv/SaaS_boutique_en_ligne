@@ -6,6 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PASSWORD_MIN_LENGTH, roleHomePath } from "@/lib/auth-constants";
 import { GoogleAuthButton } from "@/components/google-auth-button";
+import { PartnerCodeField, type PartnerCodeStatus } from "@/components/partner-code-field";
+import { safeInternalPath } from "@/lib/utils/safe-path";
+import {
+  PARTNER_COOKIE,
+  PARTNER_COOKIE_MAX_AGE,
+  normalizePartnerCode,
+  normalizePartnerSource,
+  serializePartnerCookie,
+} from "@/lib/partners";
 
 /**
  * Inscription vendeur — ajoutée le 13/09/2026 à la demande d'Isaac ("vu
@@ -49,13 +58,29 @@ import { GoogleAuthButton } from "@/components/google-auth-button";
  * même mécanisme que `?ref=` ci-dessus mais pour un lien de commercial
  * plutôt qu'un lien de vendeur — canal complètement séparé (colonne
  * `referred_by_agent_code`, jamais mélangé avec `referred_by_code`).
+ *
+ * Code partenaire (13/10/2026, programme partenaire influenceur — voir
+ * supabase/migrations/0061_partner_program.sql) : pré-rempli quand le
+ * visiteur est arrivé par le lien d'une partenaire (`partnerPrefill`, lu par
+ * page.tsx dans le cookie posé par /p/[code]), sinon saisissable à la main.
+ * Transmis via `options.data.partner_code` / `partner_source` (métadonnées
+ * du compte) et consommé par `saveShop()` à la création de la boutique —
+ * aucune colonne de profil ni trigger à modifier. Pour Google, le code saisi
+ * est écrit dans le même cookie juste avant de partir (`beforeRedirect`).
  */
-export function InscriptionForm() {
+export function InscriptionForm({
+  partnerPrefill,
+}: {
+  partnerPrefill: { code: string; source: string } | null;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const searchParams = useSearchParams();
   const referredByCode = searchParams.get("ref");
   const referredByAgentCode = searchParams.get("agent");
+  // `?suite=` (13/10/2026) : page où revenir une fois le compte créé (ex. une
+  // invitation partenaire), y compris après le lien de confirmation par email.
+  const suite = safeInternalPath(searchParams.get("suite"));
 
   type View = "form" | "confirmation-envoyee" | "compte-existant";
   const [view, setView] = useState<View>("form");
@@ -66,6 +91,26 @@ export function InscriptionForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [partnerCode, setPartnerCode] = useState(partnerPrefill?.code ?? "");
+  const [partnerStatus, setPartnerStatus] = useState<PartnerCodeStatus>({ state: "empty" });
+
+  // Canal d'arrivée (tiktok, instagram...) seulement si le code n'a pas été
+  // changé à la main ; un code tapé compte comme « Code saisi ».
+  function partnerMetadata(): { partner_code?: string; partner_source?: string } {
+    const code = normalizePartnerCode(partnerCode);
+    if (!code) return {};
+    return {
+      partner_code: code,
+      partner_source: partnerPrefill && partnerPrefill.code === code ? partnerPrefill.source : "code",
+    };
+  }
+
+  function rememberPartnerCodeForGoogle() {
+    const { partner_code, partner_source } = partnerMetadata();
+    if (!partner_code || partnerStatus.state === "invalid") return;
+    const value = serializePartnerCookie(partner_code, normalizePartnerSource(partner_source));
+    document.cookie = `${PARTNER_COOKIE}=${value}; Max-Age=${PARTNER_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +129,10 @@ export function InscriptionForm() {
       setError("Les deux mots de passe ne correspondent pas.");
       return;
     }
+    if (partnerCode && partnerStatus.state === "invalid") {
+      setError("Ce code partenaire n'existe pas. Corrige-le ou laisse le champ vide.");
+      return;
+    }
 
     setPending(true);
 
@@ -95,8 +144,11 @@ export function InscriptionForm() {
           display_name: trimmedName,
           ...(referredByCode ? { referred_by_code: referredByCode } : {}),
           ...(referredByAgentCode ? { referred_by_agent_code: referredByAgentCode } : {}),
+          ...partnerMetadata(),
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback${
+          suite ? `?next=${encodeURIComponent(suite)}` : ""
+        }`,
       },
     });
 
@@ -127,7 +179,7 @@ export function InscriptionForm() {
         .eq("id", data.user!.id)
         .maybeSingle();
 
-      router.push(roleHomePath(profile?.role));
+      router.push(suite ?? roleHomePath(profile?.role));
       router.refresh();
       return;
     }
@@ -234,6 +286,13 @@ export function InscriptionForm() {
                 className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
               />
 
+              <PartnerCodeField
+                value={partnerCode}
+                onChange={setPartnerCode}
+                onStatusChange={setPartnerStatus}
+                initiallyOpen={Boolean(partnerPrefill)}
+              />
+
               {error && <p className="text-sm text-erreur">{error}</p>}
 
               <button
@@ -254,12 +313,17 @@ export function InscriptionForm() {
               <GoogleAuthButton
                 referralCode={referredByCode ?? undefined}
                 agentCode={referredByAgentCode ?? undefined}
+                beforeRedirect={rememberPartnerCodeForGoogle}
+                next={suite ?? undefined}
               />
             </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">
               Déjà un compte ?{" "}
-              <Link href="/connexion" className="text-vert-actif underline">
+              <Link
+                href={suite ? `/connexion?suite=${encodeURIComponent(suite)}` : "/connexion"}
+                className="text-vert-actif underline"
+              >
                 Se connecter
               </Link>
             </p>

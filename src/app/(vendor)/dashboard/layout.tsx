@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
+import { SpaceSwitcher } from "@/components/space-switcher";
 import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
 import { CURRENT_SELLER_CHARTER_VERSION } from "@/lib/seller-charter";
@@ -107,7 +108,7 @@ export default async function DashboardLayout({
     : { data: null };
   const isOwner = access?.isOwner ?? true;
 
-  const [subscription, unreadNotificationsCount] = await Promise.all([
+  const [subscription, unreadNotificationsCount, { data: ownPartner }] = await Promise.all([
     shop ? getShopSubscription(supabase, shop.id) : Promise.resolve(null),
     supabase
       .from("notifications")
@@ -115,7 +116,14 @@ export default async function DashboardLayout({
       .eq("profile_id", user.id)
       .eq("is_read", false)
       .then(({ count }) => count ?? 0),
+    // Programme partenaire (13/10/2026) : une partenaire voit le sélecteur
+    // « Ma boutique | Partenaire ». Jamais un collaborateur : l'espace
+    // partenaire est personnel.
+    isOwner
+      ? supabase.from("partners").select("id").eq("profile_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  const isPartner = Boolean(ownPartner);
 
   const initial = (profile?.display_name || user.email || "?").trim().charAt(0).toUpperCase();
 
@@ -127,6 +135,12 @@ export default async function DashboardLayout({
           <img src="/keva-logo.jpg" alt="KEVA" className="h-8 w-8 rounded object-cover" />
           <span className="font-display text-lg font-bold tracking-wide">KEVA</span>
         </Link>
+
+        {isPartner && (
+          <div className="px-3">
+            <SpaceSwitcher active="boutique" />
+          </div>
+        )}
 
         <SidebarNav isOwner={isOwner} />
 
@@ -211,6 +225,11 @@ export default async function DashboardLayout({
             <span className="font-display text-base font-bold tracking-wide">KEVA</span>
           </Link>
         </div>
+        {isPartner && (
+          <div className="bg-vert-sapin px-3 pb-3 md:hidden">
+            <SpaceSwitcher active="boutique" />
+          </div>
+        )}
 
         <header className="flex flex-wrap items-center gap-3 border-b border-ligne bg-white px-4 py-3 sm:gap-4">
           <form

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { resolveHomePath, PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
+import { resolveHomePath, readSpacePreference, PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
 import { GoogleAuthButton } from "@/components/google-auth-button";
+import { safeInternalPath } from "@/lib/utils/safe-path";
 
 /**
  * Connexion vendeur/admin — deux méthodes (13/09/2026, suite à la remarque
@@ -97,14 +98,25 @@ export function ConnexionForm() {
       : null
   );
 
+  // `?suite=` (13/10/2026) : retour vers la page qui a demandé la connexion,
+  // par exemple une invitation partenaire.
+  const suite = safeInternalPath(searchParams.get("suite"));
+
   async function redirectForUser(userId: string) {
+    if (suite) {
+      router.push(suite);
+      router.refresh();
+      return;
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", userId)
       .maybeSingle();
 
-    router.push(await resolveHomePath(supabase, userId, profile?.role));
+    router.push(
+      await resolveHomePath(supabase, userId, profile?.role, readSpacePreference(document.cookie))
+    );
     router.refresh();
   }
 
@@ -346,7 +358,7 @@ export function ConnexionForm() {
               <div className="h-px flex-1 bg-ligne" />
             </div>
             <div className="mt-4">
-              <GoogleAuthButton />
+              <GoogleAuthButton next={suite ?? undefined} />
             </div>
 
             <p className="mt-4 text-center text-sm text-encre/60">

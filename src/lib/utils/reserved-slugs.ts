@@ -38,6 +38,9 @@ export const RESERVED_SHOP_SLUGS: readonly string[] = [
   "contact",
   "favoris",
   "inscription",
+  // Liens des partenaires influenceurs (/p/<code>) et leur espace (13/10/2026).
+  "p",
+  "partenaire",
   "politique-confidentialite",
   "tarifs",
 ];

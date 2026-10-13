@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slug";
 import { isReservedShopSlug } from "@/lib/utils/reserved-slugs";
@@ -9,6 +10,8 @@ import { isValidCategory } from "@/lib/categories";
 import { getShopSubscription } from "@/lib/subscription";
 import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
 import { CI_VILLES, ABIDJAN_COMMUNES } from "@/lib/geo/ci-locations";
+import { PARTNER_COOKIE, normalizePartnerCode, parsePartnerCookie } from "@/lib/partners";
+import { syncPartnerGift } from "@/lib/partners-server";
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -251,13 +254,53 @@ export async function saveShop(
       // si le code est invalide ou périmé — non bloquant, même principe que
       // `start_free_subscription` juste au-dessus : une erreur ici
       // n'empêche jamais la création de boutique.
+      // Programme partenaire (13/10/2026, migration 0061) — passe AVANT les
+      // deux parrainages ci-dessous : une boutique n'est jamais rattachée à
+      // deux personnes. Code saisi (ou pré-rempli) à l'inscription d'abord,
+      // puis le lien mémorisé 30 jours dans le cookie (inscription Google, ou
+      // compte créé avant d'avoir suivi le lien). `create_partner_referral`
+      // revalide tout (partenariat actif, pas d'auto-rattachement, boutique
+      // jamais payée) et ne bloque jamais la création de boutique.
+      const partnerCandidates: { code: string; source: string }[] = [];
+      const typedPartnerCode = normalizePartnerCode(user.user_metadata?.partner_code as string | undefined);
+      if (typedPartnerCode) {
+        partnerCandidates.push({
+          code: typedPartnerCode,
+          source: (user.user_metadata?.partner_source as string | undefined) ?? "code",
+        });
+      }
+      const partnerCookie = parsePartnerCookie((await cookies()).get(PARTNER_COOKIE)?.value);
+      if (partnerCookie && partnerCookie.code !== typedPartnerCode) partnerCandidates.push(partnerCookie);
+
+      // La créatrice de la boutique est elle-même partenaire : sa boutique
+      // reçoit le Pro offert par le partenariat (à la place du mois d'essai).
+      const { data: ownPartner } = await supabase
+        .from("partners")
+        .select("id")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      if (ownPartner) await syncPartnerGift(ownPartner.id);
+
+      let attributedToPartner = false;
+      for (const candidate of partnerCandidates) {
+        const { data: status } = await supabase.rpc("create_partner_referral", {
+          p_shop_id: newShop.id,
+          p_code: candidate.code,
+          p_source: candidate.source,
+        });
+        if (status === "ok") {
+          attributedToPartner = true;
+          break;
+        }
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("referred_by_code, referred_by_agent_code")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profile?.referred_by_code) {
+      if (!attributedToPartner && profile?.referred_by_code) {
         await supabase.rpc("create_referral", {
           p_referred_shop_id: newShop.id,
           p_referrer_slug: profile.referred_by_code,
@@ -271,7 +314,7 @@ export async function saveShop(
       // recruté par un commercial reste indépendant du système entre
       // vendeurs, jamais les deux mélangés. Même philosophie "non
       // bloquant" que `create_referral` juste au-dessus.
-      if (profile?.referred_by_agent_code) {
+      if (!attributedToPartner && profile?.referred_by_agent_code) {
         await supabase.rpc("create_commercial_referral", {
           p_referred_shop_id: newShop.id,
           p_agent_code: profile.referred_by_agent_code,

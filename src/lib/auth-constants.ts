@@ -64,7 +64,12 @@ export function roleHomePath(role: string | null | undefined): string {
 export async function resolveHomePath(
   supabase: SupabaseClient<Database>,
   userId: string,
-  role: string | null | undefined
+  role: string | null | undefined,
+  // Programme partenaire (13/10/2026) : dernier espace choisi avec le
+  // sélecteur « Ma boutique | Partenaire » (cookie `keva_espace`, voir
+  // `readSpacePreference`). Une partenaire arrive sur son espace partenaire
+  // par défaut, sur sa boutique si c'est le dernier espace qu'elle a ouvert.
+  spacePreference?: string | null
 ): Promise<string> {
   if (role === "admin") return "/admin";
   // 'commercial' (23/09/2026, parrainage commercial, voir
@@ -73,7 +78,7 @@ export async function resolveHomePath(
   // même raisonnement que 'admin' juste au-dessus.
   if (role === "commercial") return "/commercial";
 
-  const [{ data: owned }, { data: collab }] = await Promise.all([
+  const [{ data: owned }, { data: collab }, { data: partner }] = await Promise.all([
     supabase.from("shops").select("id").eq("owner_id", userId).maybeSingle(),
     supabase
       .from("shop_collaborators")
@@ -81,9 +86,17 @@ export async function resolveHomePath(
       .eq("user_id", userId)
       .eq("status", "active")
       .maybeSingle(),
+    supabase.from("partners").select("id").eq("profile_id", userId).maybeSingle(),
   ]);
 
+  if (partner) return spacePreference === "boutique" && (owned || collab) ? "/dashboard" : "/partenaire";
   if (owned || collab) return "/dashboard";
   if (role === "vendor") return "/dashboard";
   return "/compte";
+}
+
+/** Valeur du cookie `keva_espace` dans un en-tête Cookie (ou `document.cookie`). */
+export function readSpacePreference(cookieHeader: string | null | undefined): string | null {
+  const match = (cookieHeader ?? "").match(/(?:^|;\s*)keva_espace=([a-z]+)/);
+  return match ? match[1] : null;
 }

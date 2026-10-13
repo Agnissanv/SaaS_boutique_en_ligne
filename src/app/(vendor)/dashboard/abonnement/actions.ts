@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { normalizePartnerCode } from "@/lib/partners";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import {
   createNyoleCheckoutSession,
@@ -163,4 +165,53 @@ export async function initiateSubscriptionPayment(
     .eq("provider_transaction_id", transactionId);
 
   redirect(result.url);
+}
+
+export type PartnerCodeState = { error?: string; success?: string };
+
+const PARTNER_CODE_ERRORS: Record<string, string> = {
+  invalid_code: "Ce code n'existe pas ou n'est plus actif.",
+  inactive: "Ce code n'existe pas ou n'est plus actif.",
+  self: "Tu ne peux pas utiliser ton propre code partenaire.",
+  already_attributed: "Ta boutique est déjà rattachée à un partenaire ou à un parrain.",
+  already_paid: "Le code partenaire se saisit avant le premier paiement d'abonnement.",
+  not_owner: "Seule la propriétaire de la boutique peut saisir un code partenaire.",
+};
+
+/**
+ * Code partenaire saisi sur la page Abonnement (13/10/2026, programme
+ * partenaire — voir supabase/migrations/0061_partner_program.sql) : filet de
+ * sécurité pour qui n'a pas utilisé le lien ni saisi le code à
+ * l'inscription. Toutes les vérifications (partenariat actif, boutique jamais
+ * payée ni déjà rattachée) sont faites par `create_partner_referral`.
+ */
+export async function applyPartnerCode(
+  _prev: PartnerCodeState,
+  formData: FormData
+): Promise<PartnerCodeState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Connecte-toi pour continuer." };
+
+  const code = normalizePartnerCode(formData.get("code")?.toString());
+  if (!code) return { error: "Le code fait 3 à 20 lettres ou chiffres." };
+
+  const { data: shop } = await supabase.from("shops").select("id").eq("owner_id", user.id).maybeSingle();
+  if (!shop) return { error: "Crée d'abord ta boutique." };
+
+  const { data: status, error } = await supabase.rpc("create_partner_referral", {
+    p_shop_id: shop.id,
+    p_code: code,
+    p_source: "code",
+  });
+  if (error) {
+    console.error("applyPartnerCode — erreur Supabase:", error);
+    return { error: "Impossible d'appliquer le code. Réessaie." };
+  }
+  if (status !== "ok") return { error: PARTNER_CODE_ERRORS[status ?? ""] ?? "Code refusé." };
+
+  revalidatePath("/dashboard/abonnement");
+  return { success: "Code partenaire appliqué." };
 }

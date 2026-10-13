@@ -9,6 +9,8 @@ import { isNyolePaymentsEnabled } from "@/lib/nyole";
 import { getPlanFeatureList } from "@/lib/plan-features";
 import { UpgradeButton } from "./upgrade-button";
 import { SettingsTabs } from "../settings-tabs";
+import { PartnerCodeForm } from "./partner-code-form";
+import { getShopPartnerCodeState } from "@/lib/partners-server";
 
 type Plan = {
   id: string;
@@ -81,12 +83,14 @@ export default async function SubscriptionPage() {
     redirect("/dashboard/boutique");
   }
 
-  const [subscription, { data: plans }] = await Promise.all([
+  const [subscription, { data: plans }, partnerCodeState] = await Promise.all([
     getShopSubscription(supabase, shop.id),
     supabase
       .from("subscription_plans")
       .select("id, code, name, price, duration_days, features")
       .order("price", { ascending: true }),
+    // Propriétaire déjà vérifiée ci-dessus (`owner_id = user.id`).
+    getShopPartnerCodeState(shop.id, user!.id),
   ]);
 
   // Coupe-circuit optionnel — voir `isNyolePaymentsEnabled` dans nyole.ts. Le
@@ -143,6 +147,16 @@ export default async function SubscriptionPage() {
           </p>
         )}
       </div>
+
+      {/* Programme partenaire (13/10/2026) : code saisi avant le premier
+          paiement, ou rappel du partenaire déjà rattaché. */}
+      {partnerCodeState.kind === "attributed" ? (
+        <p className="mt-3 text-sm text-encre/70">
+          Code partenaire : <span className="font-medium text-encre">{partnerCodeState.partnerName}</span> ✓
+        </p>
+      ) : partnerCodeState.kind === "eligible" ? (
+        <PartnerCodeForm />
+      ) : null}
 
       <h2 className="mt-8 font-display text-sm font-semibold text-encre">
         Plans disponibles
