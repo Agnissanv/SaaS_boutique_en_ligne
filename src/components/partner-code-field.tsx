@@ -90,8 +90,8 @@ export function PartnerCodeField({
         autoCapitalize="characters"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Ex : DJANDJOU"
-        className="rounded-md border border-ligne px-3 py-2 font-mono text-sm uppercase tracking-wide focus:border-vert-actif focus:outline-none"
+        placeholder="Ex : AWA225"
+        className="rounded-md border border-ligne px-3 py-2 font-mono text-sm uppercase placeholder:normal-case placeholder:font-sans placeholder:tracking-normal tracking-wide focus:border-vert-actif focus:outline-none"
       />
       {status.state === "valid" ? (
         <p className="text-xs text-succes">

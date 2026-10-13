@@ -55,7 +55,7 @@ export function AcceptInvitationForm({ token, defaultName }: { token: string; de
         required
         maxLength={60}
         defaultValue={defaultName}
-        placeholder="Ex : Djandjou"
+        placeholder="Ex : Awa Koné"
         className={inputClass}
       />
 
@@ -70,8 +70,8 @@ export function AcceptInvitationForm({ token, defaultName }: { token: string; de
         autoCapitalize="characters"
         value={code}
         onChange={(e) => handleCodeChange(e.target.value)}
-        placeholder="Ex : DJANDJOU"
-        className={`${inputClass} font-mono uppercase tracking-wide`}
+        placeholder="Ex : AWA225"
+        className={`${inputClass} font-mono uppercase placeholder:normal-case placeholder:font-sans placeholder:tracking-normal tracking-wide`}
       />
       <p className="-mt-1 text-xs text-encre/60">
         {availability === "taken" ? (

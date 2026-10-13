@@ -42,8 +42,8 @@ export function PartnerCodeForm() {
           autoComplete="off"
           autoCapitalize="characters"
           maxLength={20}
-          placeholder="Ex : DJANDJOU"
-          className="min-w-0 flex-1 rounded-md border border-ligne px-3 py-2 font-mono text-sm uppercase tracking-wide focus:border-vert-actif focus:outline-none"
+          placeholder="Ex : AWA225"
+          className="min-w-0 flex-1 rounded-md border border-ligne px-3 py-2 font-mono text-sm uppercase placeholder:normal-case placeholder:font-sans placeholder:tracking-normal tracking-wide focus:border-vert-actif focus:outline-none"
         />
         <button
           type="submit"

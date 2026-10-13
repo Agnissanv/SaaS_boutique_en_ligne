@@ -25,7 +25,7 @@ export function CreatePartnerForm() {
           <label htmlFor="partner-label" className="text-xs font-medium text-encre">
             Nom (pour toi)
           </label>
-          <input id="partner-label" name="label" required maxLength={80} placeholder="Ex : Djandjou" className={inputClass} />
+          <input id="partner-label" name="label" required maxLength={80} placeholder="Ex : Awa Koné" className={inputClass} />
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="partner-business" className="text-xs font-medium text-encre">
