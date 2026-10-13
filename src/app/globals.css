@@ -429,3 +429,18 @@ html[data-search-pending] [data-search-results] {
     animation: none;
   }
 }
+
+/* Pastille de réussite de la confirmation de commande (13/10/2026). */
+@keyframes kv-pop {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.kv-pop {
+  animation: kv-pop 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kv-pop {
+    animation: none;
+  }
+}

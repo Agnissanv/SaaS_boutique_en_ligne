@@ -23,6 +23,7 @@ import { LOW_STOCK_THRESHOLD, getEffectivePrice } from "@/lib/products";
 import { RecordProductView } from "@/components/record-product-view";
 import { RecentlyViewedRow } from "@/components/recently-viewed-row";
 import { getCategoryAttributeFields, getAttributeValueLabel } from "@/lib/category-attributes";
+import { ExpandableText } from "@/components/expandable-text";
 
 // Même variable que `layout.tsx` et `[shopSlug]/page.tsx` (23/09/2026, ajout
 // du canonical) — reprise de la convention déjà utilisée partout dans le
@@ -276,6 +277,55 @@ export default async function ProductPage({
     ? Math.round((1 - effectivePrice.price / (effectivePrice.compareAtPrice as number)) * 100)
     : null;
 
+  // Fiche produit pour Google (13/10/2026, lot 4 UX) : prix, disponibilité et
+  // note peuvent s'afficher directement dans les résultats de recherche
+  // (« résultats enrichis »). Construite uniquement à partir de ce qui est
+  // déjà affiché sur la page — Google pénalise un balisage qui ne correspond
+  // pas au contenu visible.
+  const productReviews = (reviews ?? []) as Review[];
+  const productUrl = `${siteUrl}/${shopSlug}/${product.slug}`;
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    ...(product.description ? { description: truncate(product.description, 5000) } : {}),
+    ...(images.length > 0 ? { image: images.map((image) => image.url) } : {}),
+    sku: product.id,
+    ...(product.category ? { category: categoryLabel(product.category) } : {}),
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "XOF",
+      price: effectivePrice.price,
+      availability:
+        product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      ...(effectivePrice.isOnSale && product.sale_ends_at
+        ? { priceValidUntil: String(product.sale_ends_at).slice(0, 10) }
+        : {}),
+      seller: { "@type": "Organization", name: shop.name, url: `${siteUrl}/${shopSlug}` },
+    },
+    ...(productReviews.length > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(
+              (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length).toFixed(1)
+            ),
+            reviewCount: productReviews.length,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: productReviews.slice(0, 5).map((review) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: review.customer_name },
+            datePublished: review.created_at.slice(0, 10),
+            reviewRating: { "@type": "Rating", ratingValue: review.rating, bestRating: 5, worstRating: 1 },
+            ...(review.comment ? { reviewBody: review.comment } : {}),
+          })),
+        }
+      : {}),
+  };
+
   return (
     <ViewTransition
       enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
@@ -301,6 +351,10 @@ export default async function ProductPage({
           simple lien « Retour à la boutique » et le chevron posé sur la
           photo). Doublé d'un BreadcrumbList pour Google. */}
       <ProductTopBar shopSlug={shopSlug} shopName={shop.name} productTitle={product.title} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(productJsonLd) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -427,7 +481,17 @@ export default async function ProductPage({
           <h1 className="mt-3 font-display text-2xl font-semibold text-encre sm:text-3xl">
             {product.title}
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-encre/70">{product.description}</p>
+          {/* Limitée à 4 lignes + « Lire la suite » (13/10/2026, lot 4 UX) :
+              une longue description repoussait le prix et « Ajouter au
+              panier » sous le premier écran, et ses retours à la ligne
+              étaient perdus. Le texte complet reste dans la page (Google). */}
+          {product.description ? (
+            <ExpandableText
+              text={product.description}
+              lines={4}
+              className="mt-3 text-[15px] leading-relaxed text-encre/70"
+            />
+          ) : null}
 
           {/* "Points forts" — ajouté le 22/09/2026 (migration 0031), demandé
               par Isaac sur inspiration Jumia : quelques atouts courts mis en

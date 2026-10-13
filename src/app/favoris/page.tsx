@@ -19,6 +19,14 @@ export default function FavorisPage() {
 
   return (
     <main className="w-full mx-auto max-w-3xl px-4 py-10">
+      {/* Retour accueil sur ordinateur (13/10/2026, lot 4) : la barre basse
+          n'y est pas affichée, la page n'avait aucune sortie. */}
+      <Link
+        href="/"
+        className="mb-4 hidden text-sm font-medium text-encre/70 transition-colors hover:text-vert-actif sm:inline-flex kv-link-back"
+      >
+        Accueil
+      </Link>
       <h1 className="font-display text-xl font-semibold text-encre">Mes favoris</h1>
 
       {items.length === 0 ? (
