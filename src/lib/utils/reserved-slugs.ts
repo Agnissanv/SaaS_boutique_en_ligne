@@ -37,6 +37,8 @@ export const RESERVED_SHOP_SLUGS: readonly string[] = [
   "connexion",
   "contact",
   "favoris",
+  // Ajoutée le 13/10/2026 : la page /faq existait sans être réservée.
+  "faq",
   "inscription",
   // Liens des partenaires influenceurs (/p/<code>) et leur espace (13/10/2026).
   "p",

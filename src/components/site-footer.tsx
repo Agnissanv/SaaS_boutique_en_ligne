@@ -84,6 +84,9 @@ const HIDDEN_ROOTS = new Set([
   "dashboard",
   "auth",
   "api",
+  // Espace partenaire (13/10/2026) : sa propre navigation, comme le
+  // tableau de bord vendeur.
+  "partenaire",
 ]);
 
 export function SiteFooter() {

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
 import { useLastVisitedShop } from "@/lib/shop/useLastVisitedShop";
+import { getBottomNavRoute } from "@/lib/bottom-nav-route";
 
 // Racines masquant la barre : portails d'authentification (leur propre
 // gabarit carte/logo suffit, pas besoin d'une navigation en plus) et espaces
@@ -24,6 +25,9 @@ export const HIDDEN_ROOTS = new Set([
   "dashboard",
   "auth",
   "api",
+  // Espace partenaire (13/10/2026) : sa propre navigation, comme le
+  // tableau de bord vendeur.
+  "partenaire",
 ]);
 
 // "categories" ajouté le 16/09/2026 en même temps que la nouvelle page
@@ -113,25 +117,17 @@ const TAB_CLASS = "flex flex-1 flex-col items-center justify-center gap-0.5 py-2
  *   toujours ouvrir, quel que soit l'endroit d'où on tape le bouton.
  *
  * Rendue une seule fois, au niveau du layout racine (`layout.tsx`), plutôt
- * que dans chaque page — visible sur les surfaces client (accueil
- * marketplace, page boutique, fiche produit, panier, confirmation de
- * commande, favoris, compte), masquée sur les portails d'authentification et
- * les espaces internes vendeur/admin (déjà leur propre navigation, voir
- * HIDDEN_ROOTS ci-dessus).
+ * que dans chaque page. Où elle s'affiche : voir `getBottomNavRoute`
+ * (src/lib/bottom-nav-route.ts, 13/10/2026) — seulement sur les écrans de
+ * navigation (accueil, catégories, favoris, compte, vitrine d'une boutique),
+ * et elle se cache pendant qu'on fait défiler vers le bas.
  */
 export function BottomNav() {
   const pathname = usePathname();
-
+  const route = getBottomNavRoute(pathname);
+  const currentShop = route.shopSlug;
   const segments = pathname.split("/").filter(Boolean);
-  const first = segments[0];
-
-  const isHiddenRoute = first !== undefined && HIDDEN_ROOTS.has(first);
-  const isFavoris = first === "favoris";
-  const isCompte = first === "compte";
-  const isCategoriesRoute = first === "categories";
-  const isShopRoute =
-    first !== undefined && !isHiddenRoute && !isFavoris && !isCompte && !isCategoriesRoute;
-  const currentShop = isShopRoute ? first : null;
+  const isPanier = Boolean(currentShop) && segments[1] === "panier";
 
   const { shopSlug: lastShop, setShopSlug } = useLastVisitedShop();
 
@@ -148,10 +144,48 @@ export function BottomNav() {
   const { count: cartCount } = useShopCart(effectiveShop ?? "");
   const { count: favCount } = useWishlist();
 
-  if (isHiddenRoute) return null;
+  // Masquée en descendant, de retour dès qu'on remonte (13/10/2026) : tout
+  // l'écran pour le contenu pendant qu'on fait défiler.
+  const [hiddenByScroll, setHiddenByScroll] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setHiddenByScroll(false);
+  }
+  useEffect(() => {
+    if (!route.visible) return;
+    let lastY = window.scrollY;
+    function handleScroll() {
+      const y = window.scrollY;
+      if (Math.abs(y - lastY) < 8) return;
+      setHiddenByScroll(y > lastY && y > 120);
+      lastY = y;
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [route.visible]);
 
-  const isHome = segments.length === 0;
-  const isPanier = isShopRoute && segments[1] === "panier";
+  // Hauteur réellement occupée par la barre, partagée avec les boutons
+  // flottants (Panier de la boutique, remonter en haut) qui se posent
+  // au-dessus et la suivent quand elle se cache (`--bottom-nav-offset`).
+  const shown = route.visible && !hiddenByScroll;
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--bottom-nav-offset",
+      shown ? "calc(4rem + env(safe-area-inset-bottom, 0px))" : "0px"
+    );
+    return () => {
+      root.style.setProperty("--bottom-nav-offset", "0px");
+    };
+  }, [shown]);
+
+  if (!route.visible) return null;
+
+  const isHome = route.isHome;
+  const isCategoriesRoute = route.isCategories;
+  const isFavoris = route.isFavoris;
+  const isCompte = route.isCompte;
 
   return (
     <>
@@ -160,7 +194,9 @@ export function BottomNav() {
           jamais masqué en bas d'écran une fois complètement scrollé. */}
       <div className="h-16 sm:hidden" aria-hidden="true" />
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-ligne bg-white pb-[env(safe-area-inset-bottom,0px)] sm:hidden"
+        className={`fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-ligne bg-white pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-300 ease-out motion-reduce:transition-none sm:hidden ${
+          hiddenByScroll ? "translate-y-full" : "translate-y-0"
+        }`}
         aria-label="Navigation principale"
       >
         <Link
