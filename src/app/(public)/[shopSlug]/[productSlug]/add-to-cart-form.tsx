@@ -230,7 +230,7 @@ export function AddToCartForm({
           >
             −
           </button>
-          <span aria-live="polite" className="min-w-[1.75rem] text-center font-mono text-sm font-medium text-encre">
+          <span aria-live="polite" className="min-w-[1.75rem] text-center tabular-nums text-sm font-medium text-encre">
             {quantity}
           </span>
           <button

@@ -564,9 +564,10 @@ export default async function ShopPage({
                 <span className="font-medium text-encre">{rating.average.toFixed(1)}/5</span>
                 <span>({rating.count} avis)</span>
               </p>
-            ) : (
-              <p className="mt-1 text-xs text-encre/70">Pas encore d&apos;avis</p>
-            )}
+            ) : null}
+            {/* Rien tant qu'il n'y a pas d'avis (13/10/2026) : « Pas encore
+                d'avis » était un signal négatif inutile pour une boutique qui
+                démarre. */}
             {shop.description ? (
               <ExpandableText text={shop.description} className="mt-2 text-sm text-encre/70" />
             ) : null}
@@ -842,7 +843,7 @@ export default async function ShopPage({
               ‹ Précédent
             </span>
           )}
-          <span className="font-mono text-xs text-encre/70">
+          <span className="tabular-nums text-xs text-encre/70">
             {page} / {totalPages}
           </span>
           {page < totalPages ? (

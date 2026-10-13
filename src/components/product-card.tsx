@@ -46,6 +46,9 @@ export function ProductCard({
 }) {
   const hasDiscount =
     product.compareAtPrice != null && product.compareAtPrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / (product.compareAtPrice as number)) * 100)
+    : 0;
 
   return (
     <div
@@ -79,8 +82,15 @@ export function ProductCard({
                 inspiré des captures de référence d'Isaac (badge posé sur la
                 photo). Le prix barré en dessous suffit à donner le montant
                 de la remise, pas besoin de répéter "Promo" deux fois. */}
-            {product.isOnSale ? (
-              <span className="absolute left-2 top-2 z-10 rounded-full bg-erreur px-2 py-0.5 text-[10px] font-semibold text-ivoire">
+            {/* « −12 % » dès qu'un prix est barré (13/10/2026) : le badge
+                n'apparaissait que pour les promos datées, pas pour un prix
+                barré posé directement par le vendeur. */}
+            {discountPercent > 0 ? (
+              <span className="absolute left-2 top-2 z-10 rounded-full bg-erreur px-2 py-0.5 text-xs font-bold tabular-nums text-ivoire">
+                −{discountPercent} %
+              </span>
+            ) : product.isOnSale ? (
+              <span className="absolute left-2 top-2 z-10 rounded-full bg-erreur px-2 py-0.5 text-xs font-bold text-ivoire">
                 Promo
               </span>
             ) : null}
@@ -98,11 +108,11 @@ export function ProductCard({
           </p>
 
           <div className="flex flex-wrap items-baseline gap-x-1.5">
-            <span className="font-mono text-[15px] font-semibold text-vert-actif">
+            <span className="font-display text-base font-bold tabular-nums text-vert-actif">
               {fcfa(product.price)}
             </span>
             {hasDiscount ? (
-              <span className="font-mono text-xs text-encre/70 line-through">
+              <span className="tabular-nums text-xs text-encre/70 line-through">
                 {fcfa(product.compareAtPrice)}
               </span>
             ) : null}

@@ -59,10 +59,10 @@ export default function FavorisPage() {
                     className="mb-2 aspect-square w-full rounded object-cover"
                   />
                   <p className="text-sm font-medium text-encre">{item.title}</p>
-                  <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-vert-actif">
+                  <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-display font-bold tabular-nums text-sm text-vert-actif">
                     {fcfa(item.price)}
                     {hasDiscount ? (
-                      <span className="font-mono text-xs text-encre/70 line-through">
+                      <span className="tabular-nums text-xs text-encre/70 line-through">
                         {fcfa(item.compareAtPrice)}
                       </span>
                     ) : null}

@@ -232,7 +232,7 @@ export function ProductFilterPanel({
                             />
                             {option.label}
                           </span>
-                          <span className="font-mono text-xs text-encre/70">{option.count}</span>
+                          <span className="tabular-nums text-xs text-encre/70">{option.count}</span>
                         </label>
                       );
                     })

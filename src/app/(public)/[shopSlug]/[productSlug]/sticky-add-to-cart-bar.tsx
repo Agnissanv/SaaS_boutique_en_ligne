@@ -85,7 +85,7 @@ export function StickyAddToCartBar({
           shown ? "translate-y-0" : "pointer-events-none translate-y-full"
         }`}
       >
-        <span className="font-mono text-base font-semibold text-vert-actif">
+        <span className="font-display text-lg font-bold tabular-nums text-vert-actif">
           {fcfa(price)}
         </span>
         <button

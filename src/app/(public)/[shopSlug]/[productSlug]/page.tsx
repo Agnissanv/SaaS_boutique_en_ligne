@@ -92,7 +92,7 @@ function ReviewsSection({ reviews, shopName }: { reviews: Review[]; shopName: st
     <div className="mt-4">
       <p className="flex items-center gap-2 text-sm font-medium text-encre">
         <Stars rating={average} />
-        <span className="font-mono">{average.toFixed(1)}/5</span>
+        <span className="tabular-nums">{average.toFixed(1)}/5</span>
         <span className="text-encre/70">({reviews.length} avis)</span>
       </p>
       <ul className="mt-4 flex flex-col gap-3">
@@ -130,7 +130,7 @@ const getProductForPublicPage = cache(async (shopSlug: string, productSlug: stri
   const { data: product } = await supabase
     .from("products")
     .select(
-      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, mobile_money_number, mobile_money_operator, accent_color), product_images(url, position), product_variants(id, name, value, extra_price)"
+      "*, shop:shops!inner(id, slug, name, status, whatsapp_number, mobile_money_number, mobile_money_operator, accent_color, delivery_fee, is_verified), product_images(url, position), product_variants(id, name, value, extra_price)"
     )
     .eq("slug", productSlug)
     .eq("shop.slug", shopSlug)
@@ -386,16 +386,16 @@ export default async function ProductPage({
           )}
 
           <div className="mt-5 flex flex-wrap items-baseline gap-2.5">
-            <p className="font-mono text-2xl font-semibold text-vert-actif">
+            <p className="font-display text-[1.75rem] font-extrabold leading-none tracking-tight tabular-nums text-vert-actif">
               {fcfa(effectivePrice.price)}
             </p>
             {hasDiscount && (
               <>
-                <p className="font-mono text-sm text-encre/70 line-through">
+                <p className="tabular-nums text-sm text-encre/70 line-through">
                   {fcfa(effectivePrice.compareAtPrice)}
                 </p>
                 <span className="rounded-full bg-erreur px-2 py-0.5 text-xs font-semibold text-ivoire">
-                  -{discountPercent}%
+                  −{discountPercent} %
                 </span>
               </>
             )}
@@ -451,6 +451,41 @@ export default async function ProductPage({
               stock={product.stock}
               accentColor={shop.accent_color}
             />
+            {/* Réassurance au moment de la décision d'achat (13/10/2026) :
+                uniquement des faits vérifiables — paiement à la livraison
+                (seul mode actif), vrai tarif de livraison du vendeur, badge
+                vérifié seulement s'il l'est. */}
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-encre/80">
+              <li className="flex items-center gap-1.5">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-4 w-4 text-vert-actif">
+                  <rect x="2.5" y="5.5" width="15" height="9" rx="1.5" />
+                  <circle cx="10" cy="10" r="2" />
+                </svg>
+                Paiement à la livraison
+              </li>
+              <li className="flex items-center gap-1.5">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-4 w-4 text-vert-actif">
+                  <rect x="1.5" y="6" width="10" height="8" rx="1" />
+                  <path d="M11.5 9h3l2.5 2.5V14h-5.5" />
+                  <circle cx="5" cy="15" r="1.3" />
+                  <circle cx="14.5" cy="15" r="1.3" />
+                </svg>
+                {shop.delivery_fee == null
+                  ? "Livraison à convenir avec le vendeur"
+                  : shop.delivery_fee === 0
+                    ? "Livraison gratuite"
+                    : `Livraison ${fcfa(shop.delivery_fee)}`}
+              </li>
+              {shop.is_verified ? (
+                <li className="flex items-center gap-1.5">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-4 w-4 text-vert-actif">
+                    <path d="M10 2.5 16 5v4.5c0 3.6-2.5 6.6-6 8-3.5-1.4-6-4.4-6-8V5l6-2.5Z" />
+                    <path d="m7.2 10 2 2 3.6-3.8" />
+                  </svg>
+                  Boutique vérifiée
+                </li>
+              ) : null}
+            </ul>
           </div>
         </div>
       </div>
@@ -513,7 +548,7 @@ export default async function ProductPage({
                     />
                   </ViewTransition>
                   <p className="truncate text-xs font-medium text-encre">{item.title}</p>
-                  <p className="font-mono text-xs text-vert-actif">{fcfa(item.price)}</p>
+                  <p className="font-display font-bold tabular-nums text-xs text-vert-actif">{fcfa(item.price)}</p>
                 </Link>
               );
             })}

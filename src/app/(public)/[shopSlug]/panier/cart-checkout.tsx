@@ -286,7 +286,7 @@ export function CartCheckout({
                 {item.variantLabel && (
                   <p className="text-xs text-encre/70">{item.variantLabel}</p>
                 )}
-                <p className="font-mono text-sm text-vert-actif">{fcfa(item.price)}</p>
+                <p className="font-display font-bold tabular-nums text-sm text-vert-actif">{fcfa(item.price)}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 <div className="flex items-center rounded-md border border-ligne">
@@ -299,7 +299,7 @@ export function CartCheckout({
                   >
                     −
                   </button>
-                  <span aria-live="polite" className="min-w-[1.75rem] text-center font-mono text-sm text-encre">
+                  <span aria-live="polite" className="min-w-[1.75rem] text-center tabular-nums text-sm text-encre">
                     {item.quantity}
                   </span>
                   <button
@@ -326,17 +326,17 @@ export function CartCheckout({
         <dl className="mt-4 divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
           <div className="flex justify-between py-2 text-encre/70">
             <dt>Sous-total</dt>
-            <dd className="font-mono text-vert-actif">{fcfa(total)}</dd>
+            <dd className="font-display font-bold tabular-nums text-vert-actif">{fcfa(total)}</dd>
           </div>
           <div className="flex justify-between py-2 text-encre/70">
             <dt>Livraison</dt>
-            <dd className="font-mono text-vert-actif">
+            <dd className="font-display font-bold tabular-nums text-vert-actif">
               {deliveryFee != null ? `${fcfa(deliveryFee)}` : "à confirmer avec le vendeur"}
             </dd>
           </div>
           <div className="flex justify-between py-2 text-base font-medium text-encre">
             <dt>Total</dt>
-            <dd className="font-mono text-vert-actif">{fcfa(total + (deliveryFee ?? 0))}</dd>
+            <dd className="font-display font-bold tabular-nums text-vert-actif">{fcfa(total + (deliveryFee ?? 0))}</dd>
           </div>
         </dl>
 
@@ -356,17 +356,17 @@ export function CartCheckout({
       <dl className="divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Sous-total</dt>
-          <dd className="font-mono text-vert-actif">{fcfa(total)}</dd>
+          <dd className="font-display font-bold tabular-nums text-vert-actif">{fcfa(total)}</dd>
         </div>
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Livraison</dt>
-          <dd className="font-mono text-vert-actif">
+          <dd className="font-display font-bold tabular-nums text-vert-actif">
             {deliveryFee != null ? `${fcfa(deliveryFee)}` : "à confirmer avec le vendeur"}
           </dd>
         </div>
         <div className="flex justify-between py-2 text-base font-medium text-encre">
           <dt>Total à payer</dt>
-          <dd className="font-mono text-vert-actif">{fcfa(total + (deliveryFee ?? 0))}</dd>
+          <dd className="font-display font-bold tabular-nums text-vert-actif">{fcfa(total + (deliveryFee ?? 0))}</dd>
         </div>
       </dl>
 

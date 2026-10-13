@@ -119,7 +119,7 @@ export function ProductGallery({
             onLoad={() => setLoadedUrl(images[activeIndex].url)}
           />
           {images.length > 1 && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-vert-profond/60 px-2 py-0.5 font-mono text-[11px] font-medium text-ivoire">
+            <span className="absolute bottom-2 left-2 rounded-full bg-vert-profond/60 px-2 py-0.5 tabular-nums text-[11px] font-medium text-ivoire">
               {activeIndex + 1} / {images.length}
             </span>
           )}

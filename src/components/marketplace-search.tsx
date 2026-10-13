@@ -273,7 +273,7 @@ export function MarketplaceSearch({
                     className="h-8 w-8 shrink-0 rounded object-cover"
                   />
                   <span className="line-clamp-1 flex-1">{product.title}</span>
-                  <span className="shrink-0 font-mono text-xs text-vert-actif">
+                  <span className="shrink-0 font-display font-bold tabular-nums text-xs text-vert-actif">
                     {fcfa(product.price)}
                   </span>
                 </Link>

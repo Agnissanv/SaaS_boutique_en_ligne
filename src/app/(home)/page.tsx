@@ -66,6 +66,11 @@ const FEATURED_SHOPS_SIZE = 10;
 const NEWEST_SHOPS_SIZE = 4;
 const BEST_SELLERS_SIZE = 12;
 const CATEGORY_ROW_SIZE = 12;
+// Une bande par catégorie seulement à partir de ce nombre de produits
+// (13/10/2026) : des bandes d'un seul produit donnaient une impression de
+// site vide. Les produits des petites catégories sont regroupés dans la
+// grille « Encore plus à découvrir ».
+const MIN_CATEGORY_ROW_PRODUCTS = 3;
 // Nombre de produits actifs les plus récents considérés pour regrouper les
 // bandes par catégorie — une seule requête groupée en JS plutôt que jusqu'à
 // 24 requêtes (une par catégorie). Compromis délibéré, documenté dans
@@ -618,6 +623,7 @@ export default async function Home({
   // Une catégorie sans aucun produit actif n'apparaît simplement pas — même
   // principe que les autres bandes de découverte, jamais de bande vide.
   const categoryRows: { value: string; label: string; products: MarketplaceCardProduct[] }[] = [];
+  const moreToDiscover: MarketplaceCardProduct[] = [];
   // Produits récents de toute la fenêtre `CATEGORY_FEED_LIMIT` (avant
   // plafonnement par bande) — sert aussi à calculer la remise du badge du hero
   // (voir `heroPromoDiscount` plus bas).
@@ -648,8 +654,11 @@ export default async function Home({
     }
     for (const cat of CATEGORIES) {
       const list = byCategory.get(cat.value);
-      if (list && list.length > 0) {
+      if (!list || list.length === 0) continue;
+      if (list.length >= MIN_CATEGORY_ROW_PRODUCTS) {
         categoryRows.push({ value: cat.value, label: cat.label, products: list });
+      } else {
+        moreToDiscover.push(...list);
       }
     }
   }
@@ -668,6 +677,7 @@ export default async function Home({
       ...newArrivalsProducts.map((p) => p.id),
       ...bestSellingProducts.map((p) => p.id),
       ...categoryRows.flatMap((row) => row.products.map((p) => p.id)),
+      ...moreToDiscover.map((p) => p.id),
     ])
   );
 
@@ -687,6 +697,7 @@ export default async function Home({
     applyRatings(newArrivalsProducts);
     applyRatings(bestSellingProducts);
     for (const row of categoryRows) applyRatings(row.products);
+    applyRatings(moreToDiscover);
   }
 
   // Notes des boutiques lancées plus haut (vague 2) : en général déjà
@@ -1064,7 +1075,7 @@ export default async function Home({
                           ‹ Précédent
                         </span>
                       )}
-                      <span className="px-2 font-mono text-encre/70">
+                      <span className="px-2 tabular-nums text-encre/70">
                         {page} / {totalPages}
                       </span>
                       {page < totalPages ? (
@@ -1103,6 +1114,26 @@ export default async function Home({
                       })}
                     />
                   ))}
+                  {moreToDiscover.length > 0 ? (
+                    <section className="mt-10">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h2 className="font-display text-lg font-semibold text-encre">
+                          Encore plus à découvrir
+                        </h2>
+                        <Link
+                          href="/categories"
+                          className="shrink-0 text-sm font-medium text-vert-actif transition-colors hover:text-vert-sapin kv-link-arrow"
+                        >
+                          Voir tout
+                        </Link>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                        {moreToDiscover.map((product) => (
+                          <ProductCard key={product.id} product={product} />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
                   {newArrivalsProducts.length === 0 &&
                   categoryRows.length === 0 ? (
                     <p className="mt-10 text-sm text-encre/70">

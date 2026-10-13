@@ -166,7 +166,7 @@ export default async function OrderConfirmationPage({
                 {" × "}
                 {item.quantity}
               </span>
-              <span className="font-mono text-vert-actif">
+              <span className="font-display font-bold tabular-nums text-vert-actif">
                 {fcfa(item.unit_price * item.quantity)}
               </span>
             </li>
@@ -177,17 +177,17 @@ export default async function OrderConfirmationPage({
       <dl className="mt-4 divide-y divide-ligne text-sm">
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Sous-total produits</dt>
-          <dd className="font-mono text-vert-actif">
+          <dd className="font-display font-bold tabular-nums text-vert-actif">
             {fcfa(order.total_amount - order.delivery_fee)}
           </dd>
         </div>
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Frais de livraison</dt>
-          <dd className="font-mono text-vert-actif">{fcfa(order.delivery_fee)}</dd>
+          <dd className="font-display font-bold tabular-nums text-vert-actif">{fcfa(order.delivery_fee)}</dd>
         </div>
         <div className="flex justify-between py-1 text-base font-medium text-encre">
           <dt>Total</dt>
-          <dd className="font-mono text-vert-actif">{fcfa(order.total_amount)}</dd>
+          <dd className="font-display font-bold tabular-nums text-vert-actif">{fcfa(order.total_amount)}</dd>
         </div>
       </dl>
 
