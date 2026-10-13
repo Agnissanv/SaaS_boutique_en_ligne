@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 const FMT_FCFA = new Intl.NumberFormat("fr-FR");
 
 /**
@@ -23,9 +25,11 @@ const FMT_FCFA = new Intl.NumberFormat("fr-FR");
  *
  * `sm:hidden` : masquée dès le breakpoint tablette, où la mise en page à
  * deux colonnes rend déjà le formulaire d'achat visible sans scroller.
- * `bottom-16` (pas `bottom-0`) : la barre de navigation basse mobile
- * (`bottom-nav.tsx`) occupe déjà le bas de l'écran sur toutes les pages
- * client — cette barre vient se poser juste au-dessus, jamais superposée.
+ * Tout en bas de l'écran depuis le 13/10/2026 : la barre de navigation basse
+ * n'est plus affichée sur la fiche produit (voir src/lib/bottom-nav-route.ts),
+ * fini l'empilement de deux barres. Sa hauteur est publiée dans
+ * `--sticky-cta-offset` pour que le bouton « remonter en haut » se pose
+ * au-dessus.
  */
 export function StickyAddToCartBar({
   price,
@@ -36,6 +40,15 @@ export function StickyAddToCartBar({
   stock: number;
   accentColor?: string | null;
 }) {
+  useEffect(() => {
+    if (stock <= 0) return;
+    const root = document.documentElement;
+    root.style.setProperty("--sticky-cta-offset", "68px");
+    return () => {
+      root.style.setProperty("--sticky-cta-offset", "0px");
+    };
+  }, [stock]);
+
   if (stock <= 0) return null;
 
   function handleClick() {
@@ -50,7 +63,7 @@ export function StickyAddToCartBar({
           similaires) ne finisse jamais masqué derrière les deux barres
           fixes empilées. */}
       <div className="h-[68px] sm:hidden" aria-hidden="true" />
-      <div className="fixed inset-x-0 bottom-16 z-30 flex items-center gap-3 border-t border-ligne bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-ligne bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] sm:hidden">
         <span className="font-mono text-base font-semibold text-vert-actif">
           {FMT_FCFA.format(price)} FCFA
         </span>

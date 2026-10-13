@@ -7,7 +7,10 @@ import { useShopCart } from "@/lib/cart/useShopCart";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
 import { useLastVisitedShop } from "@/lib/shop/useLastVisitedShop";
 import { getBottomNavRoute } from "@/lib/bottom-nav-route";
+import { RESERVED_SHOP_SLUGS } from "@/lib/utils/reserved-slugs";
 
+// Espaces « internes » (13/10/2026 : ne décide plus de l'affichage de la
+// barre, voir `getBottomNavRoute` ; reste utilisée par admin-quick-access).
 // Racines masquant la barre : portails d'authentification (leur propre
 // gabarit carte/logo suffit, pas besoin d'une navigation en plus) et espaces
 // internes vendeur/admin (déjà leur propre navigation dédiée, sidebar ou
@@ -140,7 +143,10 @@ export function BottomNav() {
     if (currentShop) setShopSlug(currentShop);
   }, [currentShop, setShopSlug]);
 
-  const effectiveShop = currentShop ?? lastShop;
+  // Une ancienne version mémorisait aussi /faq, /blog... comme « boutique » :
+  // ces valeurs déjà enregistrées dans les navigateurs sont ignorées.
+  const savedShop = lastShop && !RESERVED_SHOP_SLUGS.includes(lastShop) ? lastShop : null;
+  const effectiveShop = currentShop ?? savedShop;
   const { count: cartCount } = useShopCart(effectiveShop ?? "");
   const { count: favCount } = useWishlist();
 

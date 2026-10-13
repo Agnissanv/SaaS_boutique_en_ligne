@@ -17,13 +17,12 @@ import { useEffect, useState } from "react";
  * mécanismes se combinent naturellement pour respecter ce réglage sans code
  * dupliqué ici.
  *
- * Position mobile calée pour ne jamais chevaucher les barres fixes
- * empilées en bas d'écran : `bottom-nav.tsx` (64px, `h-16`) + éventuellement
- * `sticky-add-to-cart-bar.tsx` sur la fiche produit (68px de plus, posée à
- * `bottom-16`) — 132px de barres possibles, d'où `bottom-[148px]`. Ce
- * composant global ne sait pas quelle page l'affiche, donc il part du pire
- * cas plutôt que de risquer un chevauchement. Sur desktop (`sm:`), aucune des
- * deux barres n'existe (`sm:hidden` sur les deux) : simple `sm:bottom-8`.
+ * Position mobile : juste au-dessus des barres du bas RÉELLEMENT affichées
+ * (13/10/2026) — chacune publie sa hauteur dans une variable CSS
+ * (`--bottom-nav-offset` pour la navigation basse, `--sticky-cta-offset` pour
+ * « Ajouter au panier » sur la fiche produit), au lieu de toujours partir du
+ * pire cas (148px). Sur desktop (`sm:`), aucune de ces barres n'existe :
+ * simple `sm:bottom-8`.
  */
 export function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
@@ -47,7 +46,9 @@ export function ScrollToTopButton() {
       type="button"
       onClick={handleClick}
       aria-label="Remonter en haut de la page"
-      className={`fixed right-4 bottom-[148px] z-30 flex h-11 w-11 items-center justify-center rounded-full bg-vert-sapin text-ivoire shadow-[0_6px_14px_rgba(4,20,15,0.3)] transition-opacity duration-200 sm:bottom-8 ${
+      // Au-dessus des barres du bas réellement affichées (navigation,
+      // « Ajouter au panier »), qu'il suit quand elles bougent (13/10/2026).
+      className={`fixed right-4 bottom-[calc(var(--bottom-nav-offset,0px)+var(--sticky-cta-offset,0px)+1rem)] z-30 flex h-11 w-11 items-center justify-center rounded-full bg-vert-sapin text-ivoire shadow-[0_6px_14px_rgba(4,20,15,0.3)] transition-[opacity,bottom] duration-300 sm:bottom-8 ${
         visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
