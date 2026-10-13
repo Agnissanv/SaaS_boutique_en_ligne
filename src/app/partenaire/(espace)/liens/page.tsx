@@ -53,10 +53,6 @@ export default async function PartnerLinksPage() {
       <section className="mt-4 rounded-lg bg-white/60 p-4 text-sm text-encre/80">
         <p className="font-medium text-encre">Une phrase exacte à utiliser</p>
         <p className="mt-1 italic">« {message} »</p>
-        <p className="mt-2 text-xs text-encre/60">
-          Le mois Pro est offert à toute nouvelle boutique : évite de dire qu&apos;il n&apos;existe
-          qu&apos;avec ton code.
-        </p>
       </section>
     </div>
   );
