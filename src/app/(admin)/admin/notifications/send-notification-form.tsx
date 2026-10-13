@@ -89,7 +89,7 @@ export function SendNotificationForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="body" className="text-sm font-medium text-encre">
-          Message <span className="text-encre/50">(optionnel)</span>
+          Message <span className="text-encre/70">(optionnel)</span>
         </label>
         <textarea
           id="body"
@@ -103,7 +103,7 @@ export function SendNotificationForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="link" className="text-sm font-medium text-encre">
-          Lien au clic <span className="text-encre/50">(optionnel)</span>
+          Lien au clic <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="link"
@@ -111,7 +111,7 @@ export function SendNotificationForm({
           placeholder="Ex : /dashboard/parrainage"
           className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Un chemin interne KEVA (commence par /) — vers la page concernée par le message.
         </p>
       </div>

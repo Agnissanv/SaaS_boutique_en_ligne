@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TagIcon } from "@/components/admin/admin-icons";
@@ -27,7 +28,7 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
 ];
 
 function formatDiscount(type: string, value: number): string {
-  return type === "percentage" ? `-${value}%` : `-${value} FCFA`;
+  return type === "percentage" ? `-${value}%` : `-${fcfa(value)}`;
 }
 
 /**
@@ -116,13 +117,13 @@ export default async function AdminPromoCodesPage({
       {!error && (codes ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <TagIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucun code promo ici.</p>
+          <p className="text-sm text-encre/70">Aucun code promo ici.</p>
         </div>
       ) : error ? null : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
-              <tr className="border-b border-ligne text-xs text-encre/50">
+              <tr className="border-b border-ligne text-xs text-encre/70">
                 <th className="py-3 pl-4 pr-4">Code</th>
                 <th className="py-3 pr-4">Boutique</th>
                 <th className="py-3 pr-4">Réduction</th>
@@ -161,13 +162,13 @@ export default async function AdminPromoCodesPage({
                             ? "bg-erreur/15 text-erreur"
                             : c.is_active
                               ? "bg-succes/15 text-succes"
-                              : "bg-sable text-encre/60"
+                              : "bg-sable text-encre/70"
                         }`}
                       >
                         {isExpired ? "Expiré" : c.is_active ? "Actif" : "Désactivé"}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-encre/50">
+                    <td className="py-3 pr-4 text-encre/70">
                       {c.expires_at ? new Date(c.expires_at).toLocaleDateString("fr-FR") : "—"}
                     </td>
                   </tr>

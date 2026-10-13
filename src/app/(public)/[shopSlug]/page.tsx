@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -17,6 +18,7 @@ import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
 import { getEffectivePrice } from "@/lib/products";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard } from "@/components/product-card";
+import { ExpandableText } from "@/components/expandable-text";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { ProductFilterPanel } from "@/components/product-filter-panel";
 import {
@@ -89,7 +91,7 @@ function buildHref(
 function deliveryLabel(fee: number | null): string {
   if (fee === null) return "À négocier avec le vendeur";
   if (fee === 0) return "Livraison gratuite";
-  return `${fee} FCFA`;
+  return `${fcfa(fee)}`;
 }
 
 // `cache()` (React) : mémoïse cette requête pour la durée d'une seule
@@ -563,10 +565,10 @@ export default async function ShopPage({
                 <span>({rating.count} avis)</span>
               </p>
             ) : (
-              <p className="mt-1 text-xs text-encre/50">Pas encore d&apos;avis</p>
+              <p className="mt-1 text-xs text-encre/70">Pas encore d&apos;avis</p>
             )}
             {shop.description ? (
-              <p className="mt-2 text-sm text-encre/70">{shop.description}</p>
+              <ExpandableText text={shop.description} className="mt-2 text-sm text-encre/70" />
             ) : null}
           </div>
 
@@ -586,7 +588,7 @@ export default async function ShopPage({
             entre le vendeur et le client, KEVA n'y participe pas. */}
         {shop.mobile_money_number && shop.mobile_money_operator && isMobileMoneyOperator(shop.mobile_money_operator) ? (
           <div className="mt-3">
-            <p className="mb-1.5 text-xs text-encre/50">
+            <p className="mb-1.5 text-xs text-encre/70">
               Paiement Mobile Money direct avec le vendeur :
             </p>
             <MobileMoneyBadge
@@ -603,20 +605,27 @@ export default async function ShopPage({
             tarif de livraison est le vrai `delivery_fee` du vendeur (ou une
             mention honnête qu'il reste à négocier), et le contact direct
             n'apparaît que si un numéro WhatsApp est réellement renseigné. */}
-        <div className="mt-4 grid grid-cols-1 gap-2 border-t border-ligne pt-4 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-ligne pt-4">
           <TrustItem
             label="Paiement à la livraison"
+            short="Sans compte"
             body="Commande sans créer de compte, paie en espèces à la réception."
           />
-          <TrustItem label="Livraison" body={deliveryLabel(shop.delivery_fee ?? null)} />
+          <TrustItem
+            label="Livraison"
+            short={deliveryLabel(shop.delivery_fee ?? null)}
+            body={deliveryLabel(shop.delivery_fee ?? null)}
+          />
           {shop.whatsapp_number ? (
             <TrustItem
               label="Contact direct"
+              short="WhatsApp"
               body="Une question avant de commander ? Écris sur WhatsApp."
             />
           ) : (
             <TrustItem
               label="Retours et questions"
+              short="Via ta commande"
               body="Contacte le vendeur via les coordonnées indiquées sur ta commande."
             />
           )}
@@ -644,7 +653,7 @@ export default async function ShopPage({
               <input key={`${key}:${value}`} type="hidden" name={`attr_${key}`} value={value} />
             ))
           )}
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="h-4 w-4 shrink-0 text-encre/40">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="h-4 w-4 shrink-0 text-encre/70">
             <circle cx="8.5" cy="8.5" r="5.5" />
             <path d="m16 16-3.2-3.2" />
           </svg>
@@ -653,7 +662,7 @@ export default async function ShopPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Rechercher un article dans cette boutique..."
-            className="min-w-0 flex-1 bg-transparent text-sm text-encre placeholder:text-encre/40 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm text-encre placeholder:text-encre/50 focus:outline-none"
           />
           <button
             type="submit"
@@ -795,6 +804,7 @@ export default async function ShopPage({
             return (
               <ProductCard
                 key={product.id}
+                hideShop
                 product={{
                   id: product.id,
                   slug: product.slug,
@@ -832,7 +842,7 @@ export default async function ShopPage({
               ‹ Précédent
             </span>
           )}
-          <span className="font-mono text-xs text-encre/60">
+          <span className="font-mono text-xs text-encre/70">
             {page} / {totalPages}
           </span>
           {page < totalPages ? (
@@ -858,11 +868,15 @@ export default async function ShopPage({
   );
 }
 
-function TrustItem({ label, body }: { label: string; body: string }) {
+// Version courte sur téléphone (3 encadrés sur une ligne, 13/10/2026 — audit
+// visuel : empilés, ils repoussaient les produits très bas), texte complet
+// à partir de sm:.
+function TrustItem({ label, short, body }: { label: string; short: string; body: string }) {
   return (
-    <div className="rounded-md bg-brume p-3">
-      <p className="text-sm font-medium text-encre">{label}</p>
-      <p className="mt-0.5 text-xs text-encre/70">{body}</p>
+    <div className="rounded-md bg-brume p-2.5 text-center sm:p-3 sm:text-left">
+      <p className="text-xs font-medium leading-tight text-encre sm:text-sm">{label}</p>
+      <p className="mt-0.5 text-xs leading-tight text-encre/70 sm:hidden">{short}</p>
+      <p className="mt-0.5 hidden text-xs text-encre/70 sm:block">{body}</p>
     </div>
   );
 }

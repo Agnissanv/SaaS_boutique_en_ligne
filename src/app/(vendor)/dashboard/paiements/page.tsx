@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -133,15 +134,15 @@ export default async function PaymentsPage({
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">Encaissé (livrées)</p>
+          <p className="text-xs text-encre/70">Encaissé (livrées)</p>
           <p className="mt-1 font-mono text-lg font-semibold text-vert-actif">
-            {totalReceived} FCFA
+            {fcfa(totalReceived)}
           </p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">À encaisser à la livraison</p>
+          <p className="text-xs text-encre/70">À encaisser à la livraison</p>
           <p className="mt-1 font-mono text-lg font-semibold text-vert-actif">
-            {totalAwaiting} FCFA
+            {fcfa(totalAwaiting)}
           </p>
         </div>
       </div>
@@ -195,7 +196,7 @@ export default async function PaymentsPage({
                   </p>
                 </div>
                 <p className="shrink-0 font-mono text-sm text-vert-actif">
-                  {order.total_amount} FCFA
+                  {fcfa(order.total_amount)}
                 </p>
               </Link>
             </li>

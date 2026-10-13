@@ -167,7 +167,7 @@ export default async function ReviewsPage({
                 {product && (
                   <Link
                     href={`/dashboard/produits/${product.id}`}
-                    className="text-xs text-encre/60 hover:text-vert-sapin"
+                    className="text-xs text-encre/70 hover:text-vert-sapin"
                   >
                     {product.title}
                   </Link>
@@ -175,7 +175,7 @@ export default async function ReviewsPage({
                 {review.comment && (
                   <p className="mt-1 text-sm text-encre/80">{review.comment}</p>
                 )}
-                <p className="mt-1 text-xs text-encre/50">
+                <p className="mt-1 text-xs text-encre/70">
                   {new Date(review.created_at).toLocaleDateString("fr-FR")}
                 </p>
                 <ReviewReplyForm

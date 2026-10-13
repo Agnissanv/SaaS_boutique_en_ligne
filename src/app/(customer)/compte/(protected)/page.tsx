@@ -73,7 +73,7 @@ export default async function ComptePage() {
           </p>
           <Link
             href="/compte/profil"
-            className="text-sm text-encre/60 hover:text-vert-actif transition-colors"
+            className="text-sm text-encre/70 hover:text-vert-actif transition-colors"
           >
             Voir mon profil
           </Link>

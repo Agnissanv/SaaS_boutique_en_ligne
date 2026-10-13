@@ -35,7 +35,7 @@ export default function Error({
         <>
           <p>Ce n&apos;est pas de ta faute. Réessaie dans un instant ; si le problème continue, contacte-nous.</p>
           {error.digest ? (
-            <p className="mt-3 font-mono text-xs text-encre/50">Référence : {error.digest}</p>
+            <p className="mt-3 font-mono text-xs text-encre/70">Référence : {error.digest}</p>
           ) : null}
         </>
       }

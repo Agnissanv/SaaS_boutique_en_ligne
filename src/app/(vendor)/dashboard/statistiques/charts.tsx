@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 /**
  * Composants de visualisation pour `/dashboard/statistiques` (16/09/2026) —
  * SVG dessiné à la main plutôt qu'une librairie de graphiques : aucune
@@ -19,7 +20,7 @@ const FMT_FCFA = new Intl.NumberFormat("fr-FR");
  */
 export function RevenueTrendChart({
   points,
-  format = (n) => `${FMT_FCFA.format(n)} FCFA`,
+  format = (n) => `${fcfa(n)}`,
   totalLabel = "Total sur la période",
   ariaLabel = "Évolution du chiffre d'affaires",
 }: {
@@ -50,7 +51,7 @@ export function RevenueTrendChart({
 
   if (points.every((p) => p.value === 0)) {
     return (
-      <p className="text-sm text-encre/60">
+      <p className="text-sm text-encre/70">
         Aucune commande sur cette période pour l&apos;instant.
       </p>
     );
@@ -58,14 +59,14 @@ export function RevenueTrendChart({
 
   return (
     <div>
-      <p className="text-xs text-encre/60">
+      <p className="text-xs text-encre/70">
         {totalLabel} : <span className="font-mono font-medium text-vert-actif">{format(total)}</span>
       </p>
       <svg viewBox={`0 0 ${width} ${height}`} className="mt-2 w-full" preserveAspectRatio="none" role="img" aria-label={ariaLabel}>
         {areaPath && <path d={areaPath} fill="var(--color-vert-actif, #1c6b4a)" fillOpacity={0.12} stroke="none" />}
         {linePath && <path d={linePath} fill="none" stroke="var(--color-vert-actif, #1c6b4a)" strokeWidth={2} />}
       </svg>
-      <div className="mt-1 flex justify-between text-[11px] text-encre/50">
+      <div className="mt-1 flex justify-between text-[11px] text-encre/70">
         <span>{points[0]?.label}</span>
         {points.length > 2 && <span>{points[Math.floor(points.length / 2)]?.label}</span>}
         <span>{points[points.length - 1]?.label}</span>
@@ -84,7 +85,7 @@ export function StatusBreakdown({
   const total = rows.reduce((sum, r) => sum + r.count, 0);
 
   if (total === 0) {
-    return <p className="text-sm text-encre/60">Aucune commande pour l&apos;instant.</p>;
+    return <p className="text-sm text-encre/70">Aucune commande pour l&apos;instant.</p>;
   }
 
   return (
@@ -114,7 +115,7 @@ export function RankedList({
   emptyLabel: string;
 }) {
   if (items.length === 0) {
-    return <p className="text-sm text-encre/60">{emptyLabel}</p>;
+    return <p className="text-sm text-encre/70">{emptyLabel}</p>;
   }
 
   return (
@@ -127,7 +128,7 @@ export function RankedList({
             </span>
             <span className="truncate">{item.label}</span>
           </span>
-          <span className="shrink-0 font-mono text-xs text-encre/60">{item.value}</span>
+          <span className="shrink-0 font-mono text-xs text-encre/70">{item.value}</span>
         </li>
       ))}
     </ol>
@@ -229,18 +230,18 @@ export function StatTile({
               {icon}
             </span>
             <div className="min-w-0">
-              <p className="text-xs text-encre/60">{label}</p>
+              <p className="text-xs text-encre/70">{label}</p>
               <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
-              {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+              {sublabel && <p className="mt-0.5 text-xs text-encre/70">{sublabel}</p>}
             </div>
           </div>
           {trend && <Sparkline points={trend} className="mt-1 h-8 w-14 shrink-0 text-vert-actif/45" />}
         </div>
       ) : (
         <>
-          <p className="text-xs text-encre/60">{label}</p>
+          <p className="text-xs text-encre/70">{label}</p>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">{value}</p>
-          {sublabel && <p className="mt-0.5 text-xs text-encre/50">{sublabel}</p>}
+          {sublabel && <p className="mt-0.5 text-xs text-encre/70">{sublabel}</p>}
         </>
       )}
     </div>
@@ -265,7 +266,7 @@ export function RevenueBars({
   const max = Math.max(1, ...rows.map((r) => r.revenue));
 
   if (rows.length === 0) {
-    return <p className="text-sm text-encre/60">{emptyLabel}</p>;
+    return <p className="text-sm text-encre/70">{emptyLabel}</p>;
   }
 
   return (
@@ -280,7 +281,7 @@ export function RevenueBars({
             />
           </span>
           <span className="w-28 shrink-0 text-right font-mono text-xs text-encre/70">
-            {FMT_FCFA.format(row.revenue)} FCFA
+            {fcfa(row.revenue)}
             {row.sublabel && <span className="block text-encre/45">{row.sublabel}</span>}
           </span>
         </li>
@@ -307,7 +308,7 @@ export function CountBars({
   const max = Math.max(1, ...rows.map((r) => r.count));
 
   if (rows.length === 0 || total === 0) {
-    return <p className="text-sm text-encre/60">{emptyLabel}</p>;
+    return <p className="text-sm text-encre/70">{emptyLabel}</p>;
   }
 
   return (
@@ -355,12 +356,12 @@ export function ComparisonTile({
   const change = hasPrevious ? ((current - previous) / previous) * 100 : null;
   const colorClass =
     change === null
-      ? "text-encre/50"
+      ? "text-encre/70"
       : change > 0
         ? "text-succes"
         : change < 0
           ? "text-erreur"
-          : "text-encre/50";
+          : "text-encre/70";
   const changeLabel = (
     <p className={`mt-0.5 text-xs ${colorClass}`}>
       {change === null
@@ -378,7 +379,7 @@ export function ComparisonTile({
               {icon}
             </span>
             <div className="min-w-0">
-              <p className="text-xs text-encre/60">{label}</p>
+              <p className="text-xs text-encre/70">{label}</p>
               <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
               {changeLabel}
             </div>
@@ -387,7 +388,7 @@ export function ComparisonTile({
         </div>
       ) : (
         <>
-          <p className="text-xs text-encre/60">{label}</p>
+          <p className="text-xs text-encre/70">{label}</p>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">{format(current)}</p>
           {changeLabel}
         </>
@@ -419,7 +420,7 @@ export function CategoryDonut({
   const total = rows.reduce((sum, r) => sum + r.revenue, 0);
 
   if (rows.length === 0 || total <= 0) {
-    return <p className="text-sm text-encre/60">{emptyLabel}</p>;
+    return <p className="text-sm text-encre/70">{emptyLabel}</p>;
   }
 
   const sorted = [...rows].sort((a, b) => b.revenue - a.revenue);
@@ -485,7 +486,7 @@ export function CategoryDonut({
           <li key={s.label} className="flex items-center gap-2 text-xs">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-vert-actif" style={{ opacity: s.opacity }} />
             <span className="min-w-0 flex-1 truncate text-encre/70">{s.label}</span>
-            <span className="shrink-0 font-mono text-encre/60">{Math.round(s.pct * 100)}%</span>
+            <span className="shrink-0 font-mono text-encre/70">{Math.round(s.pct * 100)}%</span>
           </li>
         ))}
       </ul>

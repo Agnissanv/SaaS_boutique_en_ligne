@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ConnexionForm } from "./connexion-form";
 
@@ -6,6 +7,12 @@ import { ConnexionForm } from "./connexion-form";
 // l'absence de `.env.local` rempli — inutile pour une page de connexion).
 // Doit être exporté depuis un Server Component ("use client" l'interdit).
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Connexion vendeur — KEVA",
+  alternates: { canonical: "/connexion" },
+  robots: { index: false, follow: true },
+};
 
 export default function ConnexionPage() {
   return (

@@ -80,7 +80,7 @@ export default async function PartnerPaymentsPage({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-lg font-semibold text-encre">Paiements</h1>
-          <p className="text-sm text-encre/60">
+          <p className="text-sm text-encre/70">
             Calculés en fin de mois, versés sous 7 jours par Wave ou Mobile Money.
           </p>
         </div>
@@ -89,11 +89,11 @@ export default async function PartnerPaymentsPage({
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-ligne bg-white p-3">
-          <p className="text-xs text-encre/60">Reste à recevoir (mois terminés)</p>
+          <p className="text-xs text-encre/70">Reste à recevoir (mois terminés)</p>
           <p className="mt-1 font-display text-2xl font-semibold text-encre">{fcfa(totalDue)}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-3">
-          <p className="text-xs text-encre/60">Tes paiements arrivent sur</p>
+          <p className="text-xs text-encre/70">Tes paiements arrivent sur</p>
           <p className="mt-1 text-sm font-medium text-encre">
             {partner.payoutMethod ? PAYOUT_METHOD_LABELS[partner.payoutMethod] : "—"}
             {partner.payoutPhone ? ` · ${maskPhone(partner.payoutPhone)}` : ""}
@@ -106,7 +106,7 @@ export default async function PartnerPaymentsPage({
 
       <section className="mt-5 rounded-lg border border-ligne bg-white px-4 py-1">
         {visible.length === 0 ? (
-          <p className="py-3 text-sm text-encre/60">
+          <p className="py-3 text-sm text-encre/70">
             Pas encore de commission. Elles apparaissent ici dès le premier paiement d&apos;une
             boutique que tu as amenée.
           </p>
@@ -135,7 +135,7 @@ export default async function PartnerPaymentsPage({
                 <li key={m.month} className="flex flex-wrap items-center justify-between gap-2 py-3">
                   <div>
                     <p className="text-sm font-medium capitalize text-encre">{formatMonth(m.month)}</p>
-                    <p className="text-xs text-encre/60">
+                    <p className="text-xs text-encre/70">
                       {/* Nombre de mois d'abonnement payés, pas le détail des
                           montants : ceux-ci ont pu changer d'un mois à l'autre. */}
                       {[m.business > 0 && `${m.business} Business`, m.pro > 0 && `${m.pro} Pro`]

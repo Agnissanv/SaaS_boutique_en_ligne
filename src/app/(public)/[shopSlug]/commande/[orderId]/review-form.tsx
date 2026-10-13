@@ -69,7 +69,7 @@ export function ReviewForm({
       <p className="text-sm font-medium text-encre">
         {productTitle}
         {isEditing && (
-          <span className="ml-2 text-xs font-normal text-encre/40">
+          <span className="ml-2 text-xs font-normal text-encre/70">
             (avis déjà envoyé — modifiable)
           </span>
         )}

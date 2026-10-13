@@ -148,7 +148,7 @@ export function InscriptionClientForm() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Ex : Awa Koné"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <label className="text-sm font-medium text-encre" htmlFor="phone">
@@ -163,9 +163,9 @@ export function InscriptionClientForm() {
                 placeholder="+225 07 00 00 00 00"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
-              <p className="text-xs text-encre/50">
+              <p className="text-xs text-encre/70">
                 Sert à retrouver automatiquement tes commandes déjà passées
                 avec ce numéro, sans compte.
               </p>
@@ -182,7 +182,7 @@ export function InscriptionClientForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="toi@exemple.com"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <label className="text-sm font-medium text-encre" htmlFor="password">
@@ -198,7 +198,7 @@ export function InscriptionClientForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <label className="text-sm font-medium text-encre" htmlFor="confirmPassword">
@@ -214,7 +214,7 @@ export function InscriptionClientForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               {error && <p className="text-sm text-erreur">{error}</p>}
@@ -222,7 +222,7 @@ export function InscriptionClientForm() {
               <button
                 type="submit"
                 disabled={pending}
-                className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
+                className="mt-2 rounded-md bg-vert-actif px-4 py-3 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
               >
                 {pending ? "Création..." : "Créer mon compte"}
               </button>
@@ -230,14 +230,14 @@ export function InscriptionClientForm() {
 
             <div className="mt-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-ligne" />
-              <span className="text-xs text-encre/40">ou</span>
+              <span className="text-xs text-encre/70">ou</span>
               <div className="h-px flex-1 bg-ligne" />
             </div>
             <div className="mt-4">
               <GoogleAuthButton portal="customer" />
             </div>
 
-            <p className="mt-4 text-center text-sm text-encre/60">
+            <p className="mt-4 text-center text-sm text-encre/70">
               Déjà un compte ?{" "}
               <Link href="/compte/connexion" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Se connecter

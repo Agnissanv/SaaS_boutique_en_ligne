@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
@@ -138,7 +140,7 @@ export function AddToCartForm({
                 {groupVariants.map((v) => {
                   const isSelected = selectedByGroup[name] === v.id;
                   const hex = getColorSwatch(v.value);
-                  const label = v.extra_price ? `${v.value} (+${v.extra_price} FCFA)` : v.value;
+                  const label = v.extra_price ? `${v.value} (+${fcfa(v.extra_price)})` : v.value;
 
                   if (!hex) {
                     // Valeur non reconnue par la table de correspondance —
@@ -202,7 +204,7 @@ export function AddToCartForm({
                     }`}
                   >
                     {v.value}
-                    {v.extra_price ? ` (+${v.extra_price} FCFA)` : ""}
+                    {v.extra_price ? ` (+${fcfa(v.extra_price)})` : ""}
                   </button>
                 );
               })}
@@ -253,7 +255,7 @@ export function AddToCartForm({
             <path d="M4 6.5h12l-1 9.5H5L4 6.5Z" />
             <path d="M7 6.5V5a3 3 0 0 1 6 0v1.5" />
           </svg>
-          Ajouter au panier — {unitPrice * quantity} FCFA
+          Ajouter au panier — {fcfa(unitPrice * quantity)}
         </button>
       </div>
 

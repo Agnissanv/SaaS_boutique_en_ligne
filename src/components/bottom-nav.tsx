@@ -195,10 +195,10 @@ export function BottomNav() {
 
   return (
     <>
-      {/* Cale de la même hauteur que la barre fixe ci-dessous : ajoute de
-          l'espace en fin de document pour que le contenu de la page ne soit
-          jamais masqué en bas d'écran une fois complètement scrollé. */}
-      <div className="h-16 sm:hidden" aria-hidden="true" />
+      {/* Plus de cale ici (13/10/2026, audit visuel) : elle se plaçait APRÈS
+          le pied de page et faisait apparaître une bande blanche de 64 px
+          sous le pied de page vert. Le pied de page réserve déjà lui-même
+          l'espace de cette barre (`pb-24` sur mobile, site-footer.tsx). */}
       <nav
         className={`fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-ligne bg-white pb-[env(safe-area-inset-bottom,0px)] transition-transform duration-300 ease-out motion-reduce:transition-none sm:hidden ${
           hiddenByScroll ? "translate-y-full" : "translate-y-0"
@@ -208,7 +208,7 @@ export function BottomNav() {
         <Link
           href="/"
           transitionTypes={["nav-back"]}
-          className={`${TAB_CLASS} ${isHome ? "text-vert-actif" : "text-encre/60"}`}
+          className={`${TAB_CLASS} ${isHome ? "text-vert-actif" : "text-encre/70"}`}
         >
           <HomeIcon />
           Accueil
@@ -216,7 +216,7 @@ export function BottomNav() {
 
         <Link
           href="/categories"
-          className={`${TAB_CLASS} ${isCategoriesRoute ? "text-vert-actif" : "text-encre/60"}`}
+          className={`${TAB_CLASS} ${isCategoriesRoute ? "text-vert-actif" : "text-encre/70"}`}
         >
           <CategoriesIcon />
           Catégories
@@ -225,7 +225,7 @@ export function BottomNav() {
         {effectiveShop ? (
           <Link
             href={`/${effectiveShop}/panier`}
-            className={`relative ${TAB_CLASS} ${isPanier ? "text-vert-actif" : "text-encre/60"}`}
+            className={`relative ${TAB_CLASS} ${isPanier ? "text-vert-actif" : "text-encre/70"}`}
           >
             <CartIcon />
             {cartCount > 0 ? (
@@ -242,7 +242,7 @@ export function BottomNav() {
           </span>
         )}
 
-        <Link href="/favoris" className={`relative ${TAB_CLASS} ${isFavoris ? "text-vert-actif" : "text-encre/60"}`}>
+        <Link href="/favoris" className={`relative ${TAB_CLASS} ${isFavoris ? "text-vert-actif" : "text-encre/70"}`}>
           <HeartIcon />
           {favCount > 0 ? (
             <span className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-vert-actif px-1 text-[9px] font-medium text-ivoire">
@@ -252,7 +252,7 @@ export function BottomNav() {
           Favoris
         </Link>
 
-        <Link href="/compte" className={`${TAB_CLASS} ${isCompte ? "text-vert-actif" : "text-encre/60"}`}>
+        <Link href="/compte" className={`${TAB_CLASS} ${isCompte ? "text-vert-actif" : "text-encre/70"}`}>
           <UserIcon />
           Compte
         </Link>

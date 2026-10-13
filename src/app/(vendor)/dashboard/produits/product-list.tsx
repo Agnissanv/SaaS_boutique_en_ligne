@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toggleProductActive, deleteProduct, bulkToggleActive } from "./actions";
@@ -93,7 +95,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
 
   if (products.length === 0) {
     return (
-      <p className="mt-6 text-sm text-encre/60">
+      <p className="mt-6 text-sm text-encre/70">
         Aucun produit ne correspond. Ajoute ton premier produit, ou modifie
         les filtres ci-dessus, pour qu&apos;il apparaisse ici.
       </p>
@@ -103,7 +105,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
   return (
     <div>
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-        <label className="flex items-center gap-1.5 text-encre/60">
+        <label className="flex items-center gap-1.5 text-encre/70">
           <input
             type="checkbox"
             checked={selected.size === products.length}
@@ -113,7 +115,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
         </label>
         {selected.size > 0 && (
           <>
-            <span className="text-encre/40">{selected.size} sélectionné(s)</span>
+            <span className="text-encre/70">{selected.size} sélectionné(s)</span>
             <button
               type="button"
               disabled={isPending}
@@ -138,7 +140,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
             type="button"
             title="Vue tableau"
             onClick={() => setView("table")}
-            className={`rounded p-1.5 ${view === "table" ? "bg-vert-sapin text-ivoire" : "text-encre/50 hover:text-encre"}`}
+            className={`rounded p-1.5 ${view === "table" ? "bg-vert-sapin text-ivoire" : "text-encre/70 hover:text-encre"}`}
           >
             <IconList className="h-4 w-4" />
           </button>
@@ -146,7 +148,7 @@ export function ProductList({ products, shopSlug }: { products: Product[]; shopS
             type="button"
             title="Vue grille"
             onClick={() => setView("grid")}
-            className={`rounded p-1.5 ${view === "grid" ? "bg-vert-sapin text-ivoire" : "text-encre/50 hover:text-encre"}`}
+            className={`rounded p-1.5 ${view === "grid" ? "bg-vert-sapin text-ivoire" : "text-encre/70 hover:text-encre"}`}
           >
             <IconGrid className="h-4 w-4" />
           </button>
@@ -200,7 +202,7 @@ function ProductTable({ products, shopSlug, selected, onToggleSelected, onToggle
     <div className="mt-3 overflow-x-auto rounded-md border border-ligne bg-white">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
-          <tr className="border-b border-ligne text-xs uppercase tracking-wide text-encre/50">
+          <tr className="border-b border-ligne text-xs uppercase tracking-wide text-encre/70">
             <th className="w-8 px-3 py-2"></th>
             <th className="px-3 py-2 font-medium">Produit</th>
             <th className="px-3 py-2 font-medium">Catégorie</th>
@@ -236,7 +238,7 @@ function ProductTable({ products, shopSlug, selected, onToggleSelected, onToggle
                 <td className="px-3 py-2.5 text-encre/70">
                   {product.category ? categoryLabel(product.category) : "—"}
                 </td>
-                <td className="px-3 py-2.5 text-encre/70">{product.price} FCFA</td>
+                <td className="px-3 py-2.5 text-encre/70">{fcfa(product.price)}</td>
                 <td className="px-3 py-2.5">
                   <StockBar stock={product.stock} threshold={product.stock_alert_threshold} />
                 </td>
@@ -298,8 +300,8 @@ function ProductGrid({ products, shopSlug, selected, onToggleSelected, onToggleA
               <div className="mt-2 aspect-square w-full rounded bg-brume" />
             )}
             <p className="mt-2 truncate text-sm font-medium text-encre">{product.title}</p>
-            <p className="text-xs text-encre/60">
-              {product.category ? categoryLabel(product.category) : "—"} · {product.price} FCFA
+            <p className="text-xs text-encre/70">
+              {product.category ? categoryLabel(product.category) : "—"} · {fcfa(product.price)}
             </p>
             <div className="mt-2">
               <StockBar stock={product.stock} threshold={product.stock_alert_threshold} />
@@ -342,7 +344,7 @@ function StockBar({ stock, threshold }: { stock: number; threshold: number | nul
   const pct = Math.min(100, Math.max(10, (stock / (effectiveThreshold * 5)) * 100));
   return (
     <div className="w-full min-w-[7rem]">
-      <div className="flex items-center justify-between text-xs text-encre/60">
+      <div className="flex items-center justify-between text-xs text-encre/70">
         <span>{STOCK_HEALTH_LABELS[health]}</span>
         <span className="tabular-nums">{stock}</span>
       </div>

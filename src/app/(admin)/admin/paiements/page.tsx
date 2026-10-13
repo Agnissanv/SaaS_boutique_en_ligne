@@ -114,13 +114,13 @@ export default async function AdminPaymentsPage({
       {!error && (payments ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <CoinsIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucun paiement ici.</p>
+          <p className="text-sm text-encre/70">Aucun paiement ici.</p>
         </div>
       ) : error ? null : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-ligne text-xs text-encre/50">
+              <tr className="border-b border-ligne text-xs text-encre/70">
                 <th className="py-3 pl-4 pr-4">Boutique</th>
                 <th className="py-3 pr-4">Fournisseur</th>
                 <th className="py-3 pr-4">Type</th>
@@ -138,10 +138,10 @@ export default async function AdminPaymentsPage({
                       {shop ? (
                         <>
                           <p className="font-medium text-encre">{shop.name}</p>
-                          <p className="text-xs text-encre/50">/{shop.slug}</p>
+                          <p className="text-xs text-encre/70">/{shop.slug}</p>
                         </>
                       ) : (
-                        <span className="text-encre/40">—</span>
+                        <span className="text-encre/70">—</span>
                       )}
                     </td>
                     <td className="py-3 pr-4 text-encre/70 capitalize">{p.provider}</td>
@@ -153,12 +153,12 @@ export default async function AdminPaymentsPage({
                     </td>
                     <td className="py-3 pr-4">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-xs ${STATUS_BADGE_CLASS[p.status] ?? "bg-sable text-encre/60"}`}
+                        className={`rounded px-1.5 py-0.5 text-xs ${STATUS_BADGE_CLASS[p.status] ?? "bg-sable text-encre/70"}`}
                       >
                         {STATUS_LABEL[p.status] ?? p.status}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-encre/50">
+                    <td className="py-3 pr-4 text-encre/70">
                       {new Date(p.created_at).toLocaleString("fr-FR")}
                       {p.status === "failed" && p.raw_payload != null && (
                         <details className="mt-1">

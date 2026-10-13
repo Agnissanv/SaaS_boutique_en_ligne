@@ -101,7 +101,7 @@ export default async function AdminTransactionsPage({
           Filtrer
         </button>
         {actionFilter && (
-          <Link href="/admin/transactions" className="text-sm text-encre/50 hover:text-encre">
+          <Link href="/admin/transactions" className="text-sm text-encre/70 hover:text-encre">
             Réinitialiser
           </Link>
         )}
@@ -116,7 +116,7 @@ export default async function AdminTransactionsPage({
       {!error && (logs ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <ClipboardIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucune action enregistrée ici.</p>
+          <p className="text-sm text-encre/70">Aucune action enregistrée ici.</p>
         </div>
       ) : error ? null : (
         <ul className="mt-6 divide-y divide-ligne rounded-lg border border-ligne bg-white text-sm">
@@ -142,7 +142,7 @@ export default async function AdminTransactionsPage({
                       ? ` (${log.metadata.duration_months} mois)`
                       : ""}
                   </p>
-                  <p className="text-xs text-encre/50">
+                  <p className="text-xs text-encre/70">
                     Par {actor?.display_name ?? "—"} le{" "}
                     {new Date(log.created_at).toLocaleString("fr-FR")}
                   </p>

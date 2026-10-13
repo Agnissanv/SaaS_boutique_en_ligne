@@ -54,7 +54,7 @@ export function NotificationEmailForm({
         />
         <span className="text-sm">
           <span className="font-medium text-encre">Recevoir des notifications par email</span>
-          <span className="mt-0.5 block text-xs text-encre/50">
+          <span className="mt-0.5 block text-xs text-encre/70">
             Nouvelle commande, et stock bas sur le plan Pro.
           </span>
         </span>
@@ -73,7 +73,7 @@ export function NotificationEmailForm({
             placeholder={accountEmail}
             className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
           />
-          <p className="text-xs text-encre/50">Peut être différente de ton email de connexion.</p>
+          <p className="text-xs text-encre/70">Peut être différente de ton email de connexion.</p>
         </div>
       )}
 

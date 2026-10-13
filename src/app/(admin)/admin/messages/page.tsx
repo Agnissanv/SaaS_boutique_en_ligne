@@ -95,7 +95,7 @@ export default async function AdminMessagesPage({
       {!error && (messages ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <MailIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucun message ici.</p>
+          <p className="text-sm text-encre/70">Aucun message ici.</p>
         </div>
       ) : error ? null : (
         <ul className="mt-6 flex flex-col gap-3">
@@ -105,11 +105,11 @@ export default async function AdminMessagesPage({
                 <div className="min-w-0">
                   <p className="font-medium text-encre">
                     {m.subject}
-                    <span className="ml-2 text-xs font-normal text-encre/50">
+                    <span className="ml-2 text-xs font-normal text-encre/70">
                       {new Date(m.created_at).toLocaleString("fr-FR")}
                     </span>
                   </p>
-                  <p className="text-xs text-encre/60">
+                  <p className="text-xs text-encre/70">
                     {m.name} — {m.email}
                   </p>
                 </div>

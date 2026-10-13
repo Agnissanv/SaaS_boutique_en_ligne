@@ -122,12 +122,14 @@ export function SiteFooter() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-ivoire/50">
                 {group.title}
               </p>
-              <ul className="mt-3 flex flex-col gap-2.5">
+              {/* Liens de 40 px de haut sur mobile (zone de clic confortable,
+                  audit visuel du 13/10/2026), plus serrés sur ordinateur. */}
+              <ul className="mt-2 flex flex-col sm:mt-3 sm:gap-1.5">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-ivoire/80 transition hover:text-white"
+                      className="inline-block py-2.5 text-sm text-ivoire/80 transition hover:text-white sm:py-0.5"
                     >
                       {link.label}
                     </Link>
@@ -146,11 +148,11 @@ export function SiteFooter() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="KEVA sur Facebook"
-              className="transition hover:text-ivoire/80"
+              className="-m-3 p-3 transition hover:text-ivoire/80"
             >
               <IconFacebook />
             </a>
-            <a href="mailto:contact@shopkeva.com" className="transition hover:text-ivoire/80">
+            <a href="mailto:contact@shopkeva.com" className="py-2.5 transition hover:text-ivoire/80 sm:py-0">
               contact@shopkeva.com
             </a>
           </div>

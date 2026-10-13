@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClaimOrdersButton } from "../claim-orders-button";
@@ -28,7 +29,7 @@ export default async function CommandesPage() {
       {/* Retour */}
       <Link
         href="/compte"
-        className="mb-5 inline-flex items-center gap-1 text-sm text-encre/60 hover:text-vert-actif transition-colors"
+        className="mb-5 inline-flex items-center gap-1 text-sm text-encre/70 hover:text-vert-actif transition-colors"
       >
         ‹ Retour
       </Link>
@@ -74,15 +75,15 @@ export default async function CommandesPage() {
                       <span
                         className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                           ORDER_STATUS_BADGE_CLASS[order.status] ??
-                          "bg-brume text-encre/60"
+                          "bg-brume text-encre/70"
                         }`}
                       >
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-sm text-encre/60">
+                    <p className="mt-0.5 text-sm text-encre/70">
                       <span className="font-mono text-vert-actif">
-                        {order.total_amount.toLocaleString("fr-FR")} FCFA
+                        {fcfa(order.total_amount)}
                       </span>
                       {" — "}
                       {new Date(order.created_at).toLocaleDateString("fr-FR")}

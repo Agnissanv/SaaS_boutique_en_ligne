@@ -114,7 +114,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
           <div>
             <h1 className="font-display text-lg font-semibold text-encre">
               {partner.label}
-              {partner.code && <span className="ml-2 font-mono text-sm text-encre/50">{partner.code}</span>}
+              {partner.code && <span className="ml-2 font-mono text-sm text-encre/70">{partner.code}</span>}
             </h1>
             <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs ${STATUS_TONE_CLASSES[status.tone]}`}>
               {status.label}
@@ -145,7 +145,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
           <h2 className="font-display text-sm font-semibold text-encre">Invitation</h2>
           {partner.invite_token && !inviteExpired ? (
             <>
-              <p className="mt-1 text-xs text-encre/60">
+              <p className="mt-1 text-xs text-encre/70">
                 Valable jusqu&apos;au {day(partner.invite_expires_at!)}, utilisable une seule fois.
               </p>
               <InviteLink url={`${siteUrl}/partenaire/invitation/${partner.invite_token}`} />
@@ -203,26 +203,26 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
       {stats && (
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className={card}>
-            <p className="text-xs text-encre/60">Visites ce mois</p>
+            <p className="text-xs text-encre/70">Visites ce mois</p>
             <p className="mt-1 text-xl font-semibold text-encre">
               {Object.values(stats.clicks).reduce((s, n) => s + n, 0)}
             </p>
           </div>
           <div className={card}>
-            <p className="text-xs text-encre/60">Boutiques (total)</p>
+            <p className="text-xs text-encre/70">Boutiques (total)</p>
             <p className="mt-1 text-xl font-semibold text-encre">{stats.shops_total}</p>
           </div>
           <div className={card}>
-            <p className="text-xs text-encre/60">Abonnements actifs</p>
+            <p className="text-xs text-encre/70">Abonnements actifs</p>
             <p className="mt-1 text-xl font-semibold text-encre">
               {(stats.active.business ?? 0) + (stats.active.pro ?? 0)}
             </p>
-            <p className="text-xs text-encre/50">
+            <p className="text-xs text-encre/70">
               {stats.active.business ?? 0} Business · {stats.active.pro ?? 0} Pro
             </p>
           </div>
           <div className={card}>
-            <p className="text-xs text-encre/60">Gagné ce mois</p>
+            <p className="text-xs text-encre/70">Gagné ce mois</p>
             <p className="mt-1 text-xl font-semibold text-encre">{fcfa(stats.earned)}</p>
           </div>
         </section>
@@ -230,12 +230,12 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
 
       <section className={card}>
         <h2 className="font-display text-sm font-semibold text-encre">Relevés mensuels</h2>
-        <p className="mt-1 text-xs text-encre/60">
+        <p className="mt-1 text-xs text-encre/70">
           À payer avant le 7 du mois suivant. Une fois le versement fait par Wave / Mobile Money,
           clique sur « Marquer payé ».
         </p>
         {statements.length === 0 ? (
-          <p className="mt-3 text-sm text-encre/60">Aucune commission pour l&apos;instant.</p>
+          <p className="mt-3 text-sm text-encre/70">Aucune commission pour l&apos;instant.</p>
         ) : (
           <ul className="mt-3 divide-y divide-ligne">
             {statements.map(([month, row]) => {
@@ -244,7 +244,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
                 <li key={month} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium capitalize text-encre">{monthLabel(month)}</p>
-                    <p className="text-xs text-encre/60">
+                    <p className="text-xs text-encre/70">
                       {[row.business > 0 && `${row.business} Business`, row.pro > 0 && `${row.pro} Pro`]
                         .filter(Boolean)
                         .join(" · ")}{" "}
@@ -253,7 +253,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
                     </p>
                   </div>
                   {month >= currentMonth ? (
-                    <span className="text-xs text-encre/60">Mois en cours</span>
+                    <span className="text-xs text-encre/70">Mois en cours</span>
                   ) : due > 0 ? (
                     <form action={markPartnerMonthPaid.bind(null, id, month)} className="flex gap-2">
                       <input
@@ -278,10 +278,10 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
 
       <section className={card}>
         <h2 className="font-display text-sm font-semibold text-encre">
-          Boutiques rattachées <span className="font-normal text-encre/50">(visible par toi seul)</span>
+          Boutiques rattachées <span className="font-normal text-encre/70">(visible par toi seul)</span>
         </h2>
         {referrals.length === 0 ? (
-          <p className="mt-3 text-sm text-encre/60">Aucune boutique pour l&apos;instant.</p>
+          <p className="mt-3 text-sm text-encre/70">Aucune boutique pour l&apos;instant.</p>
         ) : (
           <ul className="mt-3 divide-y divide-ligne">
             {referrals.map((referral) => {
@@ -305,9 +305,9 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
                         {referral.shop.name}
                       </a>
                     ) : (
-                      <span className="text-encre/50">Boutique supprimée</span>
+                      <span className="text-encre/70">Boutique supprimée</span>
                     )}
-                    <p className="text-xs text-encre/60">
+                    <p className="text-xs text-encre/70">
                       {PARTNER_SOURCE_LABELS[referral.source] ?? referral.source} · {day(referral.created_at)}
                     </p>
                   </div>
@@ -316,7 +316,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
                     <form action={detachShopFromPartner.bind(null, id, referral.id)}>
                       <ConfirmButton
                         message="Retirer cette boutique du partenaire ? Les commissions déjà créditées restent."
-                        className="text-xs text-encre/50 hover:text-erreur"
+                        className="text-xs text-encre/70 hover:text-erreur"
                       >
                         Retirer
                       </ConfirmButton>
@@ -342,7 +342,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
           />
         </div>
         {partner.ends_on && (
-          <p className="mt-3 text-xs text-encre/60">Fin du partenariat : {day(partner.ends_on)}</p>
+          <p className="mt-3 text-xs text-encre/70">Fin du partenariat : {day(partner.ends_on)}</p>
         )}
       </section>
 
@@ -351,7 +351,7 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
         <form action={deletePartner.bind(null, id)}>
           <ConfirmButton
             message="Supprimer définitivement ce partenaire (essai ou invitation inutilisée) ? Ses codes, clics et boutiques rattachées seront effacés."
-            className="text-xs text-encre/50 hover:text-erreur"
+            className="text-xs text-encre/70 hover:text-erreur"
           >
             Supprimer ce partenaire (essai)
           </ConfirmButton>

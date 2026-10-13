@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -103,7 +104,6 @@ const TRAFFIC_SOURCE_LABELS: Record<string, string> = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const FMT_FCFA = new Intl.NumberFormat("fr-FR");
 
 function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -292,7 +292,7 @@ export default async function DashboardOverviewPage({
               label="Revenu"
               current={periodRevenue}
               previous={previousPeriodRevenue}
-              format={(n) => `${FMT_FCFA.format(n)} FCFA`}
+              format={(n) => `${fcfa(n)}`}
               icon={<IconRevenue className="h-4 w-4" />}
             />
             <ComparisonTile
@@ -307,7 +307,7 @@ export default async function DashboardOverviewPage({
           <>
             <StatTile
               label="Revenu"
-              value={`${FMT_FCFA.format(periodRevenue)} FCFA`}
+              value={`${fcfa(periodRevenue)}`}
               sublabel={periodLabel}
               icon={<IconRevenue className="h-4 w-4" />}
             />
@@ -330,13 +330,13 @@ export default async function DashboardOverviewPage({
             label="Panier moyen"
             current={periodAvgOrderValue}
             previous={previousAvgOrderValue}
-            format={(n) => `${FMT_FCFA.format(Math.round(n))} FCFA`}
+            format={(n) => `${fcfa(Math.round(n))}`}
             icon={<IconBasket className="h-4 w-4" />}
           />
         ) : (
           <StatTile
             label="Panier moyen"
-            value={`${FMT_FCFA.format(Math.round(periodAvgOrderValue))} FCFA`}
+            value={`${fcfa(Math.round(periodAvgOrderValue))}`}
             sublabel={periodLabel}
             icon={<IconBasket className="h-4 w-4" />}
           />
@@ -363,7 +363,7 @@ export default async function DashboardOverviewPage({
           />
         </div>
       ) : (
-        <p className="mt-3 rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+        <p className="mt-3 rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70">
           Le taux de conversion, les clients actifs et la comparaison vs
           période précédente sont disponibles avec le plan{" "}
           <Link href="/dashboard/abonnement" className="font-medium text-vert-actif hover:text-vert-sapin transition-colors">
@@ -387,7 +387,7 @@ export default async function DashboardOverviewPage({
             <h2 className="font-display text-sm font-semibold text-encre">
               Trafic par source (depuis toujours)
             </h2>
-            <p className="mt-1 text-xs text-encre/50">
+            <p className="mt-1 text-xs text-encre/70">
               Génère des liens à partager par réseau depuis « Ma boutique ».
             </p>
             <div className="mt-3">
@@ -399,7 +399,7 @@ export default async function DashboardOverviewPage({
           </div>
         </div>
       ) : (
-        <p className="mt-4 rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+        <p className="mt-4 rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70">
           La courbe de ventes et la répartition du trafic par source sont
           disponibles à partir du plan{" "}
           <Link href="/dashboard/abonnement" className="font-medium text-vert-actif hover:text-vert-sapin transition-colors">
@@ -456,7 +456,7 @@ export default async function DashboardOverviewPage({
           <h2 className="font-display text-sm font-semibold text-encre">Commandes récentes</h2>
           <Link
             href="/dashboard/commandes"
-            className="text-sm text-encre/60 hover:text-vert-sapin"
+            className="text-sm text-encre/70 hover:text-vert-sapin"
           >
             Voir tout
           </Link>
@@ -485,19 +485,19 @@ export default async function DashboardOverviewPage({
                       <p className="truncate text-sm font-medium text-encre">
                         {first?.title ?? "Commande"}
                         {extraCount > 0 && (
-                          <span className="ml-1 font-normal text-encre/50">
+                          <span className="ml-1 font-normal text-encre/70">
                             + {extraCount} autre{extraCount > 1 ? "s" : ""}
                           </span>
                         )}
                       </p>
-                      <p className="truncate text-xs text-encre/60">
+                      <p className="truncate text-xs text-encre/70">
                         {order.customer_name} ·{" "}
                         {new Date(order.created_at).toLocaleDateString("fr-FR")}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="font-mono text-sm text-vert-actif">
-                        {order.total_amount} FCFA
+                        {fcfa(order.total_amount)}
                       </p>
                       <span
                         className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs ${

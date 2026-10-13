@@ -62,7 +62,7 @@ export default async function TarifsPage() {
             <img src="/keva-logo.jpg" alt="KEVA" className="h-8 w-8 rounded-md object-cover" />
             <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">KEVA</span>
           </Link>
-          <Link href="/" className="text-sm text-encre/60 hover:text-vert-actif transition-colors">
+          <Link href="/" className="text-sm text-encre/70 hover:text-vert-actif transition-colors">
             Marketplace
           </Link>
         </div>
@@ -76,7 +76,7 @@ export default async function TarifsPage() {
           <h1 className="mt-3 text-balance font-display text-3xl font-black leading-tight text-encre sm:text-4xl">
             Des tarifs simples, sans surprise
           </h1>
-          <p className="mt-4 text-[15px] leading-relaxed text-encre/70">
+          <p className="mt-4 text-[15px] leading-relaxed text-encre/80">
             0% commission cachée : KEVA facture un abonnement fixe, jamais un
             pourcentage sur tes ventes — ton lien, tes prix, ta marge restent
             à toi. Chaque nouvelle boutique démarre avec un mois d&apos;essai
@@ -108,13 +108,13 @@ export default async function TarifsPage() {
                       <span className="font-mono text-2xl font-semibold text-vert-actif">
                         {plan.price.toLocaleString("fr-FR")}
                       </span>
-                      <span className="ml-1 text-sm text-encre/60">FCFA</span>
+                      <span className="ml-1 text-sm text-encre/70">FCFA</span>
                     </>
                   ) : (
                     <span className="font-display text-2xl font-semibold text-succes">Gratuit</span>
                   )}
                 </p>
-                <p className="text-xs text-encre/50">/ {plan.duration_days} jours</p>
+                <p className="text-xs text-encre/70">/ {plan.duration_days} jours</p>
 
                 {items.length > 0 && (
                   <ul className="mt-4 flex-1 space-y-1.5 text-sm text-encre/70">
@@ -138,7 +138,7 @@ export default async function TarifsPage() {
           })}
         </div>
 
-        <p className="mt-10 max-w-2xl text-sm text-encre/60">
+        <p className="mt-10 max-w-2xl text-sm text-encre/80">
           Le paiement à la livraison reste le seul mode de paiement client
           actif — aucun frais de transaction supplémentaire côté KEVA. Tu
           peux changer de plan à tout moment depuis ton tableau de bord, une

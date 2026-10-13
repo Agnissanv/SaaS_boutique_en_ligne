@@ -65,12 +65,12 @@ export default async function AdminNotificationsPage() {
       <h2 className="mt-8 font-display text-sm font-semibold text-encre">
         Historique des envois
       </h2>
-      <p className="mt-1 text-xs text-encre/50">
+      <p className="mt-1 text-xs text-encre/70">
         Les envois de plus de 90 jours sont automatiquement supprimés.
       </p>
 
       {(campaigns ?? []).length === 0 ? (
-        <p className="mt-4 rounded-lg border border-ligne bg-white p-4 text-sm text-encre/60">
+        <p className="mt-4 rounded-lg border border-ligne bg-white p-4 text-sm text-encre/70">
           Aucun message envoyé pour l&apos;instant.
         </p>
       ) : (
@@ -82,7 +82,7 @@ export default async function AdminNotificationsPage() {
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-sm font-medium text-encre">{c.title}</p>
-                <p className="text-xs text-encre/40">
+                <p className="text-xs text-encre/70">
                   {new Date(c.created_at).toLocaleString("fr-FR", {
                     day: "2-digit",
                     month: "2-digit",
@@ -92,8 +92,8 @@ export default async function AdminNotificationsPage() {
                   })}
                 </p>
               </div>
-              {c.body && <p className="text-sm text-encre/60">{c.body}</p>}
-              <p className="text-xs text-encre/50">
+              {c.body && <p className="text-sm text-encre/70">{c.body}</p>}
+              <p className="text-xs text-encre/70">
                 {c.target_label} — {c.recipient_count} boutique
                 {c.recipient_count > 1 ? "s" : ""}
               </p>

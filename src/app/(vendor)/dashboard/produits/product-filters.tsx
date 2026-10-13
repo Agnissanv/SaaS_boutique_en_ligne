@@ -66,7 +66,7 @@ export function ProductFilters({ current }: { current: ProductFiltersValue }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher un produit..."
-          className="w-full rounded-md border border-ligne bg-brume px-2.5 py-1.5 text-sm text-encre placeholder:text-encre/40 focus:outline-none"
+          className="w-full rounded-md border border-ligne bg-brume px-2.5 py-1.5 text-sm text-encre placeholder:text-encre/50 focus:outline-none"
         />
         <button
           type="submit"
@@ -81,7 +81,7 @@ export function ProductFilters({ current }: { current: ProductFiltersValue }) {
           decisions-techniques.md), même motif que le tri marketplace : le
           texte de légende reste un `<span>` visible au-dessus, le composant
           ne porte que le bouton + la feuille d'action. */}
-      <div className="flex flex-col gap-1 text-xs text-encre/60">
+      <div className="flex flex-col gap-1 text-xs text-encre/70">
         <span>Catégorie</span>
         <NativeSelect
           label="Catégorie"
@@ -95,7 +95,7 @@ export function ProductFilters({ current }: { current: ProductFiltersValue }) {
         />
       </div>
 
-      <div className="flex flex-col gap-1 text-xs text-encre/60">
+      <div className="flex flex-col gap-1 text-xs text-encre/70">
         <span>Statut</span>
         <NativeSelect
           label="Statut"
@@ -106,7 +106,7 @@ export function ProductFilters({ current }: { current: ProductFiltersValue }) {
         />
       </div>
 
-      <div className="flex flex-col gap-1 text-xs text-encre/60">
+      <div className="flex flex-col gap-1 text-xs text-encre/70">
         <span>Trier par</span>
         <NativeSelect
           label="Trier par"

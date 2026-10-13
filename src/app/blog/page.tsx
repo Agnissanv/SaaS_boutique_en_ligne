@@ -35,7 +35,7 @@ export default function BlogPage() {
         <h1 className="mt-2 font-display text-2xl font-semibold text-encre sm:text-3xl">
           Conseils pour vendre en ligne en Côte d&apos;Ivoire
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre/70">
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre/80">
           Des astuces concrètes pour les vendeuses et jeunes revendeurs qui
           vendent au quotidien sur WhatsApp, Instagram ou une boutique KEVA.
         </p>
@@ -47,7 +47,7 @@ export default function BlogPage() {
               href={`/blog/${post.slug}`}
               className="group rounded-xl border border-ligne bg-white p-5 transition hover:border-vert-actif hover:shadow-md"
             >
-              <p className="text-xs text-encre/50">
+              <p className="text-xs text-encre/70">
                 {new Date(post.publishedAt).toLocaleDateString("fr-FR", {
                   day: "numeric",
                   month: "long",

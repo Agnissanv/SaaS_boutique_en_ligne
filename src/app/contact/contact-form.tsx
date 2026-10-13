@@ -80,7 +80,7 @@ export function ContactForm({
           placeholder="toi@exemple.com"
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-encre/50">On répond directement à cette adresse.</p>
+        <p className="text-xs text-encre/70">On répond directement à cette adresse.</p>
       </div>
 
       <div className="flex flex-col gap-1">

@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { ViewTransition } from "react";
 import { redirect } from "next/navigation";
@@ -34,7 +35,6 @@ const STATUS_TABS: { value: string; label: string }[] = [
   ...Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => ({ value, label })),
 ];
 
-const FMT_FCFA = new Intl.NumberFormat("fr-FR");
 
 function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -286,7 +286,7 @@ export default async function OrdersPage({
         ) : (
           <span
             title="Export disponible à partir du plan Pro"
-            className="cursor-not-allowed rounded-md border border-dashed border-ligne px-3 py-1.5 text-sm font-medium text-encre/40"
+            className="cursor-not-allowed rounded-md border border-dashed border-ligne px-3 py-1.5 text-sm font-medium text-encre/70"
           >
             Exporter en CSV (Pro)
           </span>
@@ -295,23 +295,23 @@ export default async function OrdersPage({
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">Commandes du jour</p>
+          <p className="text-xs text-encre/70">Commandes du jour</p>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">{todayCount}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">En attente de traitement</p>
+          <p className="text-xs text-encre/70">En attente de traitement</p>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">{pendingCount}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">Livrées aujourd&apos;hui</p>
+          <p className="text-xs text-encre/70">Livrées aujourd&apos;hui</p>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">{deliveredTodayCount}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">Taux de livraison</p>
+          <p className="text-xs text-encre/70">Taux de livraison</p>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">
             {deliveryRate === null ? "—" : `${deliveryRate.toFixed(0)}%`}
           </p>
-          <p className="mt-0.5 text-xs text-encre/50">Depuis toujours</p>
+          <p className="mt-0.5 text-xs text-encre/70">Depuis toujours</p>
         </div>
       </div>
 
@@ -326,7 +326,7 @@ export default async function OrdersPage({
                   className="flex items-center justify-between gap-3 text-sm"
                 >
                   <span className="min-w-0 truncate text-encre">{o.customer_name}</span>
-                  <span className="shrink-0 text-encre/60">
+                  <span className="shrink-0 text-encre/70">
                     En attente depuis {Math.floor(hoursSince(o.created_at))}h
                   </span>
                 </Link>
@@ -361,11 +361,12 @@ export default async function OrdersPage({
         <input
           type="text"
           name="q"
+          aria-label="Rechercher une commande"
           defaultValue={q ?? ""}
           placeholder="Rechercher un client (nom ou téléphone)..."
           className="w-full max-w-sm rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <label className="flex flex-col gap-1 text-xs text-encre/60">
+        <label className="flex flex-col gap-1 text-xs text-encre/70">
           Du
           <input
             type="date"
@@ -374,7 +375,7 @@ export default async function OrdersPage({
             className="rounded-md border border-ligne px-3 py-1.5 text-sm focus:ring-2 focus:ring-vert-actif"
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-encre/60">
+        <label className="flex flex-col gap-1 text-xs text-encre/70">
           Au
           <input
             type="date"
@@ -425,13 +426,13 @@ export default async function OrdersPage({
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </p>
-                    <p className="truncate text-xs text-encre/60">
+                    <p className="truncate text-xs text-encre/70">
                       {productLabel}
                       {extraCount > 0 && <span className="text-encre/45"> + {extraCount} autre(s)</span>}
                     </p>
                     <p className="text-sm text-encre/70">
                       <span className="font-mono text-vert-actif">
-                        {FMT_FCFA.format(order.total_amount)} FCFA
+                        {fcfa(order.total_amount)}
                       </span>{" "}
                       — {new Date(order.created_at).toLocaleDateString("fr-FR")}
                     </p>

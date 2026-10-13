@@ -32,7 +32,7 @@ export function PeriodSelect({
   const router = useRouter();
 
   return (
-    <div className="flex flex-col gap-1 text-xs text-encre/60">
+    <div className="flex flex-col gap-1 text-xs text-encre/70">
       <NativeSelect
         label="Période"
         value={current}

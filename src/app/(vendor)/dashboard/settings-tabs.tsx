@@ -58,7 +58,7 @@ export function SettingsTabs({ isOwner }: { isOwner: boolean }) {
             key={tab.href}
             href={tab.href}
             className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              active ? "bg-vert-actif/10 text-vert-sapin" : "text-encre/60 hover:bg-brume"
+              active ? "bg-vert-actif/10 text-vert-sapin" : "text-encre/70 hover:bg-brume"
             }`}
           >
             <Icon className="h-3.5 w-3.5" />

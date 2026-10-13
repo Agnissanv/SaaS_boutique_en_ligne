@@ -73,7 +73,7 @@ export function CategoryNav({
   return (
     <nav
       aria-label="Catégories"
-      className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto bg-brume px-4 py-5 scroll-smooth sm:flex-wrap sm:overflow-visible sm:rounded-2xl sm:py-6"
+      className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto bg-brume px-4 py-5 scroll-smooth kv-scroll-x sm:flex-wrap sm:overflow-visible sm:rounded-2xl sm:py-6"
     >
       {tiles.map((tile) => {
         const isActive = tile.value ? tile.value === active : !active;

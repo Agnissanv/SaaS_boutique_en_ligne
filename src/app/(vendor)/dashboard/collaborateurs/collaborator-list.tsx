@@ -23,7 +23,7 @@ export function CollaboratorList({
 
   if (collaborators.length === 0) {
     return (
-      <p className="mt-6 text-sm text-encre/60">
+      <p className="mt-6 text-sm text-encre/70">
         Aucun collaborateur pour l&apos;instant.
       </p>
     );
@@ -33,7 +33,7 @@ export function CollaboratorList({
     <div className="mt-6 overflow-x-auto rounded-md border border-ligne bg-white">
       <table className="w-full min-w-[480px] text-left text-sm">
         <thead>
-          <tr className="border-b border-ligne text-xs uppercase tracking-wide text-encre/50">
+          <tr className="border-b border-ligne text-xs uppercase tracking-wide text-encre/70">
             <th className="px-3 py-2 font-medium">Email</th>
             <th className="px-3 py-2 font-medium">Statut</th>
             <th className="px-3 py-2 font-medium">Invité le</th>
@@ -69,7 +69,7 @@ export function CollaboratorList({
                     Retirer
                   </button>
                 ) : (
-                  <span className="text-xs text-encre/40">—</span>
+                  <span className="text-xs text-encre/70">—</span>
                 )}
               </td>
             </tr>

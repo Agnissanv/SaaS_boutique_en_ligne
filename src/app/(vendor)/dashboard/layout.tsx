@@ -237,12 +237,13 @@ export default async function DashboardLayout({
             method="GET"
             className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-ligne bg-brume px-3 py-1.5 sm:max-w-sm"
           >
-            <IconSearch className="h-4 w-4 shrink-0 text-encre/40" />
+            <IconSearch className="h-4 w-4 shrink-0 text-encre/70" />
             <input
               type="text"
               name="q"
+              aria-label="Rechercher un produit"
               placeholder="Rechercher un produit..."
-              className="w-full bg-transparent text-sm text-encre placeholder:text-encre/40 focus:outline-none"
+              className="w-full bg-transparent text-sm text-encre placeholder:text-encre/50 focus:outline-none"
             />
           </form>
 
@@ -272,7 +273,7 @@ export default async function DashboardLayout({
               <span className="block font-medium text-encre">
                 {profile?.display_name || "Mon compte"}
               </span>
-              {shop?.name && <span className="block text-xs text-encre/60">{shop.name}</span>}
+              {shop?.name && <span className="block text-xs text-encre/70">{shop.name}</span>}
             </span>
           </Link>
         </header>

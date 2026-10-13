@@ -21,8 +21,8 @@ export function BlogTeaser() {
     <section className="mt-10">
       <div className="mb-3 flex items-center justify-between px-1">
         <h2 className="font-display text-lg font-semibold text-encre">Sur le blog KEVA</h2>
-        <Link href="/blog" className="text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
-          Tout voir
+        <Link href="/blog" className="text-sm font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
+          Voir tout
         </Link>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -32,7 +32,7 @@ export function BlogTeaser() {
             href={`/blog/${post.slug}`}
             className="group rounded-xl border border-ligne bg-white p-5 transition hover:border-vert-actif hover:shadow-md"
           >
-            <p className="text-xs text-encre/50">{post.readingMinutes} min de lecture</p>
+            <p className="text-xs text-encre/70">{post.readingMinutes} min de lecture</p>
             <h3 className="mt-1.5 font-display text-base font-semibold text-encre group-hover:text-vert-sapin">
               {post.title}
             </h3>

@@ -1,5 +1,8 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+import { ProductImage } from "@/components/product-image";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -146,10 +149,25 @@ export function CartCheckout({
 
   if (items.length === 0) {
     return (
-      <div className="mt-6">
-        <p className="text-sm text-encre/70">Ton panier est vide.</p>
-        <Link href={`/${shopSlug}`} className="mt-2 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-back">
-          Retour à la boutique
+      // État vide soigné (13/10/2026, audit visuel : une ligne de texte et un
+      // lien, puis directement le pied de page).
+      <div className="mt-6 flex flex-col items-center rounded-2xl border border-ligne bg-white px-6 py-10 text-center">
+        <span
+          aria-hidden="true"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-brume text-vert-actif"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+            <path d="M6 7h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 7Z" />
+            <path d="M9 7V6a3 3 0 0 1 6 0v1" />
+          </svg>
+        </span>
+        <p className="mt-4 font-display text-base font-semibold text-encre">Ton panier est vide</p>
+        <p className="mt-1 text-sm text-encre/70">Ajoute des articles depuis la boutique pour passer commande.</p>
+        <Link
+          href={`/${shopSlug}`}
+          className="mt-5 rounded-full bg-vert-actif px-5 py-2.5 text-sm font-semibold text-ivoire transition hover:bg-vert-sapin"
+        >
+          Découvrir la boutique
         </Link>
       </div>
     );
@@ -256,12 +274,19 @@ export function CartCheckout({
         <ul className="divide-y divide-ligne rounded-lg border border-ligne bg-white">
           {items.map((item) => (
             <li key={item.key} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-encre">{item.title}</p>
+              {/* Photo de l'article (13/10/2026, audit visuel : le panier
+                  n'affichait que des lignes de texte). */}
+              <ProductImage
+                src={item.imageUrl}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-lg border border-ligne/70 object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-sm font-medium leading-snug text-encre">{item.title}</p>
                 {item.variantLabel && (
-                  <p className="text-xs text-encre/50">{item.variantLabel}</p>
+                  <p className="text-xs text-encre/70">{item.variantLabel}</p>
                 )}
-                <p className="font-mono text-sm text-vert-actif">{item.price} FCFA</p>
+                <p className="font-mono text-sm text-vert-actif">{fcfa(item.price)}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 <div className="flex items-center rounded-md border border-ligne">
@@ -301,17 +326,17 @@ export function CartCheckout({
         <dl className="mt-4 divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
           <div className="flex justify-between py-2 text-encre/70">
             <dt>Sous-total</dt>
-            <dd className="font-mono text-vert-actif">{total} FCFA</dd>
+            <dd className="font-mono text-vert-actif">{fcfa(total)}</dd>
           </div>
           <div className="flex justify-between py-2 text-encre/70">
             <dt>Livraison</dt>
             <dd className="font-mono text-vert-actif">
-              {deliveryFee != null ? `${deliveryFee} FCFA` : "à confirmer avec le vendeur"}
+              {deliveryFee != null ? `${fcfa(deliveryFee)}` : "à confirmer avec le vendeur"}
             </dd>
           </div>
           <div className="flex justify-between py-2 text-base font-medium text-encre">
             <dt>Total</dt>
-            <dd className="font-mono text-vert-actif">{total + (deliveryFee ?? 0)} FCFA</dd>
+            <dd className="font-mono text-vert-actif">{fcfa(total + (deliveryFee ?? 0))}</dd>
           </div>
         </dl>
 
@@ -331,23 +356,23 @@ export function CartCheckout({
       <dl className="divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Sous-total</dt>
-          <dd className="font-mono text-vert-actif">{total} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{fcfa(total)}</dd>
         </div>
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Livraison</dt>
           <dd className="font-mono text-vert-actif">
-            {deliveryFee != null ? `${deliveryFee} FCFA` : "à confirmer avec le vendeur"}
+            {deliveryFee != null ? `${fcfa(deliveryFee)}` : "à confirmer avec le vendeur"}
           </dd>
         </div>
         <div className="flex justify-between py-2 text-base font-medium text-encre">
           <dt>Total à payer</dt>
-          <dd className="font-mono text-vert-actif">{total + (deliveryFee ?? 0)} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{fcfa(total + (deliveryFee ?? 0))}</dd>
         </div>
       </dl>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="promoCode" className="text-sm font-medium text-encre">
-          Code promo <span className="text-encre/50">(optionnel)</span>
+          Code promo <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="promoCode"
@@ -356,7 +381,7 @@ export function CartCheckout({
           placeholder="Ex : BIENVENUE10"
           className="rounded-md border border-ligne px-3 py-2 text-sm uppercase focus:border-vert-actif focus:outline-none"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Le rabais est appliqué au moment de valider la commande.
         </p>
       </div>
@@ -391,7 +416,7 @@ export function CartCheckout({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="customerEmail" className="text-sm font-medium text-encre">
-          Email <span className="text-encre/40">(optionnel)</span>
+          Email <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="customerEmail"
@@ -416,7 +441,7 @@ export function CartCheckout({
           onChange={(e) => setDeliveryAddress(e.target.value)}
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Décris le lieu du mieux possible : le vendeur t&apos;appellera pour
           préciser si besoin.
         </p>
@@ -439,7 +464,7 @@ export function CartCheckout({
           </p>
         )}
         {geoStatus === "error" && (
-          <p className="text-xs text-encre/50">
+          <p className="text-xs text-encre/70">
             Position indisponible (refusée ou non supportée) — pas de souci,
             l&apos;adresse écrite suffit.
           </p>
@@ -457,7 +482,7 @@ export function CartCheckout({
             <span className="h-2.5 w-2.5 rounded-full bg-vert-actif" />
           </span>
         </div>
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Tu paies en espèces à la réception. Si le vendeur accepte le Mobile
           Money, son numéro est indiqué sur sa fiche boutique — à régler
           directement avec lui.

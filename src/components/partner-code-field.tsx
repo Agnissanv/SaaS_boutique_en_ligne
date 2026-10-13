@@ -80,7 +80,7 @@ export function PartnerCodeField({
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-sm font-medium text-encre" htmlFor="partnerCode">
-        Code partenaire <span className="font-normal text-encre/50">(facultatif)</span>
+        Code partenaire <span className="font-normal text-encre/70">(facultatif)</span>
       </label>
       <input
         id="partnerCode"
@@ -91,7 +91,7 @@ export function PartnerCodeField({
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Ex : AWA225"
-        className="rounded-md border border-ligne px-3 py-2 font-mono text-sm uppercase placeholder:normal-case placeholder:font-sans placeholder:tracking-normal tracking-wide focus:border-vert-actif focus:outline-none"
+        className="rounded-md border border-ligne px-3 py-2.5 font-mono text-sm uppercase placeholder:normal-case placeholder:font-sans placeholder:tracking-normal tracking-wide focus:border-vert-actif focus:outline-none"
       />
       {status.state === "valid" ? (
         <p className="text-xs text-succes">

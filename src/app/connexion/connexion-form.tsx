@@ -266,7 +266,7 @@ export function ConnexionForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="toi@exemple.com"
-                  className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                  className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
                 />
 
                 <div className="flex items-center justify-between">
@@ -276,7 +276,7 @@ export function ConnexionForm() {
                   <button
                     type="button"
                     onClick={handleSendResetCode}
-                    className="text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors"
+                    className="-my-2 py-2 text-xs text-vert-actif hover:text-vert-sapin font-medium transition-colors"
                   >
                     Oublié / pas encore défini ?
                   </button>
@@ -290,7 +290,7 @@ export function ConnexionForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                  className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
                 />
 
                 {error && <p className="text-sm text-erreur">{error}</p>}
@@ -298,7 +298,7 @@ export function ConnexionForm() {
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
+                  className="mt-2 rounded-md bg-vert-actif px-4 py-3 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
                 >
                   {pending ? "Connexion..." : "Se connecter"}
                 </button>
@@ -309,7 +309,7 @@ export function ConnexionForm() {
                     setUseEmailCode(true);
                     setError(null);
                   }}
-                  className="text-center text-sm text-encre/60 hover:text-vert-actif transition-colors"
+                  className="text-center text-sm text-encre/70 hover:text-vert-actif transition-colors"
                 >
                   Se connecter avec un code reçu par email à la place
                 </button>
@@ -329,13 +329,13 @@ export function ConnexionForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="toi@exemple.com"
-                  className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                  className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
                 />
                 {error && <p className="text-sm text-erreur">{error}</p>}
                 <button
                   type="submit"
                   disabled={pending}
-                  className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
+                  className="mt-2 rounded-md bg-vert-actif px-4 py-3 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
                 >
                   {pending ? "Envoi..." : "Recevoir le code"}
                 </button>
@@ -345,7 +345,7 @@ export function ConnexionForm() {
                     setUseEmailCode(false);
                     setError(null);
                   }}
-                  className="text-center text-sm text-encre/60 hover:text-vert-actif transition-colors"
+                  className="text-center text-sm text-encre/70 hover:text-vert-actif transition-colors"
                 >
                   Se connecter avec un mot de passe à la place
                 </button>
@@ -354,14 +354,14 @@ export function ConnexionForm() {
 
             <div className="mt-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-ligne" />
-              <span className="text-xs text-encre/40">ou</span>
+              <span className="text-xs text-encre/70">ou</span>
               <div className="h-px flex-1 bg-ligne" />
             </div>
             <div className="mt-4">
               <GoogleAuthButton next={suite ?? undefined} />
             </div>
 
-            <p className="mt-4 text-center text-sm text-encre/60">
+            <p className="mt-4 text-center text-sm text-encre/70">
               Pas encore de compte ?{" "}
               <Link href="/inscription" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
                 Créer un compte
@@ -392,7 +392,7 @@ export function ConnexionForm() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               placeholder="Ex. 12345678"
-              className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
+              className="rounded-md border border-ligne px-3 py-2.5 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
             />
 
             {error && <p className="text-sm text-erreur">{error}</p>}
@@ -400,7 +400,7 @@ export function ConnexionForm() {
             <button
               type="submit"
               disabled={pending}
-              className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
+              className="mt-2 rounded-md bg-vert-actif px-4 py-3 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
             >
               {pending ? "Vérification..." : "Se connecter"}
             </button>
@@ -419,7 +419,7 @@ export function ConnexionForm() {
                   setView("password");
                   setError(null);
                 }}
-                className="text-encre/60 hover:text-vert-actif transition-colors"
+                className="text-encre/70 hover:text-vert-actif transition-colors"
               >
                 Retour
               </button>
@@ -450,7 +450,7 @@ export function ConnexionForm() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               placeholder="Ex. 12345678"
-              className="rounded-md border border-ligne px-3 py-2 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
+              className="rounded-md border border-ligne px-3 py-2.5 text-center text-lg tracking-[0.3em] focus:border-vert-actif focus:outline-none"
             />
 
             <label className="text-sm font-medium text-encre" htmlFor="reset-new-password">
@@ -466,7 +466,7 @@ export function ConnexionForm() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
-              className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+              className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
             />
 
             <label className="text-sm font-medium text-encre" htmlFor="reset-confirm-password">
@@ -482,7 +482,7 @@ export function ConnexionForm() {
               value={newPasswordConfirm}
               onChange={(e) => setNewPasswordConfirm(e.target.value)}
               placeholder="••••••••"
-              className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+              className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
             />
 
             {error && <p className="text-sm text-erreur">{error}</p>}
@@ -490,7 +490,7 @@ export function ConnexionForm() {
             <button
               type="submit"
               disabled={pending}
-              className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
+              className="mt-2 rounded-md bg-vert-actif px-4 py-3 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
             >
               {pending ? "Enregistrement..." : "Réinitialiser le mot de passe"}
             </button>
@@ -509,7 +509,7 @@ export function ConnexionForm() {
                   setView("password");
                   setError(null);
                 }}
-                className="text-encre/60 hover:text-vert-actif transition-colors"
+                className="text-encre/70 hover:text-vert-actif transition-colors"
               >
                 Retour
               </button>

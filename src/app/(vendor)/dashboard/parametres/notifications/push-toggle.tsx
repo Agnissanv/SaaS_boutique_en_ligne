@@ -96,7 +96,7 @@ export function PushNotificationToggle({ vapidPublicKey }: { vapidPublicKey: str
 
   if (!supported) {
     return (
-      <p className="mt-4 max-w-md text-xs text-encre/50">
+      <p className="mt-4 max-w-md text-xs text-encre/70">
         Les notifications sur cet appareil ne sont pas prises en charge par ce
         navigateur. Sur iPhone, installe d&apos;abord KEVA sur ton écran
         d&apos;accueil (Safari &gt; Partager &gt; Sur l&apos;écran d&apos;accueil).
@@ -109,7 +109,7 @@ export function PushNotificationToggle({ vapidPublicKey }: { vapidPublicKey: str
       <label className="flex items-center justify-between gap-3">
         <span className="text-sm">
           <span className="font-medium text-encre">Notifications sur cet appareil</span>
-          <span className="mt-0.5 block text-xs text-encre/50">
+          <span className="mt-0.5 block text-xs text-encre/70">
             Reçois une alerte même quand KEVA n&apos;est pas ouvert — nouvelle
             commande, annulation, messages KEVA.
           </span>

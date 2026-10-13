@@ -31,7 +31,7 @@ export function PartnerCodeForm() {
       <label htmlFor="partner-code" className="text-sm font-medium text-encre">
         Code partenaire
       </label>
-      <p className="mt-0.5 text-xs text-encre/60">
+      <p className="mt-0.5 text-xs text-encre/70">
         À saisir avant ton premier paiement d&apos;abonnement.
       </p>
       <div className="mt-2 flex gap-2">

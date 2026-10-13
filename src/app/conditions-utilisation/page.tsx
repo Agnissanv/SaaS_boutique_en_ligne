@@ -60,7 +60,7 @@ export default function ConditionsUtilisationPage() {
         <h1 className="font-display text-2xl font-semibold text-encre">
           Conditions d&apos;utilisation
         </h1>
-        <p className="mt-2 text-sm text-encre/60">Dernière mise à jour : 22 septembre 2026</p>
+        <p className="mt-2 text-sm text-encre/70">Dernière mise à jour : 22 septembre 2026</p>
 
         <div className="mt-8 flex flex-col gap-6 text-sm leading-relaxed text-encre/80">
           <section>

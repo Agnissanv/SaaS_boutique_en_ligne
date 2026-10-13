@@ -19,7 +19,7 @@ export function CreateCommercialForm() {
   return (
     <div className="rounded-lg border border-ligne bg-white p-4">
       <h2 className="font-display text-sm font-semibold text-encre">Ajouter un commercial</h2>
-      <p className="mt-1 text-xs text-encre/60">
+      <p className="mt-1 text-xs text-encre/70">
         Crée un compte de connexion dédié — le commercial verra son propre
         lien de recrutement et ses commissions sur son espace.
       </p>
@@ -70,15 +70,15 @@ export function CreateCommercialForm() {
           </p>
           <dl className="mt-2 flex flex-col gap-1 font-mono text-xs text-encre/80">
             <div>
-              <dt className="inline text-encre/50">Email : </dt>
+              <dt className="inline text-encre/70">Email : </dt>
               <dd className="inline">{state.success.email}</dd>
             </div>
             <div>
-              <dt className="inline text-encre/50">Mot de passe : </dt>
+              <dt className="inline text-encre/70">Mot de passe : </dt>
               <dd className="inline">{state.success.password}</dd>
             </div>
             <div>
-              <dt className="inline text-encre/50">Code de suivi : </dt>
+              <dt className="inline text-encre/70">Code de suivi : </dt>
               <dd className="inline">{state.success.code}</dd>
             </div>
           </dl>

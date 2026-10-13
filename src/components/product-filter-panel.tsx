@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomSheet } from "@/components/bottom-sheet";
@@ -118,7 +120,7 @@ export function ProductFilterPanel({
       items.push({
         key: "prix",
         label: `Prix : ${current.prixMin ? `${Number(current.prixMin).toLocaleString("fr-FR")}` : "0"} – ${
-          current.prixMax ? `${Number(current.prixMax).toLocaleString("fr-FR")} FCFA` : "∞"
+          current.prixMax ? `${fcfa(Number(current.prixMax).toLocaleString("fr-FR"))}` : "∞"
         }`,
         onRemove: () => removeChip({ prixMin: undefined, prixMax: undefined }),
       });
@@ -138,7 +140,7 @@ export function ProductFilterPanel({
           onClick={openPanel}
           className="flex shrink-0 items-center gap-1.5 rounded-md border border-ligne px-2.5 py-1.5 text-xs text-encre"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 text-encre/60">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 text-encre/70">
             <path d="M4 6h16M7 12h10M10 18h4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span className="font-medium">Filtres</span>
@@ -177,9 +179,9 @@ export function ProductFilterPanel({
                   value={draftMin}
                   onChange={(e) => setDraftMin(e.target.value)}
                   placeholder={priceBounds.min.toLocaleString("fr-FR")}
-                  className="w-full min-w-0 rounded-md border border-ligne px-3 py-2 text-sm text-encre placeholder:text-encre/40 focus:outline-none focus:ring-2 focus:ring-vert-actif"
+                  className="w-full min-w-0 rounded-md border border-ligne px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
                 />
-                <span className="text-encre/40">–</span>
+                <span className="text-encre/70">–</span>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -187,7 +189,7 @@ export function ProductFilterPanel({
                   value={draftMax}
                   onChange={(e) => setDraftMax(e.target.value)}
                   placeholder={priceBounds.max.toLocaleString("fr-FR")}
-                  className="w-full min-w-0 rounded-md border border-ligne px-3 py-2 text-sm text-encre placeholder:text-encre/40 focus:outline-none focus:ring-2 focus:ring-vert-actif"
+                  className="w-full min-w-0 rounded-md border border-ligne px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
                 />
               </div>
             </div>
@@ -207,12 +209,12 @@ export function ProductFilterPanel({
                     value={facetSearch[facet.key] ?? ""}
                     onChange={(e) => setFacetSearch((prev) => ({ ...prev, [facet.key]: e.target.value }))}
                     placeholder={`Rechercher dans ${facet.label.toLowerCase()}...`}
-                    className="mb-2 w-full rounded-md border border-ligne px-3 py-1.5 text-xs text-encre placeholder:text-encre/40 focus:outline-none focus:ring-2 focus:ring-vert-actif"
+                    className="mb-2 w-full rounded-md border border-ligne px-3 py-1.5 text-xs text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
                   />
                 ) : null}
                 <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
                   {visibleOptions.length === 0 ? (
-                    <p className="px-1 py-1 text-xs text-encre/50">Aucun résultat.</p>
+                    <p className="px-1 py-1 text-xs text-encre/70">Aucun résultat.</p>
                   ) : (
                     visibleOptions.map((option) => {
                       const checked = draftAttrs[facet.key]?.includes(option.value) ?? false;
@@ -230,7 +232,7 @@ export function ProductFilterPanel({
                             />
                             {option.label}
                           </span>
-                          <span className="font-mono text-xs text-encre/50">{option.count}</span>
+                          <span className="font-mono text-xs text-encre/70">{option.count}</span>
                         </label>
                       );
                     })

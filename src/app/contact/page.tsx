@@ -66,7 +66,7 @@ export default async function ContactPage({
 
       <main className="mx-auto w-full max-w-2xl px-4 py-10">
         <h1 className="font-display text-2xl font-semibold text-encre">Nous contacter</h1>
-        <p className="mt-2 text-sm text-encre/70">
+        <p className="mt-2 text-sm text-encre/80">
           Une question, un souci avec une commande, ou un avis sur KEVA ?
           Écris-nous, on te répond directement par email.
         </p>

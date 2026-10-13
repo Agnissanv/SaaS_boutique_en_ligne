@@ -103,7 +103,7 @@ export default async function PromoCodesPage({
       </div>
 
       {!subscription.features.canUsePromoCodes ? (
-        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/60">
+        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/70">
           Les codes promo sont disponibles à partir du plan Pro.
         </p>
       ) : (

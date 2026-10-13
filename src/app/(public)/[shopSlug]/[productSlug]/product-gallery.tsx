@@ -82,7 +82,7 @@ export function ProductGallery({
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-brume text-sm text-encre/40">
+      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-brume text-sm text-encre/70">
         Pas de photo
       </div>
     );
@@ -126,7 +126,7 @@ export function ProductGallery({
         </button>
       </ViewTransition>
       {images.length > 1 && (
-        <div className="mt-2 flex gap-2 overflow-x-auto">
+        <div className="mt-2 flex gap-2 overflow-x-auto kv-scroll-x">
           {images.map((img, index) => (
             <button
               key={img.url}

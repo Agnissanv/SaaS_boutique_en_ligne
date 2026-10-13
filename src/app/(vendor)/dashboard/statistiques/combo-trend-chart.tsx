@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import { useState } from "react";
 
 /**
@@ -44,7 +46,7 @@ export function ComboTrendChart({
   const fmtFcfa = new Intl.NumberFormat("fr-FR");
 
   if (points.every((p) => p.revenue === 0 && p.views === 0)) {
-    return <p className="text-sm text-encre/60">Aucune donnée sur cette période pour l&apos;instant.</p>;
+    return <p className="text-sm text-encre/70">Aucune donnée sur cette période pour l&apos;instant.</p>;
   }
 
   const barWidth = points.length > 0 ? (width - padding * 2) / points.length : 0;
@@ -60,9 +62,9 @@ export function ComboTrendChart({
 
   return (
     <div>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-xs text-encre/60">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-0.5 text-xs text-encre/70">
         <p>
-          CA : <span className="font-mono font-medium text-vert-actif">{fmtFcfa.format(totalRevenue)} FCFA</span>
+          CA : <span className="font-mono font-medium text-vert-actif">{fcfa(totalRevenue)}</span>
         </p>
         <p>
           Vues : <span className="font-mono font-medium text-encre/70">{fmtFcfa.format(totalViews)}</span>
@@ -138,13 +140,13 @@ export function ComboTrendChart({
             }}
           >
             <p className="font-medium text-encre">{hovered.label}</p>
-            <p className="text-vert-actif">{fmtFcfa.format(hovered.revenue)} FCFA</p>
-            <p className="text-encre/60">{fmtFcfa.format(hovered.views)} vue(s)</p>
+            <p className="text-vert-actif">{fcfa(hovered.revenue)}</p>
+            <p className="text-encre/70">{fmtFcfa.format(hovered.views)} vue(s)</p>
           </div>
         )}
       </div>
 
-      <div className="mt-1 flex justify-between text-[11px] text-encre/50">
+      <div className="mt-1 flex justify-between text-[11px] text-encre/70">
         <span>{points[0]?.label}</span>
         {points.length > 2 && <span>{points[Math.floor(points.length / 2)]?.label}</span>}
         <span>{points[points.length - 1]?.label}</span>

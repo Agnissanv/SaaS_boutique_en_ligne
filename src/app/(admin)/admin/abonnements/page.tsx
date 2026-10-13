@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -35,7 +36,7 @@ type ShopRow = {
 // correspondaient donc plus jamais, et les deux premiers paliers retombaient
 // silencieusement sur le gris par défaut depuis cette migration.
 const PLAN_ICON_CLASS: Record<string, string> = {
-  starter: "text-encre/40",
+  starter: "text-encre/70",
   business: "text-vert-actif",
   pro: "text-vert-actif",
 };
@@ -104,7 +105,7 @@ export default async function AdminSubscriptionsPage({
       <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
-            <tr className="border-b border-ligne text-xs text-encre/50">
+            <tr className="border-b border-ligne text-xs text-encre/70">
               <th className="py-3 pl-4 pr-4">Boutique</th>
               <th className="py-3 pr-4">Plan actuel</th>
               <th className="py-3 pr-4">Statut</th>
@@ -131,13 +132,13 @@ export default async function AdminSubscriptionsPage({
                 <tr key={shop.id} className="transition-colors hover:bg-brume/60">
                   <td className="py-3 pl-4 pr-4">
                     <p className="font-medium text-encre">{shop.name}</p>
-                    <p className="text-xs text-encre/50">/{shop.slug}</p>
+                    <p className="text-xs text-encre/70">/{shop.slug}</p>
                   </td>
                   <td className="py-3 pr-4 text-encre/70">
                     {plan ? (
                       <span className="flex items-center gap-1.5">
-                        <TagIcon className={`h-4 w-4 shrink-0 ${PLAN_ICON_CLASS[plan.code] ?? "text-encre/40"}`} />
-                        {plan.name} <span className="font-mono text-vert-actif">({plan.price} FCFA)</span>
+                        <TagIcon className={`h-4 w-4 shrink-0 ${PLAN_ICON_CLASS[plan.code] ?? "text-encre/70"}`} />
+                        {plan.name} <span className="font-mono text-vert-actif">({fcfa(plan.price)})</span>
                         {sub?.is_trial && (
                           <span
                             className="rounded bg-vert-sapin/15 px-1.5 py-0.5 text-xs font-medium text-vert-sapin"
@@ -157,10 +158,10 @@ export default async function AdminSubscriptionsPage({
                         {SUBSCRIPTION_STATE_LABELS[state]}
                       </span>
                     ) : (
-                      <span className="text-encre/50">—</span>
+                      <span className="text-encre/70">—</span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-encre/50">
+                  <td className="py-3 pr-4 text-encre/70">
                     {sub ? new Date(sub.expires_at).toLocaleDateString("fr-FR") : "—"}
                   </td>
                   <td className="py-3 pr-4">

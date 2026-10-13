@@ -49,6 +49,13 @@ export function HeroMarketplace({
       {/* Mobile : feuille blanche qui chevauche le visuel (placé au-dessus, voir
           HeroBannerCarousel). Desktop : bloc transparent posé sur le visuel. */}
       <div className="relative z-10 order-2 -mt-6 rounded-t-[1.75rem] bg-white sm:order-1 sm:mt-0 sm:rounded-none sm:bg-transparent">
+        {/* Voile clair derrière le texte sur ordinateur (13/10/2026, audit
+            visuel : le titre débordait sur les visuels, « Côte » se perdait
+            dans les feuilles vertes). Sous le texte, au-dessus du carrousel. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 -z-10 hidden w-[72%] bg-linear-to-r from-[#e6f1ea] from-40% via-[#e6f1ea]/80 to-transparent sm:block lg:w-[60%]"
+        />
         <div className="relative mx-auto w-full max-w-6xl px-4 pb-6 pt-6 sm:flex sm:min-h-[31rem] sm:items-center sm:pb-12 sm:pt-28 lg:min-h-[33rem]">
           <div className="w-full sm:max-w-[34rem]">
           <p className="hidden items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-vert-sapin shadow-sm ring-1 ring-ligne sm:inline-flex">

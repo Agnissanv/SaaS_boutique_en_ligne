@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -109,7 +110,7 @@ export default async function SubscriptionPage() {
       <h2 className="mt-6 font-display text-sm font-semibold text-encre">Mon abonnement</h2>
 
       <div className="mt-4 max-w-md rounded-lg border border-ligne bg-white p-4">
-        <p className="text-sm text-encre/60">Plan actuel</p>
+        <p className="text-sm text-encre/70">Plan actuel</p>
         <p className="mt-1 font-display text-lg font-semibold text-encre">
           {subscription.planName ?? "Aucun abonnement"}
         </p>
@@ -171,7 +172,7 @@ export default async function SubscriptionPage() {
         // propre page hébergée, voir decisions-techniques.md). Sans
         // prévenir, ce changement de nom en fin de parcours peut faire
         // croire à un vendeur attentif qu'il s'est trompé de chemin.
-        <p className="mt-1 text-xs text-encre/60">
+        <p className="mt-1 text-xs text-encre/70">
           Paiement Mobile Money/carte sécurisé via Nyole, notre partenaire de
           paiement — le plan est activé dès confirmation. Dernière étape : la
           confirmation sur ton opérateur Mobile Money affichera un nom
@@ -209,7 +210,7 @@ export default async function SubscriptionPage() {
             <p className="mt-1 text-sm text-encre/70">
               {plan.price > 0 ? (
                 <span className="font-mono text-vert-actif">
-                  {plan.price} FCFA
+                  {fcfa(plan.price)}
                 </span>
               ) : (
                 <span className="font-medium text-succes">Gratuit</span>

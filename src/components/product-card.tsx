@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { ViewTransition } from "react";
 import { WishlistButton } from "@/components/wishlist-button";
@@ -36,9 +37,12 @@ export type MarketplaceCardProduct = {
 export function ProductCard({
   product,
   className,
+  hideShop = false,
 }: {
   product: MarketplaceCardProduct;
   className?: string;
+  /** Page d'une boutique : le nom de la boutique serait répété sur chaque carte. */
+  hideShop?: boolean;
 }) {
   const hasDiscount =
     product.compareAtPrice != null && product.compareAtPrice > product.price;
@@ -95,11 +99,11 @@ export function ProductCard({
 
           <div className="flex flex-wrap items-baseline gap-x-1.5">
             <span className="font-mono text-[15px] font-semibold text-vert-actif">
-              {product.price.toLocaleString("fr-FR")} FCFA
+              {fcfa(product.price)}
             </span>
             {hasDiscount ? (
-              <span className="font-mono text-xs text-encre/40 line-through">
-                {product.compareAtPrice?.toLocaleString("fr-FR")} FCFA
+              <span className="font-mono text-xs text-encre/70 line-through">
+                {fcfa(product.compareAtPrice)}
               </span>
             ) : null}
           </div>
@@ -114,17 +118,19 @@ export function ProductCard({
       </Link>
 
       {/* Boutique */}
+      {hideShop ? null : (
       <Link
         href={`/${product.shopSlug}`}
         transitionTypes={["nav-forward"]}
-        className="mt-1.5 flex items-center gap-1 text-xs text-encre/50 transition hover:text-vert-actif"
+        className="mt-1.5 flex items-center gap-1 text-xs text-encre/70 transition hover:text-vert-actif"
       >
         <span className="min-w-0 truncate">{product.shopName}</span>
         {product.isVerified ? <VerifiedBadge /> : null}
       </Link>
+      )}
 
       {product.category ? (
-        <p className="mt-0.5 text-[11px] text-encre/40">
+        <p className="mt-0.5 text-[11px] text-encre/70">
           {categoryLabel(product.category)}
         </p>
       ) : null}

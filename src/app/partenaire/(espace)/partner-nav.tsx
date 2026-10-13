@@ -32,7 +32,7 @@ export function PartnerNav({ variant }: { variant: "sidebar" | "tabs" }) {
               className={`whitespace-nowrap border-b-2 px-1 py-3 text-center text-sm transition-colors ${
                 active
                   ? "border-vert-actif font-semibold text-vert-sapin"
-                  : "border-transparent text-encre/60 hover:text-encre"
+                  : "border-transparent text-encre/70 hover:text-encre"
               }`}
             >
               {item.short ?? item.label}

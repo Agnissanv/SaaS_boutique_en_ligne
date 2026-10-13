@@ -77,7 +77,7 @@ function AvatarField({ initialUrl }: { initialUrl: string | null }) {
           className="text-sm text-encre/80"
         />
       )}
-      {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
+      {uploading && <p className="text-xs text-encre/70">Envoi en cours...</p>}
       {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
   );
@@ -112,7 +112,7 @@ export function ProfileForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="phone" className="text-sm font-medium text-encre">
-          Téléphone <span className="text-encre/50">(optionnel)</span>
+          Téléphone <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="phone"

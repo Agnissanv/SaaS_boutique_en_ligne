@@ -28,7 +28,7 @@ export default async function PartnerSettingsPage() {
           <li>{fcfa(partner.businessCommission)} / mois par abonnement Business actif</li>
           <li>{fcfa(partner.proCommission)} / mois par abonnement Pro actif</li>
         </ul>
-        <p className="mt-2 text-xs text-encre/60">Ces conditions sont fixées par ton contrat avec KEVA.</p>
+        <p className="mt-2 text-xs text-encre/70">Ces conditions sont fixées par ton contrat avec KEVA.</p>
       </section>
     </div>
   );

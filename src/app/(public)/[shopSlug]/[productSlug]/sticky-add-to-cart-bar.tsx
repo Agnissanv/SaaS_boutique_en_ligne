@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { fcfa } from "@/lib/utils/money";
 
-const FMT_FCFA = new Intl.NumberFormat("fr-FR");
+import { useEffect, useState } from "react";
+
 
 /**
  * Barre "Ajouter au panier" fixe en bas d'écran sur mobile — ajoutée le
@@ -40,14 +41,29 @@ export function StickyAddToCartBar({
   stock: number;
   accentColor?: string | null;
 }) {
+  // Masquée tant que le vrai formulaire d'achat (#acheter) est à l'écran
+  // (13/10/2026, audit visuel : on voyait deux fois « Ajouter au panier »).
+  const [formInView, setFormInView] = useState(true);
   useEffect(() => {
-    if (stock <= 0) return;
+    // Le formulaire #acheter est toujours rendu sur la fiche produit ; sans
+    // lui, la barre reste simplement masquée.
+    const form = document.getElementById("acheter");
+    if (!form) return;
+    const observer = new IntersectionObserver(([entry]) => setFormInView(entry.isIntersecting), {
+      rootMargin: "0px 0px -40px 0px",
+    });
+    observer.observe(form);
+    return () => observer.disconnect();
+  }, []);
+
+  const shown = stock > 0 && !formInView;
+  useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty("--sticky-cta-offset", "68px");
+    root.style.setProperty("--sticky-cta-offset", shown ? "68px" : "0px");
     return () => {
       root.style.setProperty("--sticky-cta-offset", "0px");
     };
-  }, [stock]);
+  }, [shown]);
 
   if (stock <= 0) return null;
 
@@ -63,9 +79,14 @@ export function StickyAddToCartBar({
           similaires) ne finisse jamais masqué derrière les deux barres
           fixes empilées. */}
       <div className="h-[68px] sm:hidden" aria-hidden="true" />
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-ligne bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] sm:hidden">
+      <div
+        aria-hidden={!shown}
+        className={`fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-ligne bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-out motion-reduce:transition-none sm:hidden ${
+          shown ? "translate-y-0" : "pointer-events-none translate-y-full"
+        }`}
+      >
         <span className="font-mono text-base font-semibold text-vert-actif">
-          {FMT_FCFA.format(price)} FCFA
+          {fcfa(price)}
         </span>
         <button
           type="button"

@@ -41,9 +41,9 @@ export function PartnerSettingsForm({
         autoCapitalize="characters"
         defaultValue={code}
         readOnly={codeLocked}
-        className={`${inputClass} font-mono uppercase tracking-wide ${codeLocked ? "bg-brume text-encre/60" : ""}`}
+        className={`${inputClass} font-mono uppercase tracking-wide ${codeLocked ? "bg-brume text-encre/70" : ""}`}
       />
-      <p className="-mt-1 text-xs text-encre/60">
+      <p className="-mt-1 text-xs text-encre/70">
         {codeLocked
           ? "Ton partenariat est terminé : le code ne peut plus changer."
           : "Si tu changes de code, l'ancien continue de marcher : tes anciennes vidéos te rapportent toujours."}

@@ -202,7 +202,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-medium text-encre">
-        Photos <span className="text-encre/50">(1 à {MAX_PHOTOS})</span>
+        Photos <span className="text-encre/70">(1 à {MAX_PHOTOS})</span>
       </label>
       {urls.map((url) => (
         <input key={url} type="hidden" name="imageUrls" value={url} />
@@ -241,7 +241,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/50 transition hover:border-vert-actif hover:text-vert-actif disabled:opacity-50"
+            className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/70 transition hover:border-vert-actif hover:text-vert-actif disabled:opacity-50"
           >
             <span className="text-xl leading-none">+</span>
             <span className="text-[10px] font-medium">Ajouter</span>
@@ -257,7 +257,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
         disabled={uploading}
         className="hidden"
       />
-      <p className="text-xs text-encre/50">
+      <p className="text-xs text-encre/70">
         Résolution entre 500×500 et 2000×2000 px, 2 Mo maximum par photo. Fond
         blanc recommandé, sans filigrane.
       </p>
@@ -267,7 +267,7 @@ function PhotoGallery({ initialUrls }: { initialUrls: string[] }) {
       {urls.length === 0 && !uploading && (
         <p className="text-xs text-erreur">Ajoute au moins une photo pour pouvoir enregistrer.</p>
       )}
-      {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
+      {uploading && <p className="text-xs text-encre/70">Envoi en cours...</p>}
       {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
   );
@@ -296,10 +296,10 @@ function HighlightsField({ initial }: { initial: string[] }) {
 
   return (
     <fieldset className="flex flex-col gap-2 rounded-md border border-ligne p-3">
-      <legend className="px-1 text-xs font-medium text-encre/60">
-        Points forts <span className="text-encre/50">(optionnel)</span>
+      <legend className="px-1 text-xs font-medium text-encre/70">
+        Points forts <span className="text-encre/70">(optionnel)</span>
       </legend>
-      <p className="text-xs text-encre/50">
+      <p className="text-xs text-encre/70">
         Ex : « 100% coton », « Garantie 12 mois », « Livré avec housse ».
       </p>
       {items.map((item, index) => (
@@ -368,13 +368,13 @@ function CategoryAttributesFields({
 
   return (
     <fieldset key={category} className="flex flex-col gap-3 rounded-md border border-ligne p-3">
-      <legend className="px-1 text-xs font-medium text-encre/60">
+      <legend className="px-1 text-xs font-medium text-encre/70">
         Spécifications {(CATEGORIES.find((c) => c.value === category)?.label ?? "").toLowerCase()}
       </legend>
       {fields.map((field: CategoryAttributeField) => (
         <div key={field.key} className="flex flex-col gap-1">
           <label htmlFor={`attr_${field.key}`} className="text-sm font-medium text-encre">
-            {field.label} <span className="text-encre/50">(optionnel)</span>
+            {field.label} <span className="text-encre/70">(optionnel)</span>
           </label>
           {field.type === "select" ? (
             <NativeSelect
@@ -461,10 +461,10 @@ function VariantGroups({ initialVariants }: { initialVariants: Variant[] }) {
 
   return (
     <fieldset className="flex flex-col gap-3 rounded-md border border-ligne p-3">
-      <legend className="px-1 text-xs font-medium text-encre/60">
+      <legend className="px-1 text-xs font-medium text-encre/70">
         Variantes (optionnel)
       </legend>
-      <p className="text-xs text-encre/50">
+      <p className="text-xs text-encre/70">
         Ex : un groupe « Taille » avec les valeurs « S », « M », « L »..., un
         groupe « Couleur » avec « Rouge », « Bleu »... Ajoute autant de groupes
         que nécessaire (Matière, Pointure...). Le client choisira une valeur
@@ -677,7 +677,7 @@ export function ProductForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="tags" className="text-sm font-medium text-encre">
-          Tags <span className="text-encre/50">(optionnel)</span>
+          Tags <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="tags"
@@ -687,7 +687,7 @@ export function ProductForm({
           maxLength={300}
           className="rounded-md border border-ligne px-3 py-2 text-sm"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Mots-clés séparés par une virgule, utiles pour la recherche.
         </p>
       </div>
@@ -723,7 +723,7 @@ export function ProductForm({
         </div>
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="compareAtPrice" className="text-sm font-medium text-encre">
-            Prix barré <span className="text-encre/50">(optionnel)</span>
+            Prix barré <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="compareAtPrice"
@@ -743,10 +743,10 @@ export function ProductForm({
           les deux dates sont optionnelles indépendamment l'une de l'autre
           (validé côté serveur, voir actions.ts). */}
       <fieldset className="flex flex-col gap-2 rounded-md border border-ligne p-3">
-        <legend className="px-1 text-xs font-medium text-encre/60">
+        <legend className="px-1 text-xs font-medium text-encre/70">
           Prix soldé (optionnel)
         </legend>
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Prix affiché à la place du prix normal pendant une période donnée
           (ex : promo de weekend). Laisse vide pour ne pas faire de promo.
         </p>
@@ -767,7 +767,7 @@ export function ProductForm({
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 flex-col gap-1">
             <label htmlFor="saleStartsAt" className="text-sm font-medium text-encre">
-              Début <span className="text-encre/50">(optionnel)</span>
+              Début <span className="text-encre/70">(optionnel)</span>
             </label>
             <input
               id="saleStartsAt"
@@ -779,7 +779,7 @@ export function ProductForm({
           </div>
           <div className="flex flex-1 flex-col gap-1">
             <label htmlFor="saleEndsAt" className="text-sm font-medium text-encre">
-              Fin <span className="text-encre/50">(optionnel)</span>
+              Fin <span className="text-encre/70">(optionnel)</span>
             </label>
             <input
               id="saleEndsAt"
@@ -798,7 +798,7 @@ export function ProductForm({
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="sku" className="text-sm font-medium text-encre">
-            SKU <span className="text-encre/50">(optionnel)</span>
+            SKU <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="sku"
@@ -811,7 +811,7 @@ export function ProductForm({
         </div>
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="barcode" className="text-sm font-medium text-encre">
-            Code-barres <span className="text-encre/50">(optionnel)</span>
+            Code-barres <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="barcode"
@@ -845,7 +845,7 @@ export function ProductForm({
       {canManageStock && canUseAdvancedStockAlerts ? (
         <div className="flex flex-col gap-1">
           <label htmlFor="stockAlertThreshold" className="text-sm font-medium text-encre">
-            Seuil d&apos;alerte stock bas <span className="text-encre/50">(optionnel)</span>
+            Seuil d&apos;alerte stock bas <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="stockAlertThreshold"
@@ -857,7 +857,7 @@ export function ProductForm({
             placeholder="5 par défaut"
             className="rounded-md border border-ligne px-3 py-2 text-sm"
           />
-          <p className="text-xs text-encre/50">
+          <p className="text-xs text-encre/70">
             Tu reçois un email dès que le stock de ce produit passe à ou sous
             ce seuil suite à une commande.
           </p>
@@ -865,7 +865,7 @@ export function ProductForm({
       ) : null}
 
       {!canManageStock && (
-        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70">
           Gestion du stock disponible à partir du plan Business.
         </p>
       )}
@@ -873,7 +873,7 @@ export function ProductForm({
       {canUseVariants ? (
         <VariantGroups initialVariants={variants} />
       ) : (
-        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70">
           Variantes (taille, couleur...) disponibles à partir du plan Business.
         </p>
       )}

@@ -25,7 +25,7 @@ export function SpaceSwitcher({
   tone?: "dark" | "light";
 }) {
   const track = tone === "dark" ? "bg-white/10" : "bg-brume";
-  const idle = tone === "dark" ? "text-ivoire/70 hover:text-ivoire" : "text-encre/60 hover:text-encre";
+  const idle = tone === "dark" ? "text-ivoire/70 hover:text-ivoire" : "text-encre/70 hover:text-encre";
   const current = tone === "dark" ? "bg-ivoire text-vert-sapin" : "bg-white text-vert-sapin shadow-sm";
 
   const items = [

@@ -57,9 +57,9 @@ export function SortSelect({
         onClick={() => setOpen(true)}
         className="flex shrink-0 items-center gap-1.5 rounded-md border border-ligne px-2.5 py-1.5 text-xs text-encre"
       >
-        <span className="text-encre/60">Trier :</span>
+        <span className="text-encre/70">Trier :</span>
         <span className="font-medium">{currentLabel}</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3 text-encre/50">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3 text-encre/70">
           <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>

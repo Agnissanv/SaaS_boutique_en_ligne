@@ -22,7 +22,7 @@ export function MessageStatusButton({ messageId, status }: { messageId: string; 
       }
       className={`flex w-fit shrink-0 items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium disabled:opacity-50 ${
         isHandled
-          ? "border-ligne text-encre/60 hover:bg-brume"
+          ? "border-ligne text-encre/70 hover:bg-brume"
           : "border-succes/40 text-succes hover:bg-succes/10"
       }`}
     >

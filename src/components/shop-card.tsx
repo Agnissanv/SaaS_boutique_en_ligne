@@ -65,17 +65,19 @@ export function ShopCard({ shop, className }: { shop: MarketplaceShop; className
           {shop.name.charAt(0).toUpperCase()}
         </div>
       )}
-      <p className="flex w-full items-center justify-center gap-1 text-sm font-medium text-encre">
-        <span className="min-w-0 truncate">{shop.name}</span>
+      {/* Nom sur 2 lignes au plus (audit visuel du 13/10/2026 : « MAMFO SOL… »
+          coupé sur une seule ligne), hauteur fixe pour aligner les cartes. */}
+      <p className="flex min-h-[2.5rem] w-full items-center justify-center gap-1 text-center text-sm font-medium leading-tight text-encre">
+        <span className="line-clamp-2 min-w-0 break-words">{shop.name}</span>
         {shop.isVerified ? <VerifiedBadge /> : null}
       </p>
       {shop.category ? (
-        <p className="text-xs text-encre/60">{categoryLabel(shop.category)}</p>
+        <p className="text-xs text-encre/70">{categoryLabel(shop.category)}</p>
       ) : null}
       {shop.rating ? (
         <p className="text-xs text-vert-actif">
           <Stars rating={shop.rating.average} />{" "}
-          <span className="text-encre/60">({shop.rating.count})</span>
+          <span className="text-encre/70">({shop.rating.count})</span>
         </p>
       ) : null}
     </Link>

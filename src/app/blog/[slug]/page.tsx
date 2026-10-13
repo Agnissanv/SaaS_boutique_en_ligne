@@ -57,7 +57,7 @@ export default async function BlogPostPage({
           Tous les articles
         </Link>
 
-        <p className="mt-5 text-xs text-encre/50">
+        <p className="mt-5 text-xs text-encre/70">
           {new Date(post.publishedAt).toLocaleDateString("fr-FR", {
             day: "numeric",
             month: "long",

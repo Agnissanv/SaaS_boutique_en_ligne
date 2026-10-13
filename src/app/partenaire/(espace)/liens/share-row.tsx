@@ -23,7 +23,7 @@ export function ShareRow({ label, url, message }: { label: string; url: string; 
     <li className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="text-sm font-medium text-encre">{label}</p>
-        <p className="truncate font-mono text-xs text-encre/60">{url}</p>
+        <p className="truncate font-mono text-xs text-encre/70">{url}</p>
       </div>
       <div className="flex shrink-0 gap-2">
         <button

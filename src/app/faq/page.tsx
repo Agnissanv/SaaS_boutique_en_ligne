@@ -135,7 +135,7 @@ export default function FaqPage() {
         <h1 className="mt-2 font-display text-2xl font-semibold text-encre sm:text-3xl">
           Questions fréquentes
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre/70">
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-encre/80">
           Les réponses aux questions les plus courantes sur KEVA. Une autre
           question ?{" "}
           <Link href="/contact" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
@@ -160,7 +160,7 @@ export default function FaqPage() {
                       {item.question}
                       <span
                         aria-hidden="true"
-                        className="text-encre/40 transition group-open:rotate-45"
+                        className="text-encre/70 transition group-open:rotate-45"
                       >
                         +
                       </span>

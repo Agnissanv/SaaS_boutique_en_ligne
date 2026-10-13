@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
@@ -72,7 +73,6 @@ function firstThumbnail(images: ProductImageRow[] | undefined): string | undefin
   return [...images].sort((a, b) => a.position - b.position)[0]?.url;
 }
 
-const FMT_FCFA = new Intl.NumberFormat("fr-FR");
 
 /**
  * "Vraies statistiques" avec graphiques — ajoutée le 16/09/2026, enrichie le
@@ -133,7 +133,7 @@ export default async function StatistiquesPage({
           répartition des commandes par statut, et bien plus sur les plans
           supérieurs.
         </p>
-        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/60">
+        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/70">
           Les statistiques avec graphiques sont disponibles à partir du plan
           Business.
         </p>
@@ -418,7 +418,7 @@ export default async function StatistiquesPage({
               label="Chiffre d'affaires"
               current={currentPeriodRevenue}
               previous={previousPeriodRevenue}
-              format={(n) => `${FMT_FCFA.format(n)} FCFA`}
+              format={(n) => `${fcfa(n)}`}
               icon={<IconRevenue className="h-4.5 w-4.5" />}
               trend={revenueTrend}
             />
@@ -426,7 +426,7 @@ export default async function StatistiquesPage({
               label="Panier moyen"
               current={currentAvgOrderValue}
               previous={previousAvgOrderValue}
-              format={(n) => `${FMT_FCFA.format(Math.round(n))} FCFA`}
+              format={(n) => `${fcfa(Math.round(n))}`}
               icon={<IconBasket className="h-4.5 w-4.5" />}
               trend={avgOrderTrend}
             />
@@ -449,19 +449,19 @@ export default async function StatistiquesPage({
           <>
             <StatTile
               label="Chiffre d'affaires"
-              value={`${FMT_FCFA.format(currentPeriodRevenue)} FCFA`}
+              value={`${fcfa(currentPeriodRevenue)}`}
               sublabel={periodLabel}
               icon={<IconRevenue className="h-4.5 w-4.5" />}
               trend={revenueTrend}
             />
             <StatTile
               label="Panier moyen"
-              value={`${FMT_FCFA.format(Math.round(currentAvgOrderValue))} FCFA`}
+              value={`${fcfa(Math.round(currentAvgOrderValue))}`}
               sublabel={periodLabel}
               icon={<IconBasket className="h-4.5 w-4.5" />}
               trend={avgOrderTrend}
             />
-            <div className="col-span-2 flex items-center rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60 sm:col-span-2">
+            <div className="col-span-2 flex items-center rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70 sm:col-span-2">
               Le taux de conversion et les clients actifs sont disponibles avec
               le plan Pro.
             </div>
@@ -483,7 +483,7 @@ export default async function StatistiquesPage({
           <h2 className="font-display text-sm font-semibold text-encre">
             Entonnoir de conversion ({periodLabel})
           </h2>
-          <p className="mt-1 text-xs text-encre/50">
+          <p className="mt-1 text-xs text-encre/70">
             Simplifié à 3 étapes : KEVA ne peut pas suivre les ajouts au
             panier (panier local au navigateur), et &quot;Commandes
             confirmées&quot; remplace &quot;Paiements réussis&quot; — pas
@@ -529,10 +529,10 @@ export default async function StatistiquesPage({
       <div className="mt-4 rounded-lg border border-ligne bg-white p-4">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display text-sm font-semibold text-encre">Top produits</h2>
-          <p className="text-xs text-encre/50">Depuis toujours</p>
+          <p className="text-xs text-encre/70">Depuis toujours</p>
         </div>
         {topProducts.length === 0 ? (
-          <p className="mt-3 text-sm text-encre/60">Aucune vente pour l&apos;instant.</p>
+          <p className="mt-3 text-sm text-encre/70">Aucune vente pour l&apos;instant.</p>
         ) : (
           <ul className="mt-3 divide-y divide-ligne">
             {topProducts.map((p) => (
@@ -540,7 +540,7 @@ export default async function StatistiquesPage({
                 <ProductImage src={p.thumbnail} alt={p.title} className="h-10 w-10 shrink-0 rounded-md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-encre">{p.title}</p>
-                  <p className="text-xs text-encre/50">
+                  <p className="text-xs text-encre/70">
                     {p.views} vue(s) · {p.quantitySold} vendu(s)
                     {subscription.features.hasFullStats && p.conversion !== null && (
                       <> · {p.conversion.toFixed(1)}% conversion</>
@@ -548,7 +548,7 @@ export default async function StatistiquesPage({
                   </p>
                 </div>
                 <p className="shrink-0 font-mono text-sm text-vert-actif">
-                  {FMT_FCFA.format(p.revenue)} FCFA
+                  {fcfa(p.revenue)}
                 </p>
               </li>
             ))}
@@ -560,7 +560,7 @@ export default async function StatistiquesPage({
         <h2 className="font-display text-sm font-semibold text-encre">
           Trafic par source (depuis toujours)
         </h2>
-        <p className="mt-1 text-xs text-encre/50">
+        <p className="mt-1 text-xs text-encre/70">
           Génère des liens à partager par réseau depuis « Ma boutique ».
         </p>
         <div className="mt-3">
@@ -580,7 +580,7 @@ export default async function StatistiquesPage({
             <StatusBreakdown rows={statusRows} />
           </div>
           {cancellationRate !== null && (
-            <p className="mt-3 text-xs text-encre/50">
+            <p className="mt-3 text-xs text-encre/70">
               Taux d&apos;annulation : <span className="font-mono text-encre/70">{cancellationRate.toFixed(1)}%</span>
             </p>
           )}
@@ -603,16 +603,16 @@ export default async function StatistiquesPage({
         <div className="rounded-lg border border-ligne bg-white p-4">
           <h2 className="font-display text-sm font-semibold text-encre">Valeur du stock</h2>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">
-            {FMT_FCFA.format(Math.round(stockValue))} FCFA
+            {fcfa(Math.round(stockValue))}
           </p>
-          <p className="mt-0.5 text-xs text-encre/50">{allProducts.length} produit(s) actif(s)</p>
+          <p className="mt-0.5 text-xs text-encre/70">{allProducts.length} produit(s) actif(s)</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
           <h2 className="font-display text-sm font-semibold text-encre">Note moyenne des avis</h2>
           <p className="mt-1 font-mono text-lg font-semibold text-encre">
             {rating ? `${rating.average.toFixed(1)} / 5` : "—"}
           </p>
-          <p className="mt-0.5 text-xs text-encre/50">
+          <p className="mt-0.5 text-xs text-encre/70">
             {rating ? `${rating.count} avis` : "Pas encore d'avis"}
           </p>
         </div>
@@ -622,14 +622,14 @@ export default async function StatistiquesPage({
         <h2 className="font-display text-sm font-semibold text-encre">
           Produits jamais vendus
         </h2>
-        <p className="mt-1 text-xs text-encre/50">
+        <p className="mt-1 text-xs text-encre/70">
           Depuis toujours, hors produits inactifs ou supprimés.
         </p>
         <div className="mt-3">
           <RankedList
             items={neverSoldProducts.slice(0, 10).map((p) => ({
               label: p.title,
-              value: `${FMT_FCFA.format(p.price)} FCFA`,
+              value: `${fcfa(p.price)}`,
             }))}
             emptyLabel="Tous tes produits actifs ont déjà été vendus au moins une fois 🎉"
           />
@@ -642,7 +642,7 @@ export default async function StatistiquesPage({
             <h2 className="font-display text-sm font-semibold text-encre">
               Clients par segment
             </h2>
-            <p className="mt-1 text-xs text-encre/50">
+            <p className="mt-1 text-xs text-encre/70">
               Parmi les clients ayant commandé sur la période, selon leur
               nombre de commandes cumulé depuis toujours.
             </p>
@@ -658,12 +658,12 @@ export default async function StatistiquesPage({
             <h2 className="font-display text-sm font-semibold text-encre">
               Meilleurs clients
             </h2>
-            <p className="mt-1 text-xs text-encre/50">Par dépense cumulée, depuis toujours.</p>
+            <p className="mt-1 text-xs text-encre/70">Par dépense cumulée, depuis toujours.</p>
             <div className="mt-3">
               <RankedList
                 items={topCustomers.map((c) => ({
                   label: `${c.customer_name} (${c.customer_phone})`,
-                  value: `${FMT_FCFA.format(c.total_spent)} FCFA · ${c.order_count} commande(s)`,
+                  value: `${fcfa(c.total_spent)} · ${c.order_count} commande(s)`,
                 }))}
                 emptyLabel="Pas encore de commande."
               />
@@ -678,7 +678,7 @@ export default async function StatistiquesPage({
               <StatTile label="Commandes avec un code" value={String(promoOrdersCount)} />
               <StatTile
                 label="Total des remises accordées"
-                value={`${FMT_FCFA.format(promoDiscountTotal)} FCFA`}
+                value={`${fcfa(promoDiscountTotal)}`}
               />
             </div>
           </div>

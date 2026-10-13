@@ -772,10 +772,13 @@ export default async function Home({
               une pastille blanche translucide pour rester lisibles par-dessus
               les visuels sombres du hero. */}
           <ScrollHeader>
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
+            {/* Une seule ligne sur téléphone (13/10/2026, audit visuel : logo
+                puis recherche sur deux lignes, ~110 px une fois qu'on défile) :
+                logo seul, recherche, bouton loupe. Inchangé à partir de sm:. */}
+            <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:flex-wrap sm:gap-4">
               <Link
                 href="/"
-                className="flex shrink-0 items-center gap-2 rounded-full bg-white/80 py-1 pl-1 pr-3 backdrop-blur-sm transition group-data-[scrolled=true]:bg-transparent"
+                className="flex shrink-0 items-center gap-2 rounded-full bg-white/80 p-1 backdrop-blur-sm transition group-data-[scrolled=true]:bg-transparent sm:pr-3"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -783,7 +786,7 @@ export default async function Home({
                   alt="KEVA"
                   className="h-9 w-9 rounded-md object-cover"
                 />
-                <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">
+                <span className="hidden font-display text-lg font-bold tracking-wide text-vert-sapin sm:inline">
                   KEVA
                 </span>
               </Link>
@@ -820,17 +823,28 @@ export default async function Home({
               derrière. Le <h1> ("la plus simple de Côte d'Ivoire") reste celui
               voulu par Isaac le 02/10/2026. Le badge de promotion n'apparaît
               que s'il existe une vraie promo (`heroPromoDiscount`). */}
-          <HeroMarketplace
-            categories={heroCategories}
-            promoDiscount={heroPromoDiscount}
-            search={{ defaultValue: q ?? "", categorie, prixMin, prixMax, attrs }}
-          />
+          {/* Page de résultats (recherche, catégorie, filtres) : ni bandeau, ni
+              argumentaire, ni bande de boutiques (13/10/2026, audit visuel —
+              les résultats commençaient ~1 400 px plus bas, presque deux écrans
+              de téléphone, quand on arrivait par un lien : pastille de
+              catégorie, lien partagé, retour arrière). Une cale de la hauteur
+              de l'en-tête fixe suffit. */}
+          {hasFilter ? (
+            <div className="h-[68px] sm:h-[72px]" aria-hidden="true" />
+          ) : (
+            <HeroMarketplace
+              categories={heroCategories}
+              promoDiscount={heroPromoDiscount}
+              search={{ defaultValue: q ?? "", categorie, prixMin, prixMax, attrs }}
+            />
+          )}
 
           {/* Argumentaire de confiance — déplacé juste sous le hero le
               22/09/2026 (au lieu d'être noyé après "Catégories"), pour
               reprendre la rangée de badges de confiance sous le hero vue
               dans la référence d'Isaac. Recoloré bg-sable/text-cuivre-profond
               → bg-brume/text-vert-actif au passage. */}
+          {!hasFilter && (
           <section className="mx-auto mt-8 grid w-full max-w-6xl grid-cols-1 gap-3 px-4 sm:grid-cols-3">
             {TRUST_ITEMS.map((item) => (
               <div
@@ -850,6 +864,7 @@ export default async function Home({
               </div>
             ))}
           </section>
+          )}
 
           {/* ========== CONTENU (limité en largeur) ========== */}
           <main className="mx-auto w-full max-w-6xl px-4 pb-10">
@@ -873,9 +888,9 @@ export default async function Home({
                 </h2>
                 <Link
                   href="/categories"
-                  className="text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
+                  className="text-sm font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
                 >
-                  Tout voir
+                  Voir tout
                 </Link>
               </div>
               <CategoryNav
@@ -887,13 +902,13 @@ export default async function Home({
               />
             </div>
 
-            {/* Boutiques de la plateforme */}
-            {featuredShops.length > 0 ? (
+            {/* Boutiques de la plateforme (pas sur une page de résultats). */}
+            {!hasFilter && featuredShops.length > 0 ? (
               <section className="mt-10">
                 <h2 className="font-display text-lg font-semibold text-encre">
                   Boutiques sur KEVA
                 </h2>
-                <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth">
+                <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth kv-scroll-x">
                   {featuredShops.map((shop) => (
                     <ShopCard
                       key={shop.slug}
@@ -911,9 +926,9 @@ export default async function Home({
                 <section className="mt-10">
                   <div className="rounded-lg border border-ligne bg-white p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h2 className="font-display text-lg font-semibold text-encre">
+                      <h1 className="font-display text-lg font-semibold text-encre">
                         {gridTitle}
-                      </h2>
+                      </h1>
                       <SortSelect
                         basePath="/"
                         value={sort}
@@ -923,7 +938,7 @@ export default async function Home({
                         current={current}
                       />
                     </div>
-                    <p className="mt-1 text-xs text-encre/60">
+                    <p className="mt-1 text-xs text-encre/70">
                       {filterSummary}
                       {" — "}
                       <Link
@@ -960,7 +975,7 @@ export default async function Home({
                     ) : null}
                     {searchCategories.some((c) => c.value !== categorie) ? (
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                        <span className="text-encre/60">Voir tout le rayon :</span>
+                        <span className="text-encre/70">Voir tout le rayon :</span>
                         {searchCategories
                           .filter((c) => c.value !== categorie)
                           .map((c) => (

@@ -76,7 +76,7 @@ export function GoogleAuthButton({
     <button
       type="button"
       onClick={handleClick}
-      className="flex items-center justify-center gap-2 rounded-md border border-ligne bg-white px-4 py-2 text-sm font-medium text-encre hover:bg-brume"
+      className="flex w-full items-center justify-center gap-2 rounded-md border border-ligne bg-white px-4 py-3 text-sm font-medium text-encre hover:bg-brume"
     >
       <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
         <path

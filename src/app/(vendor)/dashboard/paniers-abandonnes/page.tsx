@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getShopSubscription } from "@/lib/subscription";
@@ -19,7 +20,6 @@ type AbandonedCartRow = {
   updated_at: string;
 };
 
-const FMT_FCFA = new Intl.NumberFormat("fr-FR");
 const MAX_AGE_DAYS = 7;
 
 /**
@@ -66,7 +66,7 @@ export default async function AbandonedCartsPage() {
           Vois qui a rempli le formulaire de commande sans jamais valider, et
           relance-le toi-même sur WhatsApp en un clic.
         </p>
-        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/60">
+        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/70">
           Disponible à partir du plan Business.
         </p>
       </div>
@@ -94,7 +94,7 @@ export default async function AbandonedCartsPage() {
       </p>
 
       {carts.length === 0 ? (
-        <p className="mt-6 text-sm text-encre/60">Aucun panier abandonné pour l&apos;instant.</p>
+        <p className="mt-6 text-sm text-encre/70">Aucun panier abandonné pour l&apos;instant.</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
           {carts.map((cart) => {
@@ -111,8 +111,8 @@ export default async function AbandonedCartsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-encre">{cart.customer_name}</p>
-                    <p className="text-xs text-encre/50">{cart.customer_phone}</p>
-                    <p className="mt-1 text-xs text-encre/40">
+                    <p className="text-xs text-encre/70">{cart.customer_phone}</p>
+                    <p className="mt-1 text-xs text-encre/70">
                       Vu le{" "}
                       {new Date(cart.updated_at).toLocaleString("fr-FR", {
                         day: "2-digit",
@@ -133,7 +133,7 @@ export default async function AbandonedCartsPage() {
                 </div>
                 <p className="mt-3 text-sm text-encre/70">{itemsLabel}</p>
                 <p className="mt-1 font-mono text-sm text-vert-actif">
-                  {FMT_FCFA.format(cart.cart_total)} FCFA
+                  {fcfa(cart.cart_total)}
                 </p>
               </li>
             );

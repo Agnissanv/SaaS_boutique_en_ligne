@@ -35,6 +35,7 @@ export default function NotFound() {
             id="not-found-search"
             type="search"
             name="q"
+            aria-label="Rechercher sur KEVA"
             placeholder="Rechercher un article…"
             className="min-w-0 flex-1 rounded-full border border-ligne bg-white px-4 py-2.5 text-sm text-encre placeholder:text-encre/50 focus:border-vert-actif focus:outline-none"
           />

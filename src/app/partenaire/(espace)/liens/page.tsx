@@ -26,17 +26,17 @@ export default async function PartnerLinksPage() {
   return (
     <div>
       <h1 className="font-display text-lg font-semibold text-encre">Liens et code</h1>
-      <p className="mt-1 text-sm text-encre/60">
+      <p className="mt-1 text-sm text-encre/70">
         Chaque boutique créée avec ton lien ou ton code t&apos;est attribuée. Le lien est mémorisé
         30 jours : la personne peut visiter le site et s&apos;inscrire plus tard.
       </p>
 
       <section className="mt-5 rounded-lg border border-ligne bg-white p-4">
-        <p className="text-xs text-encre/60">Ton code partenaire</p>
+        <p className="text-xs text-encre/70">Ton code partenaire</p>
         <div className="mt-1">
           <CopyCode code={partner.code} />
         </div>
-        <p className="mt-2 text-xs text-encre/60">
+        <p className="mt-2 text-xs text-encre/70">
           Pour ceux qui n&apos;ont pas cliqué sur ton lien : ils le saisissent à l&apos;inscription ou
           sur leur page Abonnement, avant leur premier paiement.
         </p>

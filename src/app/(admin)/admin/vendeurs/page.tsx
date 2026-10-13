@@ -117,10 +117,11 @@ export default async function AdminVendorsPage({
 
       <form method="GET" className="mt-4 flex gap-2">
         <div className="relative w-full max-w-sm">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-encre/40" />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-encre/70" />
           <input
             type="text"
             name="q"
+            aria-label="Rechercher un vendeur"
             defaultValue={q ?? ""}
             placeholder="Rechercher une boutique (nom ou lien)..."
             className="w-full rounded-md border border-ligne py-2 pl-9 pr-3 text-sm focus:ring-2 focus:ring-vert-actif"
@@ -143,13 +144,13 @@ export default async function AdminVendorsPage({
       {!fetchError && (shops ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <StorefrontIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucune boutique trouvée.</p>
+          <p className="text-sm text-encre/70">Aucune boutique trouvée.</p>
         </div>
       ) : fetchError ? null : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-ligne text-xs text-encre/50">
+              <tr className="border-b border-ligne text-xs text-encre/70">
                 <th className="py-3 pl-4 pr-4">Boutique</th>
                 <th className="py-3 pr-4">Vendeur</th>
                 <th className="py-3 pr-4">Catégorie</th>
@@ -187,13 +188,13 @@ export default async function AdminVendorsPage({
                           >
                             {shop.name}
                           </Link>
-                          <p className="text-xs text-encre/50">/{shop.slug}</p>
+                          <p className="text-xs text-encre/70">/{shop.slug}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 pr-4 text-encre/70">
                       <p>{owner?.display_name ?? "—"}</p>
-                      <p className="text-xs text-encre/50">{owner?.phone ?? ""}</p>
+                      <p className="text-xs text-encre/70">{owner?.phone ?? ""}</p>
                     </td>
                     <td className="py-3 pr-4 text-encre/70">{categoryLabel(shop.category)}</td>
                     <td className="py-3 pr-4">
@@ -207,7 +208,7 @@ export default async function AdminVendorsPage({
                         {shop.status === "active" ? "Active" : "Suspendue"}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-encre/50">
+                    <td className="py-3 pr-4 text-encre/70">
                       {new Date(shop.created_at).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="py-3 pr-4">

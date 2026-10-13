@@ -43,7 +43,7 @@ export function ShareShopLinks({ shopUrl }: { shopUrl: string }) {
   return (
     <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
       <h2 className="font-display text-sm font-semibold text-encre">Partager ma boutique</h2>
-      <p className="mt-1 text-xs text-encre/60">
+      <p className="mt-1 text-xs text-encre/70">
         Un lien différent par réseau pour savoir lequel amène le plus de
         visiteurs — retrouve la répartition sur{" "}
         <span className="font-medium text-encre/80">Statistiques</span>{" "}
@@ -60,7 +60,7 @@ export function ShareShopLinks({ shopUrl }: { shopUrl: string }) {
             >
               <div className="min-w-0">
                 <p className="text-xs font-medium text-encre">{channel.label}</p>
-                <p className="truncate font-mono text-[11px] text-encre/50">{url}</p>
+                <p className="truncate font-mono text-[11px] text-encre/70">{url}</p>
               </div>
               <button
                 type="button"

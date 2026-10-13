@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CopyLink } from "@/components/copy-link";
@@ -68,7 +69,7 @@ export default async function CommercialPage() {
       <p className="mt-2 text-sm text-encre/70">
         Partage ton lien avec des vendeurs. Tu gagnes {COMMERCIAL_COMMISSION_BY_PLAN_CODE.business}{" "}
         FCFA à chaque paiement d&apos;un abonnement Business et{" "}
-        {COMMERCIAL_COMMISSION_BY_PLAN_CODE.pro} FCFA à chaque paiement d&apos;un abonnement
+        {fcfa(COMMERCIAL_COMMISSION_BY_PLAN_CODE.pro)} à chaque paiement d&apos;un abonnement
         Pro — tant que le vendeur reste abonné.
       </p>
 
@@ -83,23 +84,23 @@ export default async function CommercialPage() {
 
       <div className="mt-6 grid grid-cols-3 gap-2">
         <div className="rounded-lg border border-ligne bg-white p-3 text-center">
-          <p className="text-lg font-semibold text-encre">{earned} FCFA</p>
-          <p className="text-xs text-encre/50">Gagné</p>
+          <p className="text-lg font-semibold text-encre">{fcfa(earned)}</p>
+          <p className="text-xs text-encre/70">Gagné</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-3 text-center">
-          <p className="text-lg font-semibold text-encre">{paid} FCFA</p>
-          <p className="text-xs text-encre/50">Payé</p>
+          <p className="text-lg font-semibold text-encre">{fcfa(paid)}</p>
+          <p className="text-xs text-encre/70">Payé</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-3 text-center">
-          <p className={`text-lg font-semibold ${due > 0 ? "text-attention" : "text-encre"}`}>{due} FCFA</p>
-          <p className="text-xs text-encre/50">Dû</p>
+          <p className={`text-lg font-semibold ${due > 0 ? "text-attention" : "text-encre"}`}>{fcfa(due)}</p>
+          <p className="text-xs text-encre/70">Dû</p>
         </div>
       </div>
 
       <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
         <h2 className="font-display text-sm font-semibold text-encre">Vendeurs recrutés</h2>
         {referrals.length === 0 ? (
-          <p className="mt-3 text-sm text-encre/60">Aucun vendeur inscrit avec ton lien pour l&apos;instant.</p>
+          <p className="mt-3 text-sm text-encre/70">Aucun vendeur inscrit avec ton lien pour l&apos;instant.</p>
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {referrals.map((referral) => {
@@ -110,7 +111,7 @@ export default async function CommercialPage() {
                   className="flex items-center justify-between rounded-md border border-ligne/70 bg-brume/40 p-2.5"
                 >
                   <p className="truncate text-sm font-medium text-encre">{shop?.name ?? "Boutique supprimée"}</p>
-                  <p className="shrink-0 text-xs text-encre/50">
+                  <p className="shrink-0 text-xs text-encre/70">
                     {new Date(referral.created_at).toLocaleDateString("fr-FR")}
                   </p>
                 </li>
@@ -123,7 +124,7 @@ export default async function CommercialPage() {
       <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
         <h2 className="font-display text-sm font-semibold text-encre">Historique des commissions</h2>
         {commissions.length === 0 ? (
-          <p className="mt-3 text-sm text-encre/60">Aucune commission pour l&apos;instant.</p>
+          <p className="mt-3 text-sm text-encre/70">Aucune commission pour l&apos;instant.</p>
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {commissions.map((commission) => (
@@ -133,9 +134,9 @@ export default async function CommercialPage() {
               >
                 <div>
                   <p className="text-sm font-medium text-encre">
-                    Plan {PLAN_LABEL[commission.plan_code] ?? commission.plan_code} — {commission.amount} FCFA
+                    Plan {PLAN_LABEL[commission.plan_code] ?? commission.plan_code} — {fcfa(commission.amount)}
                   </p>
-                  <p className="text-xs text-encre/50">
+                  <p className="text-xs text-encre/70">
                     {new Date(commission.created_at).toLocaleDateString("fr-FR")}
                   </p>
                 </div>
@@ -144,7 +145,7 @@ export default async function CommercialPage() {
                     Payé
                   </span>
                 ) : (
-                  <span className="shrink-0 rounded bg-sable px-1.5 py-0.5 text-xs text-encre/60">Dû</span>
+                  <span className="shrink-0 rounded bg-sable px-1.5 py-0.5 text-xs text-encre/70">Dû</span>
                 )}
               </li>
             ))}

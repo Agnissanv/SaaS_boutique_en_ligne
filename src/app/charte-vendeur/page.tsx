@@ -132,7 +132,7 @@ export default async function SellerCharterPage({
           </section>
         </div>
 
-        <p className="mt-6 text-sm text-encre/60">
+        <p className="mt-6 text-sm text-encre/70">
           Le détail complet des règles de KEVA est dans les{" "}
           <Link href="/conditions-utilisation" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
             conditions d&apos;utilisation

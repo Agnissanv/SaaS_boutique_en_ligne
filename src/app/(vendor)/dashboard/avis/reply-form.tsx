@@ -55,7 +55,7 @@ export function ReviewReplyForm({
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="text-xs text-encre/60 hover:text-vert-sapin"
+                className="text-xs text-encre/70 hover:text-vert-sapin"
               >
                 Modifier
               </button>
@@ -71,7 +71,7 @@ export function ReviewReplyForm({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-xs text-encre/60 hover:text-vert-sapin"
+            className="text-xs text-encre/70 hover:text-vert-sapin"
           >
             Répondre à cet avis
           </button>
@@ -97,7 +97,7 @@ export function ReviewReplyForm({
         <button
           type="button"
           onClick={() => setEditing(false)}
-          className="text-xs text-encre/60 hover:text-encre"
+          className="text-xs text-encre/70 hover:text-encre"
         >
           Annuler
         </button>

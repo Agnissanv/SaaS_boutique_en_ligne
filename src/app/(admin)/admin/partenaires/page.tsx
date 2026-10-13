@@ -62,7 +62,7 @@ export default async function AdminPartnersPage() {
 
       <div className="mt-6 overflow-hidden rounded-lg border border-ligne bg-white">
         {partners.length === 0 ? (
-          <p className="p-4 text-sm text-encre/60">Aucun partenaire pour l&apos;instant.</p>
+          <p className="p-4 text-sm text-encre/70">Aucun partenaire pour l&apos;instant.</p>
         ) : (
           <ul className="divide-y divide-ligne">
             {partners.map((partner, index) => {
@@ -80,14 +80,14 @@ export default async function AdminPartnersPage() {
                       <p className="truncate text-sm font-medium text-encre">
                         {partner.label}
                         {partner.code && (
-                          <span className="ml-2 font-mono text-xs text-encre/50">{partner.code}</span>
+                          <span className="ml-2 font-mono text-xs text-encre/70">{partner.code}</span>
                         )}
                       </p>
                       <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs ${STATUS_TONE_CLASSES[status.tone]}`}>
                         {status.label}
                       </span>
                     </div>
-                    <div className="flex gap-5 text-right text-xs text-encre/60">
+                    <div className="flex gap-5 text-right text-xs text-encre/70">
                       <div>
                         <p className="text-sm font-semibold text-encre">{stats?.shops_total ?? 0}</p>
                         boutiques

@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { notFound, redirect } from "next/navigation";
 import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
@@ -63,7 +64,7 @@ export default async function OrderDetailPage({
       <h1 className="font-display text-lg font-semibold text-encre">
         Commande de {order.customer_name}
       </h1>
-      <p className="mt-1 text-sm text-encre/60">
+      <p className="mt-1 text-sm text-encre/70">
         {new Date(order.created_at).toLocaleString("fr-FR")} —{" "}
         {PAYMENT_LABELS[order.payment_method] ?? order.payment_method}
       </p>
@@ -129,7 +130,7 @@ export default async function OrderDetailPage({
                 {item.quantity}
               </span>
               <span className="font-mono text-vert-actif">
-                {item.unit_price * item.quantity} FCFA
+                {fcfa(item.unit_price * item.quantity)}
               </span>
             </li>
           );
@@ -140,16 +141,16 @@ export default async function OrderDetailPage({
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Sous-total produits</dt>
           <dd className="font-mono text-vert-actif">
-            {order.total_amount - order.delivery_fee} FCFA
+            {fcfa(order.total_amount - order.delivery_fee)}
           </dd>
         </div>
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Frais de livraison</dt>
-          <dd className="font-mono text-vert-actif">{order.delivery_fee} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{fcfa(order.delivery_fee)}</dd>
         </div>
         <div className="flex justify-between py-1 text-base font-semibold text-encre">
           <dt>Total</dt>
-          <dd className="font-mono text-vert-actif">{order.total_amount} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{fcfa(order.total_amount)}</dd>
         </div>
       </dl>
 

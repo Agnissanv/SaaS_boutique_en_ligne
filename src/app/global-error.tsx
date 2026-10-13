@@ -34,7 +34,7 @@ export default function GlobalError({
             <>
               <p>Réessaie dans un instant. Si le problème continue, contacte-nous.</p>
               {error.digest ? (
-                <p className="mt-3 font-mono text-xs text-encre/50">Référence : {error.digest}</p>
+                <p className="mt-3 font-mono text-xs text-encre/70">Référence : {error.digest}</p>
               ) : null}
             </>
           }

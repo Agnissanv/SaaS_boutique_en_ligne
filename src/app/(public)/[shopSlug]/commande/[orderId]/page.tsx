@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -107,7 +108,7 @@ export default async function OrderConfirmationPage({
           <dd>
             <span
               className={`rounded px-1.5 py-0.5 text-xs ${
-                ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-brume text-encre/60"
+                ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-brume text-encre/70"
               }`}
             >
               {ORDER_STATUS_LABELS[order.status] ?? order.status}
@@ -166,7 +167,7 @@ export default async function OrderConfirmationPage({
                 {item.quantity}
               </span>
               <span className="font-mono text-vert-actif">
-                {item.unit_price * item.quantity} FCFA
+                {fcfa(item.unit_price * item.quantity)}
               </span>
             </li>
           )
@@ -177,16 +178,16 @@ export default async function OrderConfirmationPage({
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Sous-total produits</dt>
           <dd className="font-mono text-vert-actif">
-            {order.total_amount - order.delivery_fee} FCFA
+            {fcfa(order.total_amount - order.delivery_fee)}
           </dd>
         </div>
         <div className="flex justify-between py-1 text-encre/70">
           <dt>Frais de livraison</dt>
-          <dd className="font-mono text-vert-actif">{order.delivery_fee} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{fcfa(order.delivery_fee)}</dd>
         </div>
         <div className="flex justify-between py-1 text-base font-medium text-encre">
           <dt>Total</dt>
-          <dd className="font-mono text-vert-actif">{order.total_amount} FCFA</dd>
+          <dd className="font-mono text-vert-actif">{fcfa(order.total_amount)}</dd>
         </div>
       </dl>
 
@@ -216,7 +217,7 @@ export default async function OrderConfirmationPage({
               })}
             </div>
           ) : (
-            <p className="mt-1 text-xs text-encre/40">
+            <p className="mt-1 text-xs text-encre/70">
               Tu pourras laisser un avis une fois ta commande marquée comme
               livrée.
             </p>

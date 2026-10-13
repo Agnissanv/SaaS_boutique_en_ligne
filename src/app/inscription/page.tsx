@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { InscriptionForm } from "./inscription-form";
 import {
@@ -8,6 +9,12 @@ import {
 } from "@/lib/partners";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Crée ta boutique en ligne — KEVA",
+  description: "Ouvre ta boutique en ligne sur KEVA en 5 minutes : ton nom, ton email et un mot de passe suffisent.",
+  alternates: { canonical: "/inscription" },
+};
 
 // Code partenaire pré-rempli (13/10/2026, programme partenaire) : d'abord le
 // lien mémorisé 30 jours dans le cookie (le premier lien suivi l'emporte),

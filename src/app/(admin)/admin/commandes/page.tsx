@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_BADGE_CLASS, isOrderStatus } from "@/lib/orders";
@@ -123,10 +124,11 @@ export default async function AdminOrdersPage({
 
       <form method="GET" className="mt-4 flex flex-wrap gap-2">
         <div className="relative w-full max-w-sm">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-encre/40" />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-encre/70" />
           <input
             type="text"
             name="q"
+            aria-label="Rechercher une commande"
             defaultValue={q ?? ""}
             placeholder="Nom ou téléphone du client..."
             className="w-full rounded-md border border-ligne py-2 pl-9 pr-3 text-sm focus:ring-2 focus:ring-vert-actif"
@@ -161,13 +163,13 @@ export default async function AdminOrdersPage({
       {!fetchError && (orders ?? []).length === 0 ? (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-12 text-center">
           <PackageIcon className="h-8 w-8 text-encre/30" />
-          <p className="text-sm text-encre/60">Aucune commande trouvée.</p>
+          <p className="text-sm text-encre/70">Aucune commande trouvée.</p>
         </div>
       ) : fetchError ? null : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-ligne text-xs text-encre/50">
+              <tr className="border-b border-ligne text-xs text-encre/70">
                 <th className="py-3 pl-4 pr-4">Client</th>
                 <th className="py-3 pr-4">Boutique</th>
                 <th className="py-3 pr-4">Paiement</th>
@@ -183,7 +185,7 @@ export default async function AdminOrdersPage({
                   <tr key={order.id} className="transition-colors hover:bg-brume/60">
                     <td className="py-3 pl-4 pr-4">
                       <p className="font-medium text-encre">{order.customer_name}</p>
-                      <p className="text-xs text-encre/50">{order.customer_phone}</p>
+                      <p className="text-xs text-encre/70">{order.customer_phone}</p>
                     </td>
                     <td className="py-3 pr-4 text-encre/70">
                       {shop ? (
@@ -194,18 +196,18 @@ export default async function AdminOrdersPage({
                         "—"
                       )}
                     </td>
-                    <td className="py-3 pr-4 text-encre/60">
+                    <td className="py-3 pr-4 text-encre/70">
                       {order.payment_method === "cash_on_delivery" ? "À la livraison" : "Mobile Money"}
                     </td>
-                    <td className="py-3 pr-4 font-mono text-encre/70">{order.total_amount} FCFA</td>
+                    <td className="py-3 pr-4 font-mono text-encre/70">{fcfa(order.total_amount)}</td>
                     <td className="py-3 pr-4">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-xs ${ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/60"}`}
+                        className={`rounded px-1.5 py-0.5 text-xs ${ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/70"}`}
                       >
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-encre/50">
+                    <td className="py-3 pr-4 text-encre/70">
                       {new Date(order.created_at).toLocaleString("fr-FR")}
                     </td>
                   </tr>

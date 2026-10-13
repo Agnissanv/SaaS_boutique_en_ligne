@@ -68,7 +68,7 @@ export function IdentityForm({
           defaultValue={profile.phone}
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Sert à retrouver tes commandes passées sans compte, avec le même
           numéro (bouton « Rattacher mes anciennes commandes » sur la page
           précédente).

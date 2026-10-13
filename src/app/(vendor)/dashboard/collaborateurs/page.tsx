@@ -63,12 +63,12 @@ export default async function CollaborateursPage() {
       </p>
 
       {!subscription.features.canMultiUser ? (
-        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/60">
+        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/70">
           Les collaborateurs sont disponibles à partir du plan Pro.
         </p>
       ) : (
         <>
-          <p className="mt-4 text-xs text-encre/50">
+          <p className="mt-4 text-xs text-encre/70">
             {(collaborators ?? []).length} / {subscription.features.maxCollaborators}{" "}
             collaborateur(s) pour ton plan {subscription.planName ?? "actuel"}.
           </p>

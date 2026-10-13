@@ -98,19 +98,19 @@ export default function HomeLoading() {
             recherche (contrôle interactif, pas juste du texte) est en
             squelette. */}
         <ScrollHeader>
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:flex-wrap sm:gap-4">
             <Link
               href="/"
-              className="flex shrink-0 items-center gap-2 rounded-full bg-white/80 py-1 pl-1 pr-3 backdrop-blur-sm transition group-data-[scrolled=true]:bg-transparent"
+              className="flex shrink-0 items-center gap-2 rounded-full bg-white/80 p-1 backdrop-blur-sm transition group-data-[scrolled=true]:bg-transparent sm:pr-3"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
               <img src="/keva-logo.jpg" alt="KEVA" className="h-9 w-9 rounded-md object-cover" />
-              <span className="font-display text-lg font-bold tracking-wide text-vert-sapin">
+              <span className="hidden font-display text-lg font-bold tracking-wide text-vert-sapin sm:inline">
                 KEVA
               </span>
             </Link>
 
-            <div className="order-3 flex w-full flex-1 sm:order-2">
+            <div className="flex min-w-0 flex-1 sm:order-2">
               <Skeleton className="h-10 w-full rounded-md" />
             </div>
 
@@ -200,8 +200,8 @@ export default function HomeLoading() {
           <div className="mt-8">
             <div className="mb-3 flex items-center justify-between px-1">
               <h2 className="font-display text-lg font-semibold text-encre">Catégories</h2>
-              <Link href="/categories" className="text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
-                Tout voir
+              <Link href="/categories" className="text-sm font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
+                Voir tout
               </Link>
             </div>
             <div className="-mx-4 flex gap-5 overflow-hidden bg-brume px-4 py-5 sm:rounded-2xl sm:py-6">

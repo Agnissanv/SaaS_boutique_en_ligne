@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -79,7 +80,7 @@ type RelatedProduct = {
 function ReviewsSection({ reviews, shopName }: { reviews: Review[]; shopName: string }) {
   if (reviews.length === 0) {
     return (
-      <p className="mt-3 text-sm text-encre/50">
+      <p className="mt-3 text-sm text-encre/70">
         Aucun avis pour ce produit pour l&apos;instant.
       </p>
     );
@@ -92,7 +93,7 @@ function ReviewsSection({ reviews, shopName }: { reviews: Review[]; shopName: st
       <p className="flex items-center gap-2 text-sm font-medium text-encre">
         <Stars rating={average} />
         <span className="font-mono">{average.toFixed(1)}/5</span>
-        <span className="text-encre/50">({reviews.length} avis)</span>
+        <span className="text-encre/70">({reviews.length} avis)</span>
       </p>
       <ul className="mt-4 flex flex-col gap-3">
         {reviews.map((review, index) => (
@@ -157,14 +158,14 @@ export async function generateMetadata({
   const product = await getProductForPublicPage(shopSlug, productSlug);
 
   if (!product) {
-    return { title: "Produit introuvable — KEVA" };
+    return { title: "Page introuvable — KEVA" };
   }
 
   const shop = Array.isArray(product.shop) ? product.shop[0] : product.shop;
   const title = `${product.title} — ${shop.name} | KEVA`;
   const description = product.description
     ? truncate(product.description, 155)
-    : `${product.title} à ${product.price} FCFA, disponible sur la boutique ${shop.name} sur KEVA.`;
+    : `${product.title} à ${fcfa(product.price)}, disponible sur la boutique ${shop.name} sur KEVA.`;
   const images = [...(product.product_images ?? [])].sort(
     (a: { position: number }, b: { position: number }) => a.position - b.position
   );
@@ -345,7 +346,7 @@ export default async function ProductPage({
               {shop.name}
             </Link>
             {shopRating ? (
-              <span className="flex items-center gap-1 text-encre/50">
+              <span className="flex items-center gap-1 text-encre/70">
                 · <Stars rating={shopRating.average} /> {shopRating.average.toFixed(1)} (
                 {shopRating.count})
               </span>
@@ -386,12 +387,12 @@ export default async function ProductPage({
 
           <div className="mt-5 flex flex-wrap items-baseline gap-2.5">
             <p className="font-mono text-2xl font-semibold text-vert-actif">
-              {effectivePrice.price} FCFA
+              {fcfa(effectivePrice.price)}
             </p>
             {hasDiscount && (
               <>
-                <p className="font-mono text-sm text-encre/40 line-through">
-                  {effectivePrice.compareAtPrice} FCFA
+                <p className="font-mono text-sm text-encre/70 line-through">
+                  {fcfa(effectivePrice.compareAtPrice)}
                 </p>
                 <span className="rounded-full bg-erreur px-2 py-0.5 text-xs font-semibold text-ivoire">
                   -{discountPercent}%
@@ -474,7 +475,7 @@ export default async function ProductPage({
                 key={spec.label}
                 className="flex items-baseline justify-between gap-3 border-b border-ligne/60 py-2 text-sm sm:justify-start"
               >
-                <dt className="text-encre/60">{spec.label}</dt>
+                <dt className="text-encre/70">{spec.label}</dt>
                 <dd className="text-right font-medium text-encre sm:ml-auto">{spec.value}</dd>
               </div>
             ))}
@@ -512,7 +513,7 @@ export default async function ProductPage({
                     />
                   </ViewTransition>
                   <p className="truncate text-xs font-medium text-encre">{item.title}</p>
-                  <p className="font-mono text-xs text-vert-actif">{item.price} FCFA</p>
+                  <p className="font-mono text-xs text-vert-actif">{fcfa(item.price)}</p>
                 </Link>
               );
             })}

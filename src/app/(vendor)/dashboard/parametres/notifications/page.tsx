@@ -71,14 +71,14 @@ export default async function NotificationsSettingsPage() {
             accountEmail={user?.email ?? ""}
           />
           {!subscription.features.hasAdvancedStockAlerts && (
-            <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/60">
+            <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/70">
               Les alertes de stock bas par email sont disponibles à partir du
               plan Pro.
             </p>
           )}
         </>
       ) : (
-        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/60">
+        <p className="mt-4 max-w-md rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-sm text-encre/70">
           Les notifications par email (nouvelle commande, stock bas) sont
           disponibles à partir du plan Business.
         </p>

@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { createClient } from "@/lib/supabase/server";
 import { StorefrontIcon, CheckCircleIcon, PauseCircleIcon, TicketIcon, CoinsIcon } from "@/components/admin/admin-icons";
 import type { ReactNode } from "react";
@@ -24,7 +25,7 @@ function StatTile({
     <div className="flex items-center gap-3 rounded-lg border border-ligne bg-white p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-vert-actif hover:shadow-md">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${toneClass}`}>{icon}</div>
       <div className="min-w-0">
-        <p className="truncate text-xs text-encre/60">{label}</p>
+        <p className="truncate text-xs text-encre/70">{label}</p>
         <p className="mt-0.5 font-display text-lg font-semibold text-encre">{value}</p>
       </div>
     </div>
@@ -127,7 +128,7 @@ export default async function AdminOverviewPage() {
         <div>
           <p className="text-xs uppercase tracking-wide text-ivoire/60">CA KEVA (commandes non annulées)</p>
           <p className="mt-0.5 font-mono text-2xl font-semibold text-ivoire">
-            {platformRevenue === null ? "Indisponible pour l'instant" : `${platformRevenue} FCFA`}
+            {platformRevenue === null ? "Indisponible pour l'instant" : `${fcfa(platformRevenue)}`}
           </p>
         </div>
       </div>

@@ -42,7 +42,7 @@ export function AcceptInvitationForm({ token, defaultName }: { token: string; de
   }
 
   const inputClass =
-    "rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none";
+    "rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none";
 
   return (
     <form action={formAction} className="mt-5 flex flex-col gap-3">
@@ -73,7 +73,7 @@ export function AcceptInvitationForm({ token, defaultName }: { token: string; de
         placeholder="Ex : AWA225"
         className={`${inputClass} font-mono uppercase placeholder:normal-case placeholder:font-sans placeholder:tracking-normal tracking-wide`}
       />
-      <p className="-mt-1 text-xs text-encre/60">
+      <p className="-mt-1 text-xs text-encre/70">
         {availability === "taken" ? (
           <span className="text-erreur">Ce code est déjà pris. Choisis-en un autre.</span>
         ) : availability === "free" ? (

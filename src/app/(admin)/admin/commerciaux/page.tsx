@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import { createClient } from "@/lib/supabase/server";
 import { CreateCommercialForm } from "./create-commercial-form";
 import { MarkPaidButton } from "./mark-paid-button";
@@ -75,7 +76,7 @@ export default async function AdminCommerciauxPage() {
       <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-ligne text-xs text-encre/50">
+            <tr className="border-b border-ligne text-xs text-encre/70">
               <th className="py-3 pl-4 pr-4">Commercial</th>
               <th className="py-3 pr-4">Lien de recrutement</th>
               <th className="py-3 pr-4">Vendeurs recrutés</th>
@@ -88,7 +89,7 @@ export default async function AdminCommerciauxPage() {
           <tbody className="divide-y divide-ligne">
             {commercials.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-encre/50">
+                <td colSpan={7} className="py-6 text-center text-encre/70">
                   Aucun commercial pour l&apos;instant.
                 </td>
               </tr>
@@ -103,18 +104,18 @@ export default async function AdminCommerciauxPage() {
                     <p className="font-medium text-encre">{commercial.display_name ?? "Sans nom"}</p>
                   </td>
                   <td className="py-3 pr-4">
-                    <p className="max-w-[220px] truncate font-mono text-xs text-encre/60">
+                    <p className="max-w-[220px] truncate font-mono text-xs text-encre/70">
                       {commercial.commercial_code
                         ? `${siteUrl}/inscription?agent=${commercial.commercial_code}`
                         : "—"}
                     </p>
                   </td>
                   <td className="py-3 pr-4 text-encre/70">{recruited}</td>
-                  <td className="py-3 pr-4 font-mono text-encre/70">{totals.earned} FCFA</td>
-                  <td className="py-3 pr-4 font-mono text-encre/70">{totals.paid} FCFA</td>
+                  <td className="py-3 pr-4 font-mono text-encre/70">{fcfa(totals.earned)}</td>
+                  <td className="py-3 pr-4 font-mono text-encre/70">{fcfa(totals.paid)}</td>
                   <td className="py-3 pr-4 font-mono">
-                    <span className={due > 0 ? "font-medium text-attention" : "text-encre/50"}>
-                      {due} FCFA
+                    <span className={due > 0 ? "font-medium text-attention" : "text-encre/70"}>
+                      {fcfa(due)}
                     </span>
                   </td>
                   <td className="py-3 pr-4">

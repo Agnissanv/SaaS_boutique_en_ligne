@@ -93,7 +93,7 @@ export default async function AdminReferralsPage({
         <div className="mt-6 overflow-x-auto rounded-lg border border-ligne bg-white">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
-              <tr className="border-b border-ligne text-xs text-encre/50">
+              <tr className="border-b border-ligne text-xs text-encre/70">
                 <th className="py-3 pl-4 pr-4">Parrain</th>
                 <th className="py-3 pr-4">Filleul</th>
                 <th className="py-3 pr-4">Inscrit le</th>
@@ -103,7 +103,7 @@ export default async function AdminReferralsPage({
             <tbody className="divide-y divide-ligne">
               {referrals.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-encre/50">
+                  <td colSpan={4} className="py-6 text-center text-encre/70">
                     Aucun parrainage pour l&apos;instant.
                   </td>
                 </tr>
@@ -115,13 +115,13 @@ export default async function AdminReferralsPage({
                   <tr key={referral.id} className="transition-colors hover:bg-brume/60">
                     <td className="py-3 pl-4 pr-4">
                       <p className="font-medium text-encre">{referrer?.name ?? "Boutique supprimée"}</p>
-                      <p className="text-xs text-encre/50">/{referrer?.slug ?? "—"}</p>
+                      <p className="text-xs text-encre/70">/{referrer?.slug ?? "—"}</p>
                     </td>
                     <td className="py-3 pr-4">
                       <p className="font-medium text-encre">{referred?.name ?? "Boutique supprimée"}</p>
-                      <p className="text-xs text-encre/50">/{referred?.slug ?? "—"}</p>
+                      <p className="text-xs text-encre/70">/{referred?.slug ?? "—"}</p>
                     </td>
-                    <td className="py-3 pr-4 text-encre/50">
+                    <td className="py-3 pr-4 text-encre/70">
                       {new Date(referral.created_at).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="py-3 pr-4">
@@ -134,7 +134,7 @@ export default async function AdminReferralsPage({
                           Récompensé
                         </span>
                       ) : (
-                        <span className="rounded bg-sable px-1.5 py-0.5 text-xs text-encre/60">
+                        <span className="rounded bg-sable px-1.5 py-0.5 text-xs text-encre/70">
                           En attente
                         </span>
                       )}

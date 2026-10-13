@@ -236,7 +236,7 @@ export function InscriptionForm({
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Ex : Awa Koné"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <label className="text-sm font-medium text-encre" htmlFor="email">
@@ -251,7 +251,7 @@ export function InscriptionForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="toi@exemple.com"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <label className="text-sm font-medium text-encre" htmlFor="password">
@@ -267,7 +267,7 @@ export function InscriptionForm({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <label className="text-sm font-medium text-encre" htmlFor="confirmPassword">
@@ -283,7 +283,7 @@ export function InscriptionForm({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-md border border-ligne px-3 py-2 text-sm focus:border-vert-actif focus:outline-none"
+                className="rounded-md border border-ligne px-3 py-2.5 text-sm focus:border-vert-actif focus:outline-none"
               />
 
               <PartnerCodeField
@@ -298,7 +298,7 @@ export function InscriptionForm({
               <button
                 type="submit"
                 disabled={pending}
-                className="mt-2 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
+                className="mt-2 rounded-md bg-vert-actif px-4 py-3 text-sm font-medium text-ivoire hover:bg-vert-sapin disabled:opacity-50"
               >
                 {pending ? "Création..." : "Créer mon compte"}
               </button>
@@ -306,7 +306,7 @@ export function InscriptionForm({
 
             <div className="mt-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-ligne" />
-              <span className="text-xs text-encre/40">ou</span>
+              <span className="text-xs text-encre/70">ou</span>
               <div className="h-px flex-1 bg-ligne" />
             </div>
             <div className="mt-4">
@@ -318,7 +318,7 @@ export function InscriptionForm({
               />
             </div>
 
-            <p className="mt-4 text-center text-sm text-encre/60">
+            <p className="mt-4 text-center text-sm text-encre/70">
               Déjà un compte ?{" "}
               <Link
                 href={suite ? `/connexion?suite=${encodeURIComponent(suite)}` : "/connexion"}

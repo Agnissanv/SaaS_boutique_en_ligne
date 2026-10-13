@@ -117,7 +117,7 @@ function ImageField({
   return (
     <div className="flex flex-col gap-1">
       <label className="text-sm font-medium text-encre">{label}</label>
-      <p className="text-xs text-encre/50">{hint}</p>
+      <p className="text-xs text-encre/70">{hint}</p>
       <input type="hidden" name={fieldName} value={url} />
       {url ? (
         <div className="flex items-center gap-3">
@@ -140,7 +140,7 @@ function ImageField({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/50 transition hover:border-vert-actif hover:text-vert-actif disabled:opacity-50"
+          className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-md border-2 border-dashed border-ligne text-encre/70 transition hover:border-vert-actif hover:text-vert-actif disabled:opacity-50"
         >
           <span className="text-xl leading-none">+</span>
           <span className="text-[10px] font-medium">Ajouter</span>
@@ -154,7 +154,7 @@ function ImageField({
         disabled={uploading}
         className="hidden"
       />
-      {uploading && <p className="text-xs text-encre/60">Envoi en cours...</p>}
+      {uploading && <p className="text-xs text-encre/70">Envoi en cours...</p>}
       {error && <p className="text-xs text-erreur">{error}</p>}
     </div>
   );
@@ -218,7 +218,7 @@ export function ShopForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="description" className="text-sm font-medium text-encre">
-          Description <span className="text-encre/50">(300 caractères max)</span>
+          Description <span className="text-encre/70">(300 caractères max)</span>
         </label>
         <textarea
           id="description"
@@ -263,7 +263,7 @@ export function ShopForm({
           onChange={setVille}
           options={CI_VILLES.map((v) => ({ value: v, label: v }))}
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Les visiteurs proches de ta ville voient ta boutique en priorité sur
           la page d&apos;accueil.
         </p>
@@ -294,7 +294,7 @@ export function ShopForm({
           hint="Photo carrée, comme une photo de profil (elle s'affiche dans un rond) — ex. 500×500 px."
         />
       ) : (
-        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70">
           Logo personnalisé disponible à partir du plan Business.
         </p>
       )}
@@ -309,7 +309,7 @@ export function ShopForm({
       {canCustomizeBranding === "complete" ? (
         <div className="flex flex-col gap-1">
           <label htmlFor="accentColor" className="text-sm font-medium text-encre">
-            Couleur d&apos;accent <span className="text-encre/50">(optionnel)</span>
+            Couleur d&apos;accent <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="accentColor"
@@ -318,21 +318,21 @@ export function ShopForm({
             defaultValue={shop?.accent_color ?? "#8b4f2e"}
             className="h-9 w-14 cursor-pointer rounded border border-ligne"
           />
-          <p className="text-xs text-encre/50">
+          <p className="text-xs text-encre/70">
             Remplace la couleur d&apos;accent KEVA par défaut sur ta boutique
             publique et tes fiches produit (bouton d&apos;achat, bannière,
             catégories actives).
           </p>
         </div>
       ) : (
-        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/60">
+        <p className="rounded-md border border-dashed border-ligne bg-brume px-3 py-2 text-xs text-encre/70">
           Couleur d&apos;accent personnalisée disponible à partir du plan Pro.
         </p>
       )}
 
       <div className="flex flex-col gap-1">
         <label htmlFor="deliveryFee" className="text-sm font-medium text-encre">
-          Frais de livraison (FCFA) <span className="text-encre/50">(optionnel)</span>
+          Frais de livraison (FCFA) <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="deliveryFee"
@@ -344,7 +344,7 @@ export function ShopForm({
           placeholder="Ex : 1000"
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Affiché au client avant qu&apos;il confirme sa commande. Laisse
           vide si le tarif dépend de la zone — le client saura alors que
           c&apos;est à confirmer avec toi.
@@ -353,7 +353,7 @@ export function ShopForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="whatsappNumber" className="text-sm font-medium text-encre">
-          Numéro WhatsApp <span className="text-encre/50">(optionnel)</span>
+          Numéro WhatsApp <span className="text-encre/70">(optionnel)</span>
         </label>
         <input
           id="whatsappNumber"
@@ -363,7 +363,7 @@ export function ShopForm({
           defaultValue={shop?.whatsapp_number ?? ""}
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Affiche un bouton « Contacter sur WhatsApp » sur ta boutique et tes
           fiches produit. Laisse vide pour ne pas l&apos;afficher.
         </p>
@@ -371,7 +371,7 @@ export function ShopForm({
 
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium text-encre">
-          Numéro Mobile Money <span className="text-encre/50">(optionnel)</span>
+          Numéro Mobile Money <span className="text-encre/70">(optionnel)</span>
         </span>
         <div className="flex flex-col gap-2 sm:flex-row">
           <NativeSelect
@@ -392,7 +392,7 @@ export function ShopForm({
             className="flex-1 rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
           />
         </div>
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Affiché sur ta boutique pour les clients qui veulent payer par
           Mobile Money directement avec toi — KEVA ne s&apos;occupe pas de ce
           paiement, c&apos;est entre toi et le client. Laisse vide pour ne
@@ -401,7 +401,7 @@ export function ShopForm({
       </div>
 
       {shop && (
-        <p className="text-xs text-encre/60">
+        <p className="text-xs text-encre/70">
           Lien public :{" "}
           <a
             href={`/${shop.slug}`}

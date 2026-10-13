@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import { useTransition } from "react";
 import { togglePromoCodeActive, deletePromoCode } from "./actions";
 import type { PromoCode } from "./page";
@@ -7,7 +9,7 @@ import type { PromoCode } from "./page";
 function discountLabel(code: PromoCode): string {
   return code.discount_type === "percentage"
     ? `-${code.discount_value}%`
-    : `-${code.discount_value} FCFA`;
+    : `-${fcfa(code.discount_value)}`;
 }
 
 /**
@@ -31,7 +33,7 @@ export function PromoCodeList({
 
   if (promoCodes.length === 0) {
     return (
-      <p className="mt-6 text-sm text-encre/60">
+      <p className="mt-6 text-sm text-encre/70">
         Aucun code promo pour l&apos;instant.
       </p>
     );
@@ -41,7 +43,7 @@ export function PromoCodeList({
     <div className="mt-6 overflow-x-auto rounded-md border border-ligne bg-white">
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead>
-          <tr className="border-b border-ligne text-xs uppercase tracking-wide text-encre/50">
+          <tr className="border-b border-ligne text-xs uppercase tracking-wide text-encre/70">
             <th className="px-3 py-2 font-medium">Code</th>
             <th className="px-3 py-2 font-medium">Réduction</th>
             <th className="px-3 py-2 font-medium">Utilisations</th>
@@ -69,7 +71,7 @@ export function PromoCodeList({
                   className={`rounded-full px-2 py-0.5 text-xs ${
                     code.is_active
                       ? "bg-succes/15 text-succes"
-                      : "bg-encre/10 text-encre/60"
+                      : "bg-encre/10 text-encre/70"
                   }`}
                 >
                   {code.is_active ? "Actif" : "Désactivé"}
@@ -98,7 +100,7 @@ export function PromoCodeList({
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-encre/40">—</span>
+                  <span className="text-xs text-encre/70">—</span>
                 )}
               </td>
             </tr>

@@ -84,7 +84,7 @@ export default async function ParrainagePage() {
 
       <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
         <h2 className="font-display text-sm font-semibold text-encre">Ton lien de parrainage</h2>
-        <p className="mt-1 text-xs text-encre/60">
+        <p className="mt-1 text-xs text-encre/70">
           À partager par WhatsApp, email ou tout autre moyen — chaque
           inscription via ce lien te sera automatiquement rattachée.
         </p>
@@ -96,13 +96,13 @@ export default async function ParrainagePage() {
       <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display text-sm font-semibold text-encre">Tes filleuls</h2>
-          <p className="text-xs text-encre/50">
+          <p className="text-xs text-encre/70">
             {referrals.length} au total · {rewardedCount} récompensé{rewardedCount > 1 ? "s" : ""}
           </p>
         </div>
 
         {referrals.length === 0 ? (
-          <p className="mt-4 text-sm text-encre/60">
+          <p className="mt-4 text-sm text-encre/70">
             Aucun vendeur inscrit avec ton lien pour l&apos;instant.
           </p>
         ) : (
@@ -118,7 +118,7 @@ export default async function ParrainagePage() {
                     <p className="truncate text-sm font-medium text-encre">
                       {referredShop?.name ?? "Boutique supprimée"}
                     </p>
-                    <p className="text-xs text-encre/50">
+                    <p className="text-xs text-encre/70">
                       Inscrit le {new Date(referral.created_at).toLocaleDateString("fr-FR")}
                     </p>
                   </div>
@@ -127,7 +127,7 @@ export default async function ParrainagePage() {
                       Récompensé
                     </span>
                   ) : (
-                    <span className="shrink-0 rounded bg-sable px-1.5 py-0.5 text-xs text-encre/60">
+                    <span className="shrink-0 rounded bg-sable px-1.5 py-0.5 text-xs text-encre/70">
                       En attente d&apos;un plan payant
                     </span>
                   )}

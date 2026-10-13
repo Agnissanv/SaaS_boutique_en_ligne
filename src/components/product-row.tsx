@@ -40,7 +40,7 @@ export function ProductRow({
           </Link>
         ) : null}
       </div>
-      <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth">
+      <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scroll-smooth kv-scroll-x">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} className="w-44 shrink-0 snap-start" />
         ))}

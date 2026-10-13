@@ -384,3 +384,18 @@ html[data-search-pending] [data-search-results] {
     }
   }
 }
+
+/* Bandes à défilement horizontal (catégories, boutiques, rangées de
+   produits...) — 13/10/2026, audit visuel : la barre de défilement grise
+   apparaissait sous chaque bande. Masquée sur écran tactile (on fait glisser
+   du doigt), fine et discrète à la souris. */
+@utility kv-scroll-x {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(14 59 44 / 0.18) transparent;
+  @media (hover: none) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}

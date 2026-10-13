@@ -231,19 +231,19 @@ export default function HelpPage() {
       </Link>
 
       <div className="mt-6 flex max-w-2xl items-center gap-2 rounded-md border border-ligne bg-brume px-3 py-2">
-        <IconSearch className="h-4 w-4 shrink-0 text-encre/40" />
+        <IconSearch className="h-4 w-4 shrink-0 text-encre/70" />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Pose ta question (ex : logo, stock, code promo...)"
-          className="w-full min-w-0 bg-transparent text-sm text-encre placeholder:text-encre/40 focus:outline-none"
+          className="w-full min-w-0 bg-transparent text-sm text-encre placeholder:text-encre/50 focus:outline-none"
         />
       </div>
 
       <div className="mt-6 max-w-2xl">
         {normalizedQuery && (
-          <p className="mb-3 text-xs text-encre/50">
+          <p className="mb-3 text-xs text-encre/70">
             {resultCount > 0
               ? `${resultCount} résultat${resultCount > 1 ? "s" : ""} pour « ${query.trim()} »`
               : `Aucun résultat pour « ${query.trim()} ».`}
@@ -259,7 +259,7 @@ export default function HelpPage() {
 
         {filteredCategories.map((category) => (
           <div key={category.title} className="mb-6">
-            <h2 className="mb-1 text-xs font-medium uppercase tracking-wide text-encre/50">
+            <h2 className="mb-1 text-xs font-medium uppercase tracking-wide text-encre/70">
               {category.title}
             </h2>
             <div className="divide-y divide-ligne">

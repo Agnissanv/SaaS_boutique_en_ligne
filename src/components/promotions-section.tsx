@@ -57,12 +57,12 @@ export function PromotionsSection({ newestShops }: { newestShops: MarketplaceSho
             </h2>
             <Link
               href="/categories"
-              className="shrink-0 text-xs font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
+              className="shrink-0 text-sm font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow"
             >
-              Tout voir
+              Voir tout
             </Link>
           </div>
-          <div className="-mx-1 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 scroll-smooth">
+          <div className="-mx-1 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 scroll-smooth kv-scroll-x">
             {newestShops.map((shop) => (
               <ShopCard key={shop.slug} shop={shop} className="w-32 shrink-0 snap-start" />
             ))}

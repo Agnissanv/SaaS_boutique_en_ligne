@@ -90,7 +90,7 @@ export default async function CategoriesPage() {
         <Link href="/" className="text-vert-actif hover:text-vert-sapin font-medium transition-colors">
           Accueil
         </Link>
-        <span className="text-encre/40">/</span>
+        <span className="text-encre/70">/</span>
         <span className="text-encre/70">Catégories</span>
       </div>
       <h1 className="font-display text-2xl font-semibold text-encre sm:text-3xl">
@@ -129,7 +129,7 @@ export default async function CategoriesPage() {
                   <p className="line-clamp-1 text-sm font-medium text-encre group-hover:text-vert-sapin">
                     {cat.label}
                   </p>
-                  <p className="text-xs text-encre/50">
+                  <p className="text-xs text-encre/70">
                     {count} article{count === 1 ? "" : "s"}
                   </p>
                 </div>

@@ -1,3 +1,4 @@
+import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -84,7 +85,7 @@ export default async function AdminVendorDetailPage({
 
   return (
     <div>
-      <Link href="/admin/vendeurs" className="text-sm text-encre/60 hover:text-encre kv-link-back">
+      <Link href="/admin/vendeurs" className="text-sm text-encre/70 hover:text-encre kv-link-back">
         Retour aux vendeurs
       </Link>
 
@@ -100,10 +101,10 @@ export default async function AdminVendorDetailPage({
           )}
           <div>
             <h1 className="font-display text-lg font-semibold text-encre">{shop.name}</h1>
-            <p className="text-sm text-encre/50">
+            <p className="text-sm text-encre/70">
               /{shop.slug} — {categoryLabel(shop.category)}
             </p>
-            <p className="text-xs text-encre/50">
+            <p className="text-xs text-encre/70">
               Créée le {new Date(shop.created_at).toLocaleDateString("fr-FR")}
             </p>
           </div>
@@ -113,23 +114,23 @@ export default async function AdminVendorDetailPage({
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">Produits actifs</p>
+          <p className="text-xs text-encre/70">Produits actifs</p>
           <p className="mt-0.5 font-display text-lg font-semibold text-encre">{productsCount}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4">
-          <p className="text-xs text-encre/60">Commandes (hors annulées)</p>
+          <p className="text-xs text-encre/70">Commandes (hors annulées)</p>
           <p className="mt-0.5 font-display text-lg font-semibold text-encre">{ordersCount}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-4 sm:col-span-2">
-          <p className="text-xs text-encre/60">Chiffre d&apos;affaires (hors annulées)</p>
-          <p className="mt-0.5 font-mono text-lg font-semibold text-encre">{totalRevenue} FCFA</p>
+          <p className="text-xs text-encre/70">Chiffre d&apos;affaires (hors annulées)</p>
+          <p className="mt-0.5 font-mono text-lg font-semibold text-encre">{fcfa(totalRevenue)}</p>
         </div>
       </div>
 
       <div className="mt-6 rounded-lg border border-ligne bg-white p-4">
         <h2 className="text-sm font-medium text-encre">Vendeur</h2>
         <p className="mt-1 text-sm text-encre/70">{owner?.display_name ?? "—"}</p>
-        <p className="text-sm text-encre/50">{owner?.phone ?? "—"}</p>
+        <p className="text-sm text-encre/70">{owner?.phone ?? "—"}</p>
 
         <h2 className="mt-4 text-sm font-medium text-encre">Abonnement</h2>
         <p className="mt-1 flex items-center gap-2 text-sm text-encre/70">
@@ -141,7 +142,7 @@ export default async function AdminVendorDetailPage({
           </span>
         </p>
         {subscription.expiresAt && (
-          <p className="text-xs text-encre/50">
+          <p className="text-xs text-encre/70">
             Expire le {new Date(subscription.expiresAt).toLocaleDateString("fr-FR")}
           </p>
         )}
@@ -152,13 +153,13 @@ export default async function AdminVendorDetailPage({
         {recentOrders.length === 0 ? (
           <div className="mt-3 flex flex-col items-center gap-2 rounded-lg border border-dashed border-ligne bg-white py-10 text-center">
             <StorefrontIcon className="h-6 w-6 text-encre/30" />
-            <p className="text-sm text-encre/60">Aucune commande pour cette boutique.</p>
+            <p className="text-sm text-encre/70">Aucune commande pour cette boutique.</p>
           </div>
         ) : (
           <div className="mt-3 overflow-x-auto rounded-lg border border-ligne bg-white">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead>
-                <tr className="border-b border-ligne text-xs text-encre/50">
+                <tr className="border-b border-ligne text-xs text-encre/70">
                   <th className="py-3 pl-4 pr-4">Client</th>
                   <th className="py-3 pr-4">Montant</th>
                   <th className="py-3 pr-4">Statut</th>
@@ -169,15 +170,15 @@ export default async function AdminVendorDetailPage({
                 {recentOrders.map((order) => (
                   <tr key={order.id}>
                     <td className="py-3 pl-4 pr-4 text-encre">{order.customer_name}</td>
-                    <td className="py-3 pr-4 font-mono text-encre/70">{order.total_amount} FCFA</td>
+                    <td className="py-3 pr-4 font-mono text-encre/70">{fcfa(order.total_amount)}</td>
                     <td className="py-3 pr-4">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-xs ${ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/60"}`}
+                        className={`rounded px-1.5 py-0.5 text-xs ${ORDER_STATUS_BADGE_CLASS[order.status] ?? "bg-sable text-encre/70"}`}
                       >
                         {ORDER_STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-encre/50">
+                    <td className="py-3 pr-4 text-encre/70">
                       {new Date(order.created_at).toLocaleDateString("fr-FR")}
                     </td>
                   </tr>

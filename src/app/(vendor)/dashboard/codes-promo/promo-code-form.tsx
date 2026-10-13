@@ -84,7 +84,7 @@ export function PromoCodeForm() {
       <div className="flex gap-3">
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="maxUses" className="text-sm font-medium text-encre">
-            Utilisations max <span className="text-encre/50">(optionnel)</span>
+            Utilisations max <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="maxUses"
@@ -98,7 +98,7 @@ export function PromoCodeForm() {
         </div>
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="expiresAt" className="text-sm font-medium text-encre">
-            Expire le <span className="text-encre/50">(optionnel)</span>
+            Expire le <span className="text-encre/70">(optionnel)</span>
           </label>
           <input
             id="expiresAt"

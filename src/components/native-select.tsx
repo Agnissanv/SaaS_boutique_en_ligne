@@ -66,10 +66,10 @@ export function NativeSelect({
         onClick={() => setOpen(true)}
         className={`flex items-center justify-between gap-2 rounded-md border border-ligne bg-white px-3 py-2 text-left text-sm text-encre disabled:opacity-50 ${className ?? ""}`}
       >
-        <span className={selected ? "" : "text-encre/50"}>
+        <span className={selected ? "" : "text-encre/70"}>
           {selected ? selected.label : placeholder}
         </span>
-        <span aria-hidden="true" className="shrink-0 text-encre/40">
+        <span aria-hidden="true" className="shrink-0 text-encre/70">
           ▾
         </span>
       </button>

@@ -58,7 +58,7 @@ export function ClaimOrdersButton() {
       >
         {pending ? "Recherche..." : "Rattacher mes anciennes commandes"}
       </button>
-      {message && <p className="mt-1 text-xs text-encre/60">{message}</p>}
+      {message && <p className="mt-1 text-xs text-encre/70">{message}</p>}
     </div>
   );
 }

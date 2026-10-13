@@ -56,7 +56,7 @@ export default function PolitiqueConfidentialitePage() {
         <h1 className="font-display text-2xl font-semibold text-encre">
           Politique de confidentialité
         </h1>
-        <p className="mt-2 text-sm text-encre/60">Dernière mise à jour : 23 septembre 2026</p>
+        <p className="mt-2 text-sm text-encre/70">Dernière mise à jour : 23 septembre 2026</p>
 
         <div className="mt-8 flex flex-col gap-6 text-sm leading-relaxed text-encre/80">
           <section>

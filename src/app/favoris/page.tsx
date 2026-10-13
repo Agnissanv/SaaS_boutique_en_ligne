@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import Link from "next/link";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
 import { ProductImage } from "@/components/product-image";
@@ -58,10 +60,10 @@ export default function FavorisPage() {
                   />
                   <p className="text-sm font-medium text-encre">{item.title}</p>
                   <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 font-mono text-sm text-vert-actif">
-                    {item.price} FCFA
+                    {fcfa(item.price)}
                     {hasDiscount ? (
-                      <span className="font-mono text-xs text-encre/40 line-through">
-                        {item.compareAtPrice} FCFA
+                      <span className="font-mono text-xs text-encre/70 line-through">
+                        {fcfa(item.compareAtPrice)}
                       </span>
                     ) : null}
                   </p>

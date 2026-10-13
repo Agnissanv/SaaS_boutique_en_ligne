@@ -67,7 +67,7 @@ export function EmailForm({ currentEmail }: { currentEmail: string }) {
           placeholder="nouvelle-adresse@exemple.com"
           className="rounded-md border border-ligne px-3 py-2 text-sm focus:ring-2 focus:ring-vert-actif"
         />
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Un email de confirmation sera envoyé à cette adresse. Le changement
           ne sera effectif qu&apos;après avoir cliqué sur le lien reçu.
         </p>

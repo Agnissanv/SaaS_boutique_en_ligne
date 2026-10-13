@@ -57,7 +57,7 @@ export default async function CustomerNotificationsPage() {
     <div className="mx-auto w-full max-w-lg">
       <Link
         href="/compte"
-        className="mb-5 inline-flex items-center gap-1 text-sm text-encre/60 hover:text-vert-actif transition-colors"
+        className="mb-5 inline-flex items-center gap-1 text-sm text-encre/70 hover:text-vert-actif transition-colors"
       >
         ‹ Retour
       </Link>
@@ -85,15 +85,15 @@ export default async function CustomerNotificationsPage() {
               >
                 <span
                   className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ${
-                    NOTIFICATION_KIND_BADGE_CLASS[kind] ?? "bg-brume text-encre/60"
+                    NOTIFICATION_KIND_BADGE_CLASS[kind] ?? "bg-brume text-encre/70"
                   }`}
                 >
                   {NOTIFICATION_KIND_LABEL[kind] ?? "Info"}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className={`text-sm text-encre ${wasUnread ? "font-medium" : ""}`}>{n.title}</p>
-                  {n.body && <p className="mt-0.5 text-sm text-encre/60">{n.body}</p>}
-                  <p className="mt-1 text-xs text-encre/40">
+                  {n.body && <p className="mt-0.5 text-sm text-encre/70">{n.body}</p>}
+                  <p className="mt-1 text-xs text-encre/70">
                     {new Date(n.created_at).toLocaleString("fr-FR", {
                       day: "2-digit",
                       month: "2-digit",

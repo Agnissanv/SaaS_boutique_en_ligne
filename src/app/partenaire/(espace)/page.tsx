@@ -64,25 +64,25 @@ export default async function PartnerResultsPage({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-lg font-semibold text-encre">Bonjour {partner.displayName}</h1>
-          <p className="text-sm text-encre/60">Tes résultats de partenaire KEVA</p>
+          <p className="text-sm text-encre/70">Tes résultats de partenaire KEVA</p>
         </div>
         <MonthSelect value={selected} options={options} basePath="/partenaire" />
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-ligne bg-white p-3">
-          <p className="text-xs text-encre/60">Visites via tes liens</p>
+          <p className="text-xs text-encre/70">Visites via tes liens</p>
           <p className="mt-1 font-display text-2xl font-semibold text-encre">{totalClicks.toLocaleString("fr-FR")}</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-3">
-          <p className="text-xs text-encre/60">Boutiques créées</p>
+          <p className="text-xs text-encre/70">Boutiques créées</p>
           <p className="mt-1 font-display text-2xl font-semibold text-encre">{totalShops}</p>
-          <p className="text-xs text-encre/50">{stats.shops_total} au total</p>
+          <p className="text-xs text-encre/70">{stats.shops_total} au total</p>
         </div>
         <div className="rounded-lg border border-ligne bg-white p-3">
-          <p className="text-xs text-encre/60">Abonnements actifs</p>
+          <p className="text-xs text-encre/70">Abonnements actifs</p>
           <p className="mt-1 font-display text-2xl font-semibold text-encre">{business + pro}</p>
-          <p className="text-xs text-encre/50">
+          <p className="text-xs text-encre/70">
             {business} Business · {pro} Pro
           </p>
         </div>
@@ -95,7 +95,7 @@ export default async function PartnerResultsPage({
       <section className="mt-6 rounded-lg border border-ligne bg-white p-4">
         <h2 className="font-display text-sm font-semibold text-encre">D&apos;où viennent tes inscrits</h2>
         {sources.length === 0 ? (
-          <p className="mt-2 text-sm text-encre/60">
+          <p className="mt-2 text-sm text-encre/70">
             Rien pour ce mois-ci. Partage tes liens (page « Liens et code ») pour voir tes premiers
             résultats ici.
           </p>
@@ -108,7 +108,7 @@ export default async function PartnerResultsPage({
                 <li key={source}>
                   <div className="flex justify-between text-sm">
                     <span className="text-encre">{PARTNER_SOURCE_LABELS[source] ?? source}</span>
-                    <span className="text-encre/60">
+                    <span className="text-encre/70">
                       {clicks !== undefined ? `${clicks} visite${clicks > 1 ? "s" : ""} · ` : ""}
                       {shops} boutique{shops > 1 ? "s" : ""}
                     </span>
@@ -126,7 +126,7 @@ export default async function PartnerResultsPage({
         )}
       </section>
 
-      <p className="mt-5 text-xs leading-relaxed text-encre/60">
+      <p className="mt-5 text-xs leading-relaxed text-encre/70">
         Tu gagnes {fcfa(partner.businessCommission)} par mois pour chaque abonnement Business actif et{" "}
         {fcfa(partner.proCommission)} pour chaque Pro. Le mois d&apos;essai offert à chaque nouvelle
         boutique ne compte pas : ta commission démarre au premier vrai paiement.

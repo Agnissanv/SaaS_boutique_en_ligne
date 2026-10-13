@@ -1,5 +1,7 @@
 "use client";
 
+import { fcfa } from "@/lib/utils/money";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ProductImage } from "@/components/product-image";
@@ -105,7 +107,10 @@ export function MarketplaceSearch({
           setProducts(data.products ?? []);
           setShops(data.shops ?? []);
           setCategories(data.categories ?? []);
-          if (submittedQuery.current !== query) setOpen(true);
+          // Jamais pour la recherche déjà affichée (page de résultats chargée
+          // avec « ordinateur » dans le champ) : la liste s'ouvrait toute
+          // seule par-dessus les résultats (audit visuel du 13/10/2026).
+          if (submittedQuery.current !== query && query !== defaultValue.trim()) setOpen(true);
           }
         )
         .catch(() => {
@@ -119,7 +124,7 @@ export function MarketplaceSearch({
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [value]);
+  }, [value, defaultValue]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -139,7 +144,7 @@ export function MarketplaceSearch({
     <div
       ref={containerRef}
       className={
-        isHero ? "relative flex w-full" : "relative order-3 flex w-full sm:order-2 sm:w-auto sm:flex-1"
+        isHero ? "relative flex w-full" : "relative flex min-w-0 flex-1 sm:order-2"
       }
     >
       <InstantSearchForm
@@ -168,15 +173,16 @@ export function MarketplaceSearch({
         <input
           type="text"
           name="q"
+          aria-label="Rechercher sur KEVA"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => hasSuggestions && setOpen(true)}
           autoComplete="off"
-          placeholder={isHero ? "Rechercher un produit, une boutique ou une catégorie..." : "Rechercher un article..."}
+          placeholder={isHero ? "Rechercher un produit ou une boutique…" : "Rechercher un article…"}
           className={
             isHero
               ? "w-full rounded-full bg-transparent px-4 py-2.5 text-sm text-encre placeholder:text-encre/50 focus:outline-none"
-              : "w-full rounded-md border border-transparent bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
+              : "w-full rounded-md border border-ligne bg-white px-3 py-2 text-sm text-encre placeholder:text-encre/50 focus:outline-none focus:ring-2 focus:ring-vert-actif"
           }
         />
         <button
@@ -184,10 +190,33 @@ export function MarketplaceSearch({
           className={
             isHero
               ? "relative shrink-0 rounded-full bg-vert-actif px-6 py-2.5 text-sm font-semibold text-white hover:bg-vert-sapin"
-              : "relative shrink-0 rounded-md bg-vert-actif px-4 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin"
+              : "relative shrink-0 rounded-md bg-vert-actif px-3 py-2 text-sm font-medium text-ivoire hover:bg-vert-sapin sm:px-4"
           }
+          aria-label="Rechercher"
         >
-          <span className="group-data-[pending]/search:invisible">Rechercher</span>
+          {/* En-tête sur téléphone : une loupe au lieu du mot, pour tenir
+              sur une seule ligne avec le logo. */}
+          <span className="group-data-[pending]/search:invisible">
+            {isHero ? (
+              "Rechercher"
+            ) : (
+              <>
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                  className="h-5 w-5 sm:hidden"
+                >
+                  <circle cx="8.5" cy="8.5" r="5.5" />
+                  <path d="m16 16-3.2-3.2" />
+                </svg>
+                <span className="hidden sm:inline">Rechercher</span>
+              </>
+            )}
+          </span>
           <span
             aria-hidden="true"
             className="absolute inset-0 hidden items-center justify-center group-data-[pending]/search:flex"
@@ -208,7 +237,7 @@ export function MarketplaceSearch({
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-brume"
                 >
-                  <span className="shrink-0 text-xs text-encre/50">Rayon</span>
+                  <span className="shrink-0 text-xs text-encre/70">Rayon</span>
                   <span className="line-clamp-1 font-medium">{category.label}</span>
                 </Link>
               ))}
@@ -223,7 +252,7 @@ export function MarketplaceSearch({
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-brume"
                 >
-                  <span className="shrink-0 text-xs text-encre/50">Boutique</span>
+                  <span className="shrink-0 text-xs text-encre/70">Boutique</span>
                   <span className="line-clamp-1 font-medium">{shop.name}</span>
                 </Link>
               ))}
@@ -245,7 +274,7 @@ export function MarketplaceSearch({
                   />
                   <span className="line-clamp-1 flex-1">{product.title}</span>
                   <span className="shrink-0 font-mono text-xs text-vert-actif">
-                    {product.price.toLocaleString("fr-FR")} FCFA
+                    {fcfa(product.price)}
                   </span>
                 </Link>
               ))}

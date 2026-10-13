@@ -98,7 +98,7 @@ export default async function NewProductPage({
         </div>
         <Link
           href="/dashboard/produits"
-          className="mt-4 inline-block text-sm text-encre/60 hover:text-vert-actif transition-colors kv-link-back"
+          className="mt-4 inline-block text-sm text-encre/70 hover:text-vert-actif transition-colors kv-link-back"
         >
           Retour aux produits
         </Link>
