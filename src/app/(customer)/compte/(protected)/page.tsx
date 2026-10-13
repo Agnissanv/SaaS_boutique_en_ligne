@@ -37,7 +37,7 @@ export default async function ComptePage() {
   // silencieusement (`profile` toujours `null`), le nom affiché retombait
   // donc systématiquement sur la partie locale de l'email plutôt que le
   // vrai nom du client.
-  const [{ data: profile }, access, unreadNotificationsCount] = await Promise.all([
+  const [{ data: profile }, access, unreadNotificationsCount, { data: ownPartner }] = await Promise.all([
     supabase.from("profiles").select("display_name, phone, role").eq("id", user?.id ?? "").single(),
     user ? getAccessibleShop(supabase, user.id) : Promise.resolve(null),
     user
@@ -48,7 +48,14 @@ export default async function ComptePage() {
           .eq("is_read", false)
           .then(({ count }) => count ?? 0)
       : Promise.resolve(0),
+    // Programme partenaire (13/10/2026) : lien vers l'espace partenaire.
+    user
+      ? supabase.from("partners").select("id").eq("profile_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  const isAdmin = profile?.role === "admin";
+  const isCommercial = profile?.role === "commercial";
+  const isPartner = Boolean(ownPartner);
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Mon compte";
   const initial = displayName.charAt(0).toUpperCase();
@@ -82,21 +89,27 @@ export default async function ComptePage() {
           devenir commercial — uniquement les espaces réellement possédés
           par ce compte (mêmes gardes qu'avant : `access` via
           `getAccessibleShop`, rôle `commercial` en base). */}
-      {(access || profile?.role === "commercial") && (
+      {(access || isCommercial || isPartner || isAdmin) && (
         <section className="overflow-hidden rounded-xl border border-vert-sapin/20 bg-vert-sapin/[0.04]">
           <p className="border-b border-vert-sapin/10 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-vert-sapin/70">
             Changer d’espace
           </p>
+          {isAdmin && (
+            <AccountLink
+              href="/admin"
+              label="Administration KEVA"
+              last={!access && !isCommercial && !isPartner}
+            />
+          )}
           {access && (
             <AccountLink
               href="/dashboard"
               label="Espace vendeur — gérer ma boutique"
-              last={!(profile?.role === "commercial")}
+              last={!isCommercial && !isPartner}
             />
           )}
-          {profile?.role === "commercial" && (
-            <AccountLink href="/commercial" label="Espace commercial" last />
-          )}
+          {isPartner && <AccountLink href="/partenaire" label="Espace partenaire" last={!isCommercial} />}
+          {isCommercial && <AccountLink href="/commercial" label="Espace commercial" last />}
         </section>
       )}
 

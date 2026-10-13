@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth-constants";
+import { PASSWORD_MIN_LENGTH, readSpacePreference, resolveHomePath } from "@/lib/auth-constants";
 import { GoogleAuthButton } from "@/components/google-auth-button";
 
 /**
@@ -12,10 +12,8 @@ import { GoogleAuthButton } from "@/components/google-auth-button";
  * demande d'Isaac du 15/09/2026 ("on peut proposer un compte aux clients,
  * mais pas obligatoire pour juste passer une commande"). Même mécanique
  * Supabase Auth (un seul auth.users pour toute la plateforme, cf.
- * migration 0014), mais audience et destination différentes : ici on
- * redirige toujours vers /compte (historique de commandes), jamais vers
- * /dashboard — pas de branchement par rôle nécessaire, ce portail n'est
- * utilisé que pour ça.
+ * migration 0014). Destination : depuis le 13/10/2026, l'espace de chacun
+ * selon son rôle (voir `goToAccount`), /compte pour un client.
  *
  * **Passage du lien au code, le 23/09/2026** — même changement, même
  * raisonnement que sur /connexion (vendeur/admin, voir ce fichier pour le
@@ -58,8 +56,24 @@ export function ConnexionClientForm() {
       : null
   );
 
-  function goToAccount() {
-    router.push("/compte");
+  // Chacun arrive dans SON espace, quel que soit le portail de connexion
+  // (13/10/2026, retour d'Isaac : « le système doit reconnaître le rôle de
+  // chacun » — un admin passé par le lien « Mon compte » de la marketplace
+  // atterrissait sur l'espace client). Même règle que /connexion
+  // (`resolveHomePath`) : admin, commercial, partenaire, vendeur, sinon
+  // client (/compte). Celui qui voulait acheter retrouve « Mon compte » en
+  // un clic depuis son espace.
+  async function goToAccount() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/compte");
+      router.refresh();
+      return;
+    }
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    router.push(await resolveHomePath(supabase, user.id, profile?.role, readSpacePreference(document.cookie)));
     router.refresh();
   }
 
