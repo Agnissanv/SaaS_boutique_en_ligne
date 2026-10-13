@@ -5,6 +5,7 @@ import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
 import { ProductImage } from "@/components/product-image";
+import { EmptyState, HeartIcon } from "@/components/empty-state";
 
 /**
  * Liste de favoris — page client (localStorage, pas de compte client, voir
@@ -21,14 +22,12 @@ export default function FavorisPage() {
       <h1 className="font-display text-xl font-semibold text-encre">Mes favoris</h1>
 
       {items.length === 0 ? (
-        <div className="mt-6">
-          <p className="text-sm text-encre/70">
-            Tu n&apos;as encore ajouté aucun produit à tes favoris.
-          </p>
-          <Link href="/" className="mt-2 inline-block text-sm text-vert-actif hover:text-vert-sapin font-medium transition-colors kv-link-arrow">
-            Découvrir des produits
-          </Link>
-        </div>
+        <EmptyState
+          icon={<HeartIcon />}
+          title="Aucun favori pour l'instant"
+          text="Touche le cœur sur un produit pour le retrouver ici."
+          action={{ href: "/", label: "Découvrir des produits" }}
+        />
       ) : (
         <section className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {items.map((item) => {

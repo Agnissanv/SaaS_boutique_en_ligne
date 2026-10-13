@@ -42,6 +42,7 @@ export function HeroMarketplace({
     prixMin?: string;
     prixMax?: string;
     attrs?: Record<string, string[]>;
+    shortcuts?: { label: string; href: string }[];
   };
 }) {
   return (

@@ -399,3 +399,33 @@ html[data-search-pending] [data-search-results] {
     }
   }
 }
+
+/* Compteur du panier qui « rebondit » à chaque ajout (13/10/2026). Joué au
+   montage : le compteur est re-monté (`key={count}`) quand le nombre change. */
+@keyframes kv-bump {
+  0% { transform: scale(0.6); }
+  55% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.kv-bump {
+  animation: kv-bump 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kv-bump {
+    animation: none;
+  }
+}
+
+/* Notification d'ajout au panier : glisse depuis le bas (13/10/2026). */
+@keyframes kv-toast-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.kv-toast-in {
+  animation: kv-toast-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kv-toast-in {
+    animation: none;
+  }
+}

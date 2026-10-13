@@ -103,8 +103,8 @@ export function SiteFooter() {
           recouvrirait sinon les derniers liens du footer — masquée dès
           `sm:`, où `pb-12` suffit. */}
       <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-12 sm:px-6 sm:pb-12">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          <div className="col-span-2 sm:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-4 sm:gap-8">
+          <div className="mb-6 sm:mb-0">
             <Link href="/" className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element -- logo statique */}
               <img src="/keva-logo.jpg" alt="KEVA" className="h-8 w-8 rounded-md object-cover" />
@@ -117,30 +117,44 @@ export function SiteFooter() {
             </p>
           </div>
 
-          {FOOTER_LINK_GROUPS.map((group) => (
-            <div key={group.title}>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-ivoire/50">
-                {group.title}
-              </p>
-              {/* Liens de 40 px de haut sur mobile (zone de clic confortable,
-                  audit visuel du 13/10/2026), plus serrés sur ordinateur. */}
-              <ul className="mt-2 flex flex-col sm:mt-3 sm:gap-1.5">
-                {group.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="inline-block py-2.5 text-sm text-ivoire/80 transition hover:text-white sm:py-0.5"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {FOOTER_LINK_GROUPS.map((group) => {
+            const links = group.links.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="inline-block py-2.5 text-sm text-ivoire/80 transition hover:text-white sm:py-0.5"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ));
+            return (
+              <div key={group.title} className="border-t border-ivoire/10 sm:border-0">
+                {/* Téléphone : rubrique repliable (13/10/2026, lot 3 UX — le
+                    pied de page déroulait toutes ses listes, très long sur un
+                    petit écran). Liens de 40 px de haut. */}
+                <details className="group/footer sm:hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-xs font-bold uppercase tracking-[0.18em] text-ivoire/70 [&::-webkit-details-marker]:hidden">
+                    {group.title}
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 transition-transform group-open/footer:rotate-180" aria-hidden="true">
+                      <path d="m5 7.5 5 5 5-5" />
+                    </svg>
+                  </summary>
+                  <ul className="flex flex-col pb-3">{links}</ul>
+                </details>
+                {/* Ordinateur : listes ouvertes. */}
+                <div className="hidden sm:block">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-ivoire/50">
+                    {group.title}
+                  </p>
+                  <ul className="mt-3 flex flex-col gap-1.5">{links}</ul>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-ivoire/15 pt-6 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-0 flex flex-col gap-4 border-t border-ivoire/15 pt-6 sm:mt-10 text-xs text-ivoire/50 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} KEVA. Tous droits réservés.</p>
           <div className="flex items-center gap-4">
             <a

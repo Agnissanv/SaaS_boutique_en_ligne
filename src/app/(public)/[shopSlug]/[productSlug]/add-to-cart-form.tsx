@@ -2,10 +2,11 @@
 
 import { fcfa } from "@/lib/utils/money";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { getColorSwatch, isColorGroupName } from "@/lib/colors";
+import { ProductImage } from "@/components/product-image";
 
 type Variant = { id: string; name: string; value: string; extra_price: number };
 
@@ -94,7 +95,13 @@ export function AddToCartForm({
     return initial;
   });
   const [quantity, setQuantity] = useState(1);
-  const [justAdded, setJustAdded] = useState(false);
+  const [addedAt, setAddedAt] = useState<number | null>(null);
+  // Notification d'ajout masquée d'elle-même après 4 secondes.
+  useEffect(() => {
+    if (addedAt === null) return;
+    const timeout = setTimeout(() => setAddedAt(null), 4000);
+    return () => clearTimeout(timeout);
+  }, [addedAt]);
 
   if (stock <= 0) {
     return <p className="mt-4 text-sm font-medium text-erreur">Rupture de stock.</p>;
@@ -118,7 +125,7 @@ export function AddToCartForm({
       variantLabel: variantLabel || undefined,
       quantity,
     });
-    setJustAdded(true);
+    setAddedAt(Date.now());
   }
 
   return (
@@ -259,14 +266,35 @@ export function AddToCartForm({
         </button>
       </div>
 
-      {justAdded && (
-        <p className="text-sm text-succes">
-          Ajouté au panier.{" "}
-          <Link href={`/${shopSlug}/panier`} className="font-medium text-vert-actif hover:text-vert-sapin transition-colors kv-link-arrow">
-            Voir le panier ({count})
-          </Link>
-        </p>
-      )}
+      {/* Notification d'ajout (13/10/2026, lot 2 UX) : remplace la ligne de
+          texte sous le bouton, facile à manquer. Visible où qu'on soit sur la
+          page, avec la photo du produit et un accès direct au panier. */}
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex justify-center sm:inset-x-auto sm:right-6 sm:bottom-6">
+        {addedAt !== null ? (
+          <div
+            key={addedAt}
+            role="status"
+            className="kv-toast-in pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-ligne bg-white p-3 shadow-[0_16px_40px_rgba(14,59,44,0.18)]"
+          >
+            <ProductImage src={imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1 text-sm font-semibold text-succes">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                  <path d="m4.5 10.5 3.5 3.5 7.5-8" />
+                </svg>
+                Ajouté au panier
+              </p>
+              <p className="truncate text-xs text-encre/70">{title}</p>
+            </div>
+            <Link
+              href={`/${shopSlug}/panier`}
+              className="shrink-0 rounded-full bg-vert-actif px-3.5 py-2 text-xs font-semibold text-ivoire transition hover:bg-vert-sapin"
+            >
+              Voir le panier ({count})
+            </Link>
+          </div>
+        ) : null}
+      </div>
     </form>
   );
 }

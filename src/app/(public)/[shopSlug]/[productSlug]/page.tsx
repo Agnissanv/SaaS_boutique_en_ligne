@@ -9,6 +9,9 @@ import { AddToCartForm } from "./add-to-cart-form";
 import { StickyAddToCartBar } from "./sticky-add-to-cart-bar";
 import { ProductGallery } from "./product-gallery";
 import { WhatsappShareButton } from "./whatsapp-share-button";
+import { ProductTopBar } from "./product-top-bar";
+import { categoryLabel } from "@/lib/categories";
+import { serializeJsonLd } from "@/lib/utils/json-ld";
 import { Stars } from "@/components/stars";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ProductImage } from "@/components/product-image";
@@ -293,28 +296,80 @@ export default async function ProductPage({
           imageUrl: images[0]?.url,
         }}
       />
-      {/* Lien retour : caché sur mobile au profit du chevron flottant sur la
-          photo ci-dessous (refonte fiche produit, 22/09/2026, mockup validé
-          par Isaac) — repris à partir de sm:, où la mise en page à deux
-          colonnes laisse assez de place au-dessus de la galerie. */}
-      <Link
-        href={`/${shopSlug}`}
-        transitionTypes={["nav-back"]}
-        className="hidden items-center gap-1 text-sm text-vert-actif sm:inline-flex hover:text-vert-sapin font-medium transition-colors"
-      >
-        ‹ Retour à la boutique
-      </Link>
+      {/* Téléphone : barre du haut (retour, boutique, partager, panier).
+          Ordinateur : fil d'Ariane (13/10/2026, lot 2 UX — remplace le
+          simple lien « Retour à la boutique » et le chevron posé sur la
+          photo). Doublé d'un BreadcrumbList pour Google. */}
+      <ProductTopBar shopSlug={shopSlug} shopName={shop.name} productTitle={product.title} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Accueil", item: siteUrl },
+              ...(product.category
+                ? [
+                    {
+                      "@type": "ListItem",
+                      position: 2,
+                      name: categoryLabel(product.category),
+                      item: `${siteUrl}/?categorie=${product.category}`,
+                    },
+                  ]
+                : []),
+              {
+                "@type": "ListItem",
+                position: product.category ? 3 : 2,
+                name: shop.name,
+                item: `${siteUrl}/${shopSlug}`,
+              },
+              {
+                "@type": "ListItem",
+                position: product.category ? 4 : 3,
+                name: product.title,
+                item: `${siteUrl}/${shopSlug}/${product.slug}`,
+              },
+            ],
+          }),
+        }}
+      />
+      <nav aria-label="Fil d'Ariane" className="hidden text-sm text-encre/70 sm:block">
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li>
+            <Link href="/" className="transition-colors hover:text-vert-actif">
+              Accueil
+            </Link>
+          </li>
+          {product.category ? (
+            <>
+              <li aria-hidden="true">›</li>
+              <li>
+                <Link
+                  href={`/?categorie=${encodeURIComponent(product.category)}`}
+                  className="transition-colors hover:text-vert-actif"
+                >
+                  {categoryLabel(product.category)}
+                </Link>
+              </li>
+            </>
+          ) : null}
+          <li aria-hidden="true">›</li>
+          <li>
+            <Link href={`/${shopSlug}`} transitionTypes={["nav-back"]} className="transition-colors hover:text-vert-actif">
+              {shop.name}
+            </Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" className="max-w-[28ch] truncate font-medium text-encre">
+            {product.title}
+          </li>
+        </ol>
+      </nav>
 
       <div className="mt-0 grid gap-8 sm:mt-4 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
         <div className="relative">
-          <Link
-            href={`/${shopSlug}`}
-            transitionTypes={["nav-back"]}
-            aria-label="Retour à la boutique"
-            className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg text-vert-sapin shadow-sm sm:hidden"
-          >
-            ‹
-          </Link>
           <div className="absolute right-3 top-3 z-10">
             <WishlistButton
               item={{
@@ -351,6 +406,9 @@ export default async function ProductPage({
                 {shopRating.count})
               </span>
             ) : null}
+            <span className="ml-auto hidden sm:inline-flex">
+              <WhatsappShareButton title={product.title} />
+            </span>
           </div>
 
           {tags.length > 0 && (
@@ -414,28 +472,6 @@ export default async function ProductPage({
             </p>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <WhatsappShareButton title={product.title} />
-            {shop.whatsapp_number ? (
-              <WhatsappContactButton
-                whatsappNumber={shop.whatsapp_number}
-                message={`Bonjour, je suis intéressé(e) par « ${product.title} ».`}
-              />
-            ) : null}
-          </div>
-
-          {/* Numéro Mobile Money du vendeur (29/09/2026) — voir
-              decisions-techniques.md, même badge purement informatif que sur
-              la page boutique. */}
-          {shop.mobile_money_number && shop.mobile_money_operator && isMobileMoneyOperator(shop.mobile_money_operator) ? (
-            <div className="mt-2">
-              <MobileMoneyBadge
-                operator={shop.mobile_money_operator}
-                number={shop.mobile_money_number}
-              />
-            </div>
-          ) : null}
-
           {/* `id="acheter"` : cible du scroll de la barre fixe mobile
               (`sticky-add-to-cart-bar.tsx`), voir son commentaire pour le
               raisonnement complet. */}
@@ -486,7 +522,33 @@ export default async function ProductPage({
                 </li>
               ) : null}
             </ul>
+            {/* Bouton secondaire (13/10/2026, lot 2 UX) : « Ajouter au panier »
+                reste le seul bouton principal. Formulé « poser une question »
+                plutôt que « commander » : la commande passe par KEVA, pour que
+                le vendeur la retrouve dans son tableau de bord. */}
+            {shop.whatsapp_number ? (
+              <div className="mt-4">
+                <WhatsappContactButton
+                  whatsappNumber={shop.whatsapp_number}
+                  message={`Bonjour, j'ai une question sur « ${product.title} » vu sur KEVA.`}
+                  label="Poser une question sur WhatsApp"
+                  variant="outline"
+                />
+              </div>
+            ) : null}
           </div>
+
+          {/* Numéro Mobile Money du vendeur (29/09/2026), purement informatif :
+              placé après les boutons d'achat (13/10/2026) pour ne pas les
+              séparer du prix. */}
+          {shop.mobile_money_number && shop.mobile_money_operator && isMobileMoneyOperator(shop.mobile_money_operator) ? (
+            <div className="mt-3">
+              <MobileMoneyBadge
+                operator={shop.mobile_money_operator}
+                number={shop.mobile_money_number}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 

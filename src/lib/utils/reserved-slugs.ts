@@ -43,6 +43,8 @@ export const RESERVED_SHOP_SLUGS: readonly string[] = [
   // Liens des partenaires influenceurs (/p/<code>) et leur espace (13/10/2026).
   "p",
   "partenaire",
+  // Page « Mes paniers » (13/10/2026).
+  "paniers",
   "politique-confidentialite",
   "tarifs",
 ];

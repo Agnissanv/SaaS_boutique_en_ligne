@@ -27,6 +27,7 @@ export type BottomNavRoute = {
   isCategories: boolean;
   isFavoris: boolean;
   isCompte: boolean;
+  isPaniers: boolean;
 };
 
 const ACCOUNT_AUTH_PAGES = new Set(["connexion", "inscription"]);
@@ -34,11 +35,19 @@ const ACCOUNT_AUTH_PAGES = new Set(["connexion", "inscription"]);
 export function getBottomNavRoute(pathname: string): BottomNavRoute {
   const segments = pathname.split("/").filter(Boolean);
   const first = segments[0];
-  const base = { shopSlug: null, isHome: false, isCategories: false, isFavoris: false, isCompte: false };
+  const base = {
+    shopSlug: null,
+    isHome: false,
+    isCategories: false,
+    isFavoris: false,
+    isCompte: false,
+    isPaniers: false,
+  };
 
   if (first === undefined) return { ...base, visible: true, isHome: true };
   if (first === "categories") return { ...base, visible: segments.length === 1, isCategories: true };
   if (first === "favoris") return { ...base, visible: true, isFavoris: true };
+  if (first === "paniers") return { ...base, visible: true, isPaniers: true };
   if (first === "compte") {
     return { ...base, visible: !ACCOUNT_AUTH_PAGES.has(segments[1] ?? ""), isCompte: true };
   }

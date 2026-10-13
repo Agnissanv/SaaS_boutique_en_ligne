@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useShopCart } from "@/lib/cart/useShopCart";
+import { useAllCarts } from "@/lib/cart/useShopCart";
 import { useWishlist } from "@/lib/wishlist/useWishlist";
 import { useLastVisitedShop } from "@/lib/shop/useLastVisitedShop";
 import { getBottomNavRoute } from "@/lib/bottom-nav-route";
-import { RESERVED_SHOP_SLUGS } from "@/lib/utils/reserved-slugs";
 
 // Espaces « internes » (13/10/2026 : ne décide plus de l'affichage de la
 // barre, voir `getBottomNavRoute` ; reste utilisée par admin-quick-access).
@@ -104,12 +103,11 @@ const TAB_CLASS = "flex flex-1 flex-col items-center justify-center gap-0.5 py-2
  * inspiration ; deux écarts délibérés, tranchés avec lui avant de coder
  * (question à choix multiples) :
  *
- * - **"Panier" pointe vers la DERNIÈRE boutique visitée** (voir
- *   useLastVisitedShop.ts), grisé/inactif si le client n'a encore visité
- *   aucune boutique dans son navigateur — chez Jumia le panier est global
- *   (un seul vendeur), chez nous il est scopé par boutique (une commande =
- *   une seule boutique, voir useShopCart.ts), donc un onglet "Panier"
- *   toujours actif n'aurait pas de destination unique évidente.
+ * - **"Panier" pointe vers « Mes paniers » (`/paniers`)** depuis le
+ *   13/10/2026 — chez nous un panier = une boutique (une commande = une
+ *   seule boutique, voir useShopCart.ts) ; la page regroupe tous les paniers
+ *   en cours. Avant, l'onglet menait au panier de la dernière boutique
+ *   visitée et restait grisé tant qu'aucune n'avait été visitée.
  * - **"Catégories" pointe vers une page dédiée `/categories`** (ajoutée le
  *   16/09/2026, retour d'Isaac : "le bouton catégories doit avoir une page
  *   dédiée bien garnie, comme sur Jumia"). Avant cette date, aucune page de
@@ -132,7 +130,7 @@ export function BottomNav() {
   const segments = pathname.split("/").filter(Boolean);
   const isPanier = Boolean(currentShop) && segments[1] === "panier";
 
-  const { shopSlug: lastShop, setShopSlug } = useLastVisitedShop();
+  const { setShopSlug } = useLastVisitedShop();
 
   // Mémorise la boutique courante comme "dernière visitée" dès qu'on est sur
   // une page boutique — synchronisation vers un store externe (localStorage),
@@ -143,11 +141,10 @@ export function BottomNav() {
     if (currentShop) setShopSlug(currentShop);
   }, [currentShop, setShopSlug]);
 
-  // Une ancienne version mémorisait aussi /faq, /blog... comme « boutique » :
-  // ces valeurs déjà enregistrées dans les navigateurs sont ignorées.
-  const savedShop = lastShop && !RESERVED_SHOP_SLUGS.includes(lastShop) ? lastShop : null;
-  const effectiveShop = currentShop ?? savedShop;
-  const { count: cartCount } = useShopCart(effectiveShop ?? "");
+  // Onglet Panier (13/10/2026) : mène à « Mes paniers », qui regroupe les
+  // paniers de toutes les boutiques — il était grisé tant qu'on n'avait
+  // visité aucune boutique. Compteur : total des articles de tous les paniers.
+  const { totalCount: cartCount } = useAllCarts();
   const { count: favCount } = useWishlist();
 
   // Masquée en descendant, de retour dès qu'on remonte (13/10/2026) : tout
@@ -222,25 +219,21 @@ export function BottomNav() {
           Catégories
         </Link>
 
-        {effectiveShop ? (
-          <Link
-            href={`/${effectiveShop}/panier`}
-            className={`relative ${TAB_CLASS} ${isPanier ? "text-vert-actif" : "text-encre/70"}`}
-          >
-            <CartIcon />
-            {cartCount > 0 ? (
-              <span className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-vert-actif px-1 text-[9px] font-medium text-ivoire">
-                {cartCount}
-              </span>
-            ) : null}
-            Panier
-          </Link>
-        ) : (
-          <span className={`${TAB_CLASS} text-encre/30`} aria-disabled="true">
-            <CartIcon />
-            Panier
-          </span>
-        )}
+        <Link
+          href="/paniers"
+          className={`relative ${TAB_CLASS} ${isPanier || route.isPaniers ? "text-vert-actif" : "text-encre/70"}`}
+        >
+          <CartIcon />
+          {cartCount > 0 ? (
+            <span
+              key={cartCount}
+              className="kv-bump absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-vert-actif px-1 text-[9px] font-medium text-ivoire"
+            >
+              {cartCount}
+            </span>
+          ) : null}
+          Panier
+        </Link>
 
         <Link href="/favoris" className={`relative ${TAB_CLASS} ${isFavoris ? "text-vert-actif" : "text-encre/70"}`}>
           <HeartIcon />

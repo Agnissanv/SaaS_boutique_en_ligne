@@ -724,6 +724,12 @@ export default async function Home({
     label: c.label,
     href: buildMarketplaceHref({ ...current, attrs: {} }, { categorie: c.value, page: undefined }),
   }));
+  // Rayons proposés quand on touche la barre de recherche sans rien taper
+  // (13/10/2026) : uniquement des catégories qui ont des produits.
+  const searchShortcuts = availableCategories.slice(0, 6).map((c) => ({
+    label: c.label,
+    href: buildMarketplaceHref({}, { categorie: c.value }),
+  }));
   const discountsOnSale = [...newArrivalsProducts, ...feedPoolProducts]
     .filter((p) => p.isOnSale && p.compareAtPrice && p.compareAtPrice > p.price)
     .map((p) => Math.round((1 - p.price / (p.compareAtPrice as number)) * 100))
@@ -808,6 +814,7 @@ export default async function Home({
                 prixMin={prixMin}
                 prixMax={prixMax}
                 attrs={attrs}
+                shortcuts={searchShortcuts}
               />
 
               <div className="order-2 hidden shrink-0 items-center gap-4 text-sm font-medium sm:order-3 sm:flex">
@@ -846,7 +853,7 @@ export default async function Home({
             <HeroMarketplace
               categories={heroCategories}
               promoDiscount={heroPromoDiscount}
-              search={{ defaultValue: q ?? "", categorie, prixMin, prixMax, attrs }}
+              search={{ defaultValue: q ?? "", categorie, prixMin, prixMax, attrs, shortcuts: searchShortcuts }}
             />
           )}
 

@@ -2,10 +2,11 @@
 
 import { fcfa } from "@/lib/utils/money";
 import { ProductImage } from "@/components/product-image";
+import { CheckoutSteps } from "@/components/checkout-steps";
+import { BagIcon, EmptyState } from "@/components/empty-state";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useShopCart } from "@/lib/cart/useShopCart";
 import { createClient } from "@/lib/supabase/client";
 import { notifyVendorNewOrder, notifyVendorLowStock } from "./notify-vendor-action";
@@ -149,27 +150,13 @@ export function CartCheckout({
 
   if (items.length === 0) {
     return (
-      // État vide soigné (13/10/2026, audit visuel : une ligne de texte et un
-      // lien, puis directement le pied de page).
-      <div className="mt-6 flex flex-col items-center rounded-2xl border border-ligne bg-white px-6 py-10 text-center">
-        <span
-          aria-hidden="true"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-brume text-vert-actif"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
-            <path d="M6 7h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 7Z" />
-            <path d="M9 7V6a3 3 0 0 1 6 0v1" />
-          </svg>
-        </span>
-        <p className="mt-4 font-display text-base font-semibold text-encre">Ton panier est vide</p>
-        <p className="mt-1 text-sm text-encre/70">Ajoute des articles depuis la boutique pour passer commande.</p>
-        <Link
-          href={`/${shopSlug}`}
-          className="mt-5 rounded-full bg-vert-actif px-5 py-2.5 text-sm font-semibold text-ivoire transition hover:bg-vert-sapin"
-        >
-          Découvrir la boutique
-        </Link>
-      </div>
+      // État vide soigné (13/10/2026, audit visuel), composant partagé.
+      <EmptyState
+        icon={<BagIcon />}
+        title="Ton panier est vide"
+        text="Ajoute des articles depuis la boutique pour passer commande."
+        action={{ href: `/${shopSlug}`, label: "Découvrir la boutique" }}
+      />
     );
   }
 
@@ -271,6 +258,9 @@ export function CartCheckout({
   if (step === "panier") {
     return (
       <div className="mt-6">
+        <div className="mb-4">
+          <CheckoutSteps current={1} />
+        </div>
         <ul className="divide-y divide-ligne rounded-lg border border-ligne bg-white">
           {items.map((item) => (
             <li key={item.key} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -353,6 +343,7 @@ export function CartCheckout({
 
   return (
     <form onSubmit={handleSubmitOrder} className="mt-6 flex flex-col gap-4">
+      <CheckoutSteps current={2} />
       <dl className="divide-y divide-ligne rounded-lg border border-ligne bg-white px-4 text-sm">
         <div className="flex justify-between py-2 text-encre/70">
           <dt>Sous-total</dt>

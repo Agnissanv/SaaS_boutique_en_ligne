@@ -75,13 +75,17 @@ export function ProductImage({
   }
 
   return (
-    <div className={`relative overflow-hidden bg-brume ${className ?? ""}`}>
+    // Reflet animé tant que la photo charge (13/10/2026, lot 3 UX), au lieu
+    // d'une case beige figée ; puis fondu avec un très léger zoom.
+    <div className={`relative overflow-hidden bg-brume ${loaded ? "" : "animate-kv-pulse"} ${className ?? ""}`}>
       <Image
         src={src}
         alt={alt}
         fill
         sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
-        className={`object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`object-cover transition duration-500 ease-out motion-reduce:transition-none ${
+          loaded ? "scale-100 opacity-100" : "scale-[1.03] opacity-0"
+        }`}
         onLoad={() => setLoaded(true)}
         onError={() => setBroken(true)}
       />

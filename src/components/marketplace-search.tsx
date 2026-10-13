@@ -20,6 +20,41 @@ type ShopSuggestion = { slug: string; name: string };
 
 type CategorySuggestion = { value: string; label: string };
 
+// Recherches récentes (13/10/2026, lot 2 UX) : gardées dans ce navigateur
+// seulement, jamais envoyées au serveur.
+const RECENT_SEARCHES_KEY = "keva_recherches_recentes";
+const RECENT_SEARCHES_MAX = 5;
+
+function readRecentSearches(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]");
+    return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === "string").slice(0, RECENT_SEARCHES_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentSearch(query: string): string[] {
+  const next = [query, ...readRecentSearches().filter((v) => v.toLowerCase() !== query.toLowerCase())].slice(
+    0,
+    RECENT_SEARCHES_MAX
+  );
+  try {
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+  } catch {
+    // Stockage indisponible (navigation privée) : rien de grave.
+  }
+  return next;
+}
+
+function clearRecentSearches() {
+  try {
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+  } catch {
+    // Idem.
+  }
+}
+
 /**
  * Barre de recherche marketplace avec autocomplete — extraite de l'en-tête
  * de la page d'accueil le 21/09/2026 (client component nécessaire pour la
@@ -51,12 +86,15 @@ export function MarketplaceSearch({
   prixMax,
   attrs,
   variant = "header",
+  shortcuts = [],
 }: {
   defaultValue: string;
   categorie?: string;
   prixMin?: string;
   prixMax?: string;
   attrs?: Record<string, string[]>;
+  /** Rayons proposés quand on touche la barre sans rien taper. */
+  shortcuts?: { label: string; href: string }[];
   /** "hero" : grande pastille du hero (09/10/2026) ; "header" : barre de l'en-tête. */
   variant?: "header" | "hero";
 }) {
@@ -136,7 +174,10 @@ export function MarketplaceSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [recent, setRecent] = useState<string[]>([]);
   const queryLongEnough = value.trim().length >= 2;
+  // Barre touchée sans rien taper : recherches récentes et rayons populaires.
+  const showStarters = !queryLongEnough && (recent.length > 0 || shortcuts.length > 0);
   const hasSuggestions =
     queryLongEnough && (products.length > 0 || shops.length > 0 || categories.length > 0);
 
@@ -152,6 +193,7 @@ export function MarketplaceSearch({
         scrollTargetId="catalogue"
         onSubmitted={() => {
           submittedQuery.current = value.trim();
+          if (value.trim()) setRecent(saveRecentSearch(value.trim()));
           setOpen(false);
         }}
         className={
@@ -176,7 +218,13 @@ export function MarketplaceSearch({
           aria-label="Rechercher sur KEVA"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          onFocus={() => hasSuggestions && setOpen(true)}
+          onFocus={() => {
+            setRecent(readRecentSearches());
+            setOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setOpen(false);
+          }}
           autoComplete="off"
           placeholder={isHero ? "Rechercher un produit ou une boutique…" : "Rechercher un article…"}
           className={
@@ -225,6 +273,59 @@ export function MarketplaceSearch({
           </span>
         </button>
       </InstantSearchForm>
+
+      {open && showStarters ? (
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 rounded-xl border border-ligne bg-white p-2 text-encre shadow-lg">
+          {recent.length > 0 ? (
+            <div className="pb-1">
+              <div className="flex items-center justify-between px-2 py-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-encre/70">Recherches récentes</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearRecentSearches();
+                    setRecent([]);
+                  }}
+                  className="text-xs font-medium text-vert-actif transition-colors hover:text-vert-sapin"
+                >
+                  Effacer
+                </button>
+              </div>
+              {recent.map((term) => (
+                <Link
+                  key={term}
+                  href={`/?q=${encodeURIComponent(term)}`}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm hover:bg-brume"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className="h-4 w-4 shrink-0 text-encre/60" aria-hidden="true">
+                    <circle cx="10" cy="10" r="7" />
+                    <path d="M10 6.5V10l2.5 1.5" />
+                  </svg>
+                  <span className="truncate">{term}</span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+          {shortcuts.length > 0 ? (
+            <div className={recent.length > 0 ? "border-t border-ligne pt-2" : ""}>
+              <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-encre/70">Rayons populaires</p>
+              <div className="flex flex-wrap gap-1.5 px-2 pb-1 pt-1">
+                {shortcuts.slice(0, 6).map((shortcut) => (
+                  <Link
+                    key={shortcut.href}
+                    href={shortcut.href}
+                    onClick={() => setOpen(false)}
+                    className="rounded-full bg-brume px-3 py-1.5 text-xs font-medium text-encre transition hover:bg-vert-actif hover:text-ivoire"
+                  >
+                    {shortcut.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {open && hasSuggestions ? (
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto rounded-md border border-ligne bg-white text-encre shadow-lg">

@@ -19,6 +19,8 @@ import { getEffectivePrice } from "@/lib/products";
 import { CategoryNav } from "@/components/category-nav";
 import { ProductCard } from "@/components/product-card";
 import { ExpandableText } from "@/components/expandable-text";
+import { ShareButton } from "@/components/share-button";
+import { BagIcon, EmptyState } from "@/components/empty-state";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { ProductFilterPanel } from "@/components/product-filter-panel";
 import {
@@ -526,14 +528,27 @@ export default async function ShopPage({
             />
           </div>
         ) : (
+          // Sans photo de couverture (13/10/2026, lot 3 UX) : dégradé à la
+          // couleur de la boutique et motif discret, au lieu d'un aplat uni.
           <div
-            style={shop.accent_color ? { backgroundColor: shop.accent_color } : undefined}
-            className={
+            style={
               shop.accent_color
-                ? "h-32 w-full sm:h-40 md:h-48"
-                : "h-32 w-full bg-vert-profond sm:h-40 md:h-48"
+                ? {
+                    backgroundImage: `linear-gradient(135deg, ${shop.accent_color}, color-mix(in srgb, ${shop.accent_color} 65%, #000))`,
+                  }
+                : undefined
             }
-          />
+            className={`relative h-32 w-full overflow-hidden sm:h-40 md:h-48 ${
+              shop.accent_color ? "" : "bg-linear-to-br from-vert-profond to-vert-actif"
+            }`}
+          >
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.16)_1px,transparent_0)] bg-[length:18px_18px]"
+            />
+            <div aria-hidden="true" className="absolute -right-10 -top-16 h-56 w-56 rounded-full border border-white/15" />
+            <div aria-hidden="true" className="absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-white/5" />
+          </div>
         )}
       </div>
 
@@ -573,14 +588,21 @@ export default async function ShopPage({
             ) : null}
           </div>
 
-          {shop.whatsapp_number ? (
-            <div className="w-full sm:w-auto">
+          {/* Contact + partage (13/10/2026, lot 3 UX) : les vendeuses font
+              connaître leur boutique surtout en la partageant sur WhatsApp. */}
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {shop.whatsapp_number ? (
               <WhatsappContactButton
                 whatsappNumber={shop.whatsapp_number}
                 message={`Bonjour, j'ai une question sur votre boutique « ${shop.name} ».`}
               />
-            </div>
-          ) : null}
+            ) : null}
+            <ShareButton
+              title={shop.name}
+              text={`Découvre la boutique ${shop.name} sur KEVA :`}
+              label="Partager la boutique"
+            />
+          </div>
         </div>
 
         {/* Numéro Mobile Money du vendeur (29/09/2026) — remplace le paiement
@@ -770,12 +792,22 @@ export default async function ShopPage({
       ) : null}
 
       {gridProducts.length === 0 ? (
-        search ? null : (
-        <p className="mt-10 text-sm text-encre/70">
-          {categorie || prixMin || prixMax || Object.keys(attrs).length > 0
-            ? "Aucun article ne correspond à ces filtres."
-            : "Aucun produit disponible pour l'instant."}
-        </p>
+        search ? null : categorie || prixMin || prixMax || Object.keys(attrs).length > 0 ? (
+          <EmptyState
+            icon={<BagIcon />}
+            title="Aucun article avec ces filtres"
+            text="Essaie d'élargir les filtres ou de revenir à toute la boutique."
+            action={{ href: `/${shopSlug}`, label: "Voir toute la boutique" }}
+          />
+        ) : (
+          // Boutique encore vide (13/10/2026, lot 3 UX) : un état soigné et
+          // une sortie vers le reste de la marketplace.
+          <EmptyState
+            icon={<BagIcon />}
+            title="Bientôt des articles ici"
+            text={`${shop.name} prépare sa boutique. En attendant, découvre les autres vendeurs KEVA.`}
+            action={{ href: "/", label: "Découvrir la marketplace" }}
+          />
         )
       ) : (
         // Cartes produit passées au composant partagé `ProductCard` le

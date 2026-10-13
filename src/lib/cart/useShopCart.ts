@@ -81,6 +81,7 @@ function readCart(shopSlug: string): CartItem[] {
 
 function notify(shopSlug: string) {
   listeners.get(shopSlug)?.forEach((cb) => cb());
+  allCartsListeners.forEach((cb) => cb());
 }
 
 function writeCart(shopSlug: string, items: CartItem[]) {
@@ -116,6 +117,66 @@ function subscribe(shopSlug: string, callback: () => void) {
 
 function getServerSnapshot() {
   return EMPTY;
+}
+
+// ---------------------------------------------------------------------------
+// Tous les paniers à la fois (13/10/2026, page « Mes paniers » et onglet
+// Panier de la barre du bas) : un panier par boutique, lus ensemble.
+// ---------------------------------------------------------------------------
+export type ShopCartSummary = { shopSlug: string; items: CartItem[] };
+
+const EMPTY_CARTS: ShopCartSummary[] = [];
+const allCartsListeners = new Set<() => void>();
+let allCartsCache: { signature: string; carts: ShopCartSummary[] } | null = null;
+
+function readAllCarts(): ShopCartSummary[] {
+  if (typeof window === "undefined") return EMPTY_CARTS;
+  const slugs: string[] = [];
+  const raws: string[] = [];
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key?.startsWith("cart:")) slugs.push(key.slice("cart:".length));
+    }
+    slugs.sort();
+    for (const slug of slugs) raws.push(window.localStorage.getItem(storageKey(slug)) ?? "");
+  } catch {
+    return EMPTY_CARTS;
+  }
+  // Même tableau tant que rien n'a changé (exigence de useSyncExternalStore).
+  const signature = slugs.map((slug, i) => `${slug}=${raws[i]}`).join("|");
+  if (allCartsCache && allCartsCache.signature === signature) return allCartsCache.carts;
+  const carts = slugs
+    .map((slug) => ({ shopSlug: slug, items: readCart(slug) }))
+    .filter((cart) => cart.items.length > 0);
+  allCartsCache = { signature, carts };
+  return carts;
+}
+
+function subscribeAllCarts(callback: () => void) {
+  allCartsListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === null || e.key.startsWith("cart:")) callback();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    allCartsListeners.delete(callback);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getAllCartsServerSnapshot() {
+  return EMPTY_CARTS;
+}
+
+/** Paniers non vides de toutes les boutiques, et le nombre total d'articles. */
+export function useAllCarts() {
+  const carts = useSyncExternalStore(subscribeAllCarts, readAllCarts, getAllCartsServerSnapshot);
+  const totalCount = carts.reduce(
+    (sum, cart) => sum + cart.items.reduce((n, item) => n + item.quantity, 0),
+    0
+  );
+  return { carts, totalCount };
 }
 
 export function useShopCart(shopSlug: string) {

@@ -27,9 +27,16 @@ export function WhatsappShareButton({ title }: { title: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-md border border-green-600 px-3 py-1.5 text-sm font-medium text-green-700"
+      // Lien discret à côté du nom de la boutique, sur ordinateur (13/10/2026) ;
+      // sur téléphone, le partage est dans la barre du haut.
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-vert-actif transition-colors hover:text-vert-sapin"
     >
-      Partager sur WhatsApp
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+        <path d="M10 13V3" />
+        <path d="m6.5 6.5 3.5-3.5 3.5 3.5" />
+        <path d="M5 10H4.5A1.5 1.5 0 0 0 3 11.5v4A1.5 1.5 0 0 0 4.5 17h11a1.5 1.5 0 0 0 1.5-1.5v-4a1.5 1.5 0 0 0-1.5-1.5H15" />
+      </svg>
+      Partager
     </a>
   );
 }
