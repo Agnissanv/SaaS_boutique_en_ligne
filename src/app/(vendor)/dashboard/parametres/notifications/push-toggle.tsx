@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { subscribeToPush, unsubscribeFromPush } from "./push-actions";
+import { InstallAppButton } from "@/components/install-app-button";
 
 // Support du Web Push par ce navigateur : une capacité fixe, lue directement
 // (09/10/2026) plutôt que posée par un `setState` dans un effet — ce que la
@@ -95,12 +96,18 @@ export function PushNotificationToggle({ vapidPublicKey }: { vapidPublicKey: str
   }
 
   if (!supported) {
+    // 13/10/2026 : bouton d'installation guidée plutôt qu'un chemin de menus
+    // à retenir — sur iPhone, les alertes ne marchent qu'une fois KEVA
+    // installée sur l'écran d'accueil.
     return (
-      <p className="mt-4 max-w-md text-xs text-encre/70">
-        Les notifications sur cet appareil ne sont pas prises en charge par ce
-        navigateur. Sur iPhone, installe d&apos;abord KEVA sur ton écran
-        d&apos;accueil (Safari &gt; Partager &gt; Sur l&apos;écran d&apos;accueil).
-      </p>
+      <div className="mt-4 max-w-md">
+        <p className="text-xs text-encre/70">
+          Les notifications ne sont pas disponibles dans ce navigateur. Sur
+          iPhone, elles fonctionnent une fois KEVA installée sur ton écran
+          d&apos;accueil.
+        </p>
+        <InstallAppButton variant="inline" reason="notifications" />
+      </div>
     );
   }
 

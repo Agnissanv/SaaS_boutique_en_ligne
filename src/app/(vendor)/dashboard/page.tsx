@@ -1,3 +1,4 @@
+import { InstallInvite } from "@/components/install-invite";
 import { fcfa } from "@/lib/utils/money";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -277,6 +278,8 @@ export default async function DashboardOverviewPage({
 
   return (
     <div>
+      {/* Invitation à installer KEVA (13/10/2026) : alertes de commandes. */}
+      <InstallInvite context="vendor" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-lg font-semibold text-encre">Aperçu</h1>

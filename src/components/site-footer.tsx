@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { InstallAppButton } from "@/components/install-app-button";
 import { usePathname } from "next/navigation";
 
 /**
@@ -115,6 +116,8 @@ export function SiteFooter() {
             <p className="mt-3 max-w-[22ch] text-sm text-ivoire/70">
               La marketplace des vendeurs indépendants de Côte d&apos;Ivoire.
             </p>
+            {/* Installation de l'appli (13/10/2026) — masqué si déjà installée. */}
+            <InstallAppButton variant="footer" />
           </div>
 
           {FOOTER_LINK_GROUPS.map((group) => {

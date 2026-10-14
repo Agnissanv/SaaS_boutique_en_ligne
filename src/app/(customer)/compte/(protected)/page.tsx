@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallAppButton } from "@/components/install-app-button";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { getAccessibleShop } from "@/lib/shop-access";
@@ -138,6 +139,11 @@ export default async function ComptePage() {
           />
         </div>
       </section>
+
+      {/* ========== APPLICATION (13/10/2026) ==========
+          Installation de KEVA sur le téléphone — la rubrique disparaît
+          d'elle-même une fois l'appli installée. */}
+      <InstallAppButton variant="account" />
 
       {/* ========== AIDE ==========
           Liens branchés le 22/09/2026 (étaient des stubs "#") : "Centre

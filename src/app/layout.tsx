@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
+import { InstallSheetHost } from "@/components/install-sheet";
+import { INSTALL_CAPTURE_SCRIPT } from "@/lib/pwa-install";
 import { LocationDetector } from "@/components/location-detector";
 import { BottomNav } from "@/components/bottom-nav";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
@@ -243,6 +245,10 @@ export default function RootLayout({
       className={`h-full antialiased ${archivo.variable} ${workSans.variable} ${plexMono.variable}`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* Installation guidée (13/10/2026) : capte la fenêtre
+            d'installation de Chrome dès le chargement, avant React — voir
+            src/lib/pwa-install.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: INSTALL_CAPTURE_SCRIPT }} />
         <OrganizationJsonLd siteUrl={siteUrl} />
         {children}
         {/* Pied de page global (29/09/2026) — rendu une seule fois ici pour
@@ -262,6 +268,7 @@ export default function RootLayout({
             scroll-to-top-button.tsx. */}
         <ScrollToTopButton />
         <RegisterServiceWorker />
+        <InstallSheetHost />
         {/* Détection silencieuse de la position pour le tri par proximité de
             la marketplace (01/10/2026) — voir location-detector.tsx. */}
         <LocationDetector />

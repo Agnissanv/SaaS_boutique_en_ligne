@@ -23,11 +23,14 @@ export function BottomSheet({
   open,
   onClose,
   title,
+  label,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
+  /** Nom accessible quand la feuille n'affiche pas de `title` (en-tête personnalisé). */
+  label?: string;
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = useState(open);
@@ -112,7 +115,7 @@ export function BottomSheet({
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={title ?? label}
         className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(4,20,15,0.15)]"
         style={{
           animation: closing ? undefined : "sheet-slide-up var(--duration-sheet) var(--ease-native) both",

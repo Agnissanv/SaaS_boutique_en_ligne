@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallInvite } from "@/components/install-invite";
 import { cookies } from "next/headers";
 import { ViewTransition } from "react";
 import { createClient } from "@/lib/supabase/server";
@@ -776,6 +777,8 @@ export default async function Home({
     >
       <ViewTransition enter="kv-content-in" default="none">
         <>
+          {/* Invitation à installer KEVA, à partir de la 3e visite (13/10/2026). */}
+          <InstallInvite context="returning" />
           {/* ========== HEADER (full width) ==========
               Passé en fond blanc le 22/09/2026 (retour d'Isaac après avis de
               devs externes : la charte cuivre/ivoire lisait comme un thème

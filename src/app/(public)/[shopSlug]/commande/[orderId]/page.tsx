@@ -9,6 +9,7 @@ import { CancelOrderButton } from "./cancel-order-button";
 import { ORDER_STATUS_BADGE_CLASS, ORDER_STATUS_LABELS } from "@/lib/orders";
 import { ProductImage } from "@/components/product-image";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
+import { InstallInvite } from "@/components/install-invite";
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash_on_delivery: "Paiement à la livraison",
@@ -161,6 +162,8 @@ export default async function OrderConfirmationPage({
 
   return (
     <main className="w-full mx-auto max-w-xl px-4 py-8 sm:py-10">
+      {/* Invitation à installer KEVA juste après l'achat (13/10/2026). */}
+      {!isCancelled && <InstallInvite context="order" delayMs={4000} />}
       <div className="mb-8">
         <CheckoutSteps current={3} />
       </div>

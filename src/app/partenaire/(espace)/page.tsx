@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { InstallInvite } from "@/components/install-invite";
 import { PARTNER_SOURCE_LABELS, monthStart } from "@/lib/partners";
 import { MonthSelect } from "./month-select";
 import { fcfa, formatMonth, getMyPartner } from "./data";
@@ -61,6 +62,8 @@ export default async function PartnerResultsPage({
 
   return (
     <div>
+      {/* Invitation à installer KEVA (13/10/2026). */}
+      <InstallInvite context="partner" />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-lg font-semibold text-encre">Bonjour {partner.displayName}</h1>

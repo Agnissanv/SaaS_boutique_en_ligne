@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
+import { InstallAppButton } from "@/components/install-app-button";
 import { SpaceSwitcher } from "@/components/space-switcher";
 import { getShopSubscription } from "@/lib/subscription";
 import { getAccessibleShop } from "@/lib/shop-access";
@@ -145,6 +146,7 @@ export default async function DashboardLayout({
         <SidebarNav isOwner={isOwner} />
 
         <div className="border-t border-white/10 px-3 py-3 text-sm">
+          <InstallAppButton variant="sidebar" reason="vendor" />
           {shop?.slug && (
             <a
               href={`/${shop.slug}`}
@@ -186,6 +188,7 @@ export default async function DashboardLayout({
             isOwner={isOwner}
             footer={
               <>
+                <InstallAppButton variant="sidebar" reason="vendor" />
                 {shop?.slug && (
                   <a
                     href={`/${shop.slug}`}

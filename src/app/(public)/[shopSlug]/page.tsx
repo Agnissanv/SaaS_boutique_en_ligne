@@ -13,6 +13,7 @@ import { SortSelect } from "@/components/sort-select";
 import { Stars } from "@/components/stars";
 import { getShopRating } from "@/lib/reviews";
 import { WhatsappContactButton } from "@/components/whatsapp-contact-button";
+import { InstallInvite } from "@/components/install-invite";
 import { MobileMoneyBadge } from "@/components/mobile-money-badge";
 import { isMobileMoneyOperator } from "@/lib/utils/mobile-money";
 import { getEffectivePrice } from "@/lib/products";
@@ -464,6 +465,8 @@ export default async function ShopPage({
     >
     <ViewTransition enter="kv-content-in" default="none">
     <main className="w-full mx-auto max-w-6xl px-4 py-6 sm:py-8">
+      {/* Invitation à installer KEVA, à partir de la 3e visite (13/10/2026). */}
+      <InstallInvite context="returning" />
       <ShopJsonLd
         name={shop.name}
         description={shop.description}

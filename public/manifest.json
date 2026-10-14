@@ -1,9 +1,9 @@
 {
   "name": "KEVA — Boutiques en ligne",
   "short_name": "KEVA",
-  "description": "Créez votre boutique en ligne, gérez vos commandes et encaissez en Mobile Money, directement depuis votre téléphone.",
+  "description": "La marketplace des vendeurs indépendants de Côte d'Ivoire : achète près de chez toi et paie à la livraison. Vendeurs : crée ta boutique et gère tes commandes depuis ton téléphone.",
   "id": "/",
-  "start_url": "/?source=pwa",
+  "start_url": "/auth/ouvrir",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -18,5 +18,18 @@
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "/screenshots/marketplace.jpg", "sizes": "780x1688", "type": "image/jpeg", "form_factor": "narrow", "label": "Des articles de vendeurs ivoiriens, payés à la livraison" },
+    { "src": "/screenshots/boutique.jpg", "sizes": "780x1688", "type": "image/jpeg", "form_factor": "narrow", "label": "La boutique d'un vendeur, avec contact WhatsApp" },
+    { "src": "/screenshots/produit.jpg", "sizes": "780x1688", "type": "image/jpeg", "form_factor": "narrow", "label": "Une fiche produit claire, ajout au panier en un appui" },
+    { "src": "/screenshots/vendeur.jpg", "sizes": "780x1688", "type": "image/jpeg", "form_factor": "narrow", "label": "Crée ta boutique en ligne en 5 minutes" },
+    { "src": "/screenshots/boutique-ordinateur.jpg", "sizes": "1280x800", "type": "image/jpeg", "form_factor": "wide", "label": "La boutique d'un vendeur sur ordinateur" }
+  ],
+  "shortcuts": [
+    { "name": "Mes paniers", "short_name": "Paniers", "url": "/paniers", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Mes favoris", "short_name": "Favoris", "url": "/favoris", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Mes commandes", "short_name": "Commandes", "url": "/compte/commandes", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Ma boutique (vendeurs)", "short_name": "Ma boutique", "url": "/dashboard", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }
